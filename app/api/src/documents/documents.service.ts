@@ -1,14 +1,11 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { DocType } from "@datacon/prisma";
-import * as fs from "fs";
 import * as path from "path";
-import { randomUUID } from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { AiClientService } from "../common/ai-client.service";
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10MB, per PRD FR-3.1
 const EXT_TO_TYPE: Record<string, DocType> = { pdf: "PDF", csv: "CSV", txt: "TXT", md: "MD" };
-const UPLOAD_DIR = path.resolve(__dirname, "../../../uploads");
 
 @Injectable()
 export class DocumentsService {
@@ -59,11 +56,6 @@ export class DocumentsService {
       );
     }
 
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-    const storageKey = `${randomUUID()}.${ext}`;
-    const storagePath = path.join(UPLOAD_DIR, storageKey);
-    fs.writeFileSync(storagePath, file.buffer);
-
     const title = path.basename(file.originalname, path.extname(file.originalname));
     const row = await this.prisma.dataSource.create({
       data: {
@@ -72,19 +64,24 @@ export class DocumentsService {
         type: docType,
         status: docType === "CSV" ? "INDEXING" : "CHUNKING",
         sizeBytes: file.size,
-        storageKey,
         uploadedById,
       },
     });
 
     try {
-      const res = await this.ai.client.post("/internal/documents/ingest", {
-        documentId: row.id,
-        title,
-        filename: file.originalname,
-        storagePath,
-        docType: docType.toLowerCase(),
-      });
+      // Sent as bytes, not a local path — api and ai run as separate
+      // processes (separate containers in production) with no shared disk.
+      const res = await this.ai.client.post(
+        "/internal/documents/ingest",
+        {
+          documentId: row.id,
+          title,
+          filename: file.originalname,
+          contentBase64: file.buffer.toString("base64"),
+          docType: docType.toLowerCase(),
+        },
+        { timeout: 120_000 }, // embedding a large PDF's chunks can take longer than the default 30s
+      );
       const data = res.data as { ok: boolean; message: string; chunkCount?: number; rowCount?: number; colCount?: number };
       const updated = await this.prisma.dataSource.update({
         where: { id: row.id },
