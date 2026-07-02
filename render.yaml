@@ -5,6 +5,9 @@
 # NOTE: written offline (this environment's network policy blocks
 # render.com's docs/API), so double-check it against Render's Blueprint
 # preview before confirming — it validates syntax without creating anything.
+# (envVarGroups at the service level was tried and rejected by Render's own
+# validator — "field envVarGroups not found in type file.Service" — so the
+# shared secret below is a plain literal value instead.)
 
 databases:
   - name: datacon-db
@@ -12,15 +15,6 @@ databases:
     user: datacon
     plan: free
     postgresMajorVersion: "16"
-
-envVarGroups:
-  - name: datacon-shared
-    envVars:
-      # Shared secret so the api service can call the ai service's /internal/*
-      # routes; Render generates one value and injects it into every service
-      # below that references this group.
-      - key: INTERNAL_AUTH_TOKEN
-        generateValue: true
 
 services:
   - type: web
@@ -37,8 +31,6 @@ services:
       npm run build --workspace=api
     startCommand: node api/dist/main.js
     healthCheckPath: /api/health
-    envVarGroups:
-      - datacon-shared
     envVars:
       - key: NODE_ENV
         value: production
@@ -52,6 +44,12 @@ services:
         generateValue: true
       - key: CONNECTOR_ENCRYPTION_KEY
         generateValue: true
+      # Shared secret so this service can call datacon-ai's /internal/*
+      # routes — must be set to the exact same literal value on both
+      # services below (Render's Blueprint spec has no cross-service
+      # variable-sharing construct that validated successfully offline).
+      - key: INTERNAL_AUTH_TOKEN
+        value: D5kFW75jd7oLQhF0Tx_yMk3JsAnr8Tkd8YbF1WjlzoE
       # Set after the ai service's first deploy — see its onrender.com URL in
       # the Render dashboard (predictable as https://datacon-ai.onrender.com
       # given the service name below, but confirm rather than assume).
@@ -71,9 +69,9 @@ services:
     buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
     startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
-    envVarGroups:
-      - datacon-shared
     envVars:
+      - key: INTERNAL_AUTH_TOKEN
+        value: D5kFW75jd7oLQhF0Tx_yMk3JsAnr8Tkd8YbF1WjlzoE
       - key: CHROMA_PERSIST_DIR
         value: /var/data/chroma
       - key: ANTHROPIC_MODEL
