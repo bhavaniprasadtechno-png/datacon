@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  :root{--ac:#6d4dff;--ac2:#7d5cff;--ac-deep:#5b3fd6;--ac-soft:#efeaff;--ac-softer:#faf9ff;--ac-ring:#c9bdff;--ac-bg:#eef0f6;--ac-grad:linear-gradient(135deg,#6d4dff,#7d5cff);--ac-logo:linear-gradient(135deg,#6d4dff,#2bb8c4)}
+  /* derived tokens — recompute whenever --ac / --ac2 change */
+  .dc-theme{--ac-soft:color-mix(in srgb,var(--ac) 13%,white);--ac-softer:color-mix(in srgb,var(--ac) 6%,white);--ac-ring:color-mix(in srgb,var(--ac) 34%,white);--ac-bg:color-mix(in srgb,var(--ac) 6%,#eef0f6);--ac-grad:linear-gradient(135deg,var(--ac),var(--ac2))}
+  .dc-theme-soft{--ac:#6d4dff;--ac2:#7d5cff;--ac-deep:#5b3fd6;--ac-logo:linear-gradient(135deg,#6d4dff,#2bb8c4)}
+  .dc-theme-emerald{--ac:#0f9d6b;--ac2:#17b884;--ac-deep:#0b7d54;--ac-logo:linear-gradient(135deg,#0f9d6b,#12b6a6)}
+  .dc-theme-sapphire{--ac:#2f66f0;--ac2:#4d84ff;--ac-deep:#2450cf;--ac-logo:linear-gradient(135deg,#2f66f0,#26a7d8)}
+  .dc-theme-sunset{--ac:#e2544f;--ac2:#f0725c;--ac-deep:#c53c50;--ac-logo:linear-gradient(135deg,#e2544f,#f0a24a)}
+  .dc-theme-custom{--ac2:color-mix(in srgb,var(--ac) 76%,white);--ac-deep:color-mix(in srgb,var(--ac) 82%,black);--ac-logo:linear-gradient(135deg,var(--ac),var(--ac2))}
+  body{background:var(--ac-bg);font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1a1d29}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#d4d7e2;border-radius:6px;border:3px solid transparent;background-clip:content-box}
+  ::-webkit-scrollbar-thumb:hover{background:#bfc3d4;background-clip:content-box}
+  input,button,textarea{font-family:inherit}
+  button{cursor:pointer;border:none;background:none}
+  @keyframes dvblink{0%,100%{opacity:1}50%{opacity:.2}}
+  @keyframes dvspin{to{transform:rotate(360deg)}}
+  @keyframes dvdraw{to{stroke-dashoffset:0}}
+  @keyframes dvfadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes dvtoast{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+  @keyframes dvbounce{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
+  @keyframes dvpulse{0%{box-shadow:0 0 0 0 rgba(217,162,58,.5)}70%{box-shadow:0 0 0 6px rgba(217,162,58,0)}100%{box-shadow:0 0 0 0 rgba(217,162,58,0)}}
+  @keyframes dvgrow{from{width:0}}
+  .dvfu{animation:dvfadeup .4s cubic-bezier(.2,.7,.3,1) both}
+  .dv-side{width:236px;transition:width .22s cubic-bezier(.2,.7,.3,1)}
+  .dv-side.dv-collapsed{width:74px}
+  .dv-navitem{position:relative;justify-content:flex-start}
+  .dv-collapsed .dv-navitem{justify-content:center}
+  .dv-sub{margin-left:12px;padding-left:11px;border-left:1px solid #e9eaf2}
+  .dv-collapsed .dv-sub{margin-left:0;padding-left:0;border-left:none}
+  .dv-tip{position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);background:#1a1d29;color:#fff;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;z-index:80;box-shadow:0 10px 24px -10px rgba(0,0,0,.45)}
+  .dv-tip::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%) rotate(45deg);width:8px;height:8px;background:#1a1d29;border-radius:1px}
+  .dv-collapsed .dv-navitem:hover .dv-tip{opacity:1}
+  @keyframes dvDrift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(46px,34px) scale(1.08)}}
+  @keyframes dvDrift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-38px,28px) scale(1.05)}}
+  @keyframes dvDrift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(26px,-32px) scale(1.1)}}
+  @keyframes dvNodeGlow{0%,100%{opacity:.42;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
+  @keyframes dvFlow{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+  @keyframes dvPulseDot{0%{box-shadow:0 0 0 0 rgba(43,184,196,.55)}70%{box-shadow:0 0 0 9px rgba(43,184,196,0)}100%{box-shadow:0 0 0 0 rgba(43,184,196,0)}}
+  @keyframes dvCaret{0%,48%{opacity:1}49%,100%{opacity:0}}
+  .dv-plx{position:absolute;inset:0;transform:translate(calc(var(--mx,0)*26px),calc(var(--my,0)*26px));transition:transform .4s cubic-bezier(.2,.8,.2,1);will-change:transform}
+  .dv-plx2{position:absolute;inset:0;transform:translate(calc(var(--mx,0)*-14px),calc(var(--my,0)*-14px));transition:transform .5s cubic-bezier(.2,.8,.2,1);will-change:transform}
+  .dv-node{position:relative;display:flex;align-items:center;gap:7px;font:600 11px 'IBM Plex Mono',monospace;color:#e7e2ff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:7px 12px;border-radius:9px;animation:dvNodeGlow 3.4s ease-in-out infinite}
+  .dv-node span.dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dv-arrow{color:rgba(255,255,255,.35);font-size:13px;flex:none}
+</style>
+</helmet>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#221c46"/><stop offset="0.5" stop-color="#3a2f73"/><stop offset="1" stop-color="#6d4dff"/></linearGradient></defs><rect width="400" height="400" fill="url(#bg)"/><rect x="132" y="120" width="136" height="136" rx="34" fill="#ffffff"/><text x="200" y="228" font-family="Georgia,serif" font-size="92" font-weight="800" fill="#6d4dff" text-anchor="middle">D</text><circle cx="300" cy="110" r="10" fill="#2bb8c4"/><circle cx="110" cy="290" r="8" fill="#8c6eff"/></svg></template>
+<div ref="{{ setRootRef }}" class="dc-theme {{ themeClass }}" style="height:100vh;width:100vw;overflow:hidden">
+
+<!-- ============================== AUTH ============================== -->
+<sc-if value="{{ isAuth }}" hint-placeholder-val="{{ true }}">
+<div style="height:100vh;display:flex">
+  <!-- brand panel -->
+  <div ref="{{ setBrandRef }}" style="--mx:0;--my:0;width:44%;min-width:380px;background:linear-gradient(150deg,#221c46 0%,#3a2f73 45%,var(--ac) 120%);color:#fff;padding:54px 56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden">
+    <div class="dv-plx">
+      <div style="position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(43,184,196,.38),transparent 62%);right:-180px;top:-120px;animation:dvDrift1 15s ease-in-out infinite"></div>
+      <div style="position:absolute;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(140,110,255,.34),transparent 64%);left:-140px;bottom:-90px;animation:dvDrift2 18s ease-in-out infinite"></div>
+      <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.14),transparent 66%);right:60px;bottom:120px;animation:dvDrift3 12s ease-in-out infinite"></div>
+    </div>
+    <div class="dv-plx2" style="background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;opacity:.5;mask-image:radial-gradient(circle at 70% 30%,#000,transparent 70%);-webkit-mask-image:radial-gradient(circle at 70% 30%,#000,transparent 70%)"></div>
+    <div style="position:relative;display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:11px;background:var(--ac-logo);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px">D</div>
+      <span style="font-weight:800;font-size:20px;letter-spacing:-.01em">Datacon</span>
+    </div>
+    <div style="position:relative">
+      <div style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.2em;color:#b6abff;margin-bottom:18px">ENTERPRISE ANALYTICS · OS</div>
+      <h1 style="margin:0;font-size:38px;line-height:1.12;font-weight:800;letter-spacing:-.025em;max-width:440px">Ask your whole business one question.</h1>
+      <p style="margin:20px 0 0;font-size:15px;line-height:1.6;color:#d8d3ff;max-width:420px">Datacon unifies your databases and your documents behind one conversation — routed to descriptive, diagnostic, predictive and prescriptive agents.</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:30px;flex-wrap:wrap">
+        <div class="dv-node" style="animation-delay:0s"><span class="dot" style="background:#2bb8c4"></span>Descriptive</div>
+        <span class="dv-arrow">→</span>
+        <div class="dv-node" style="animation-delay:.85s"><span class="dot" style="background:#8c6eff"></span>Diagnostic</div>
+        <span class="dv-arrow">→</span>
+        <div class="dv-node" style="animation-delay:1.7s"><span class="dot" style="background:#5b8def"></span>Predictive</div>
+        <span class="dv-arrow">→</span>
+        <div class="dv-node" style="animation-delay:2.55s"><span class="dot" style="background:#f2a65a"></span>Prescriptive</div>
+      </div>
+    </div>
+    <div style="position:relative;display:flex;align-items:center;gap:10px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#b6abff">
+      <span style="width:8px;height:8px;border-radius:50%;background:#2bb8c4;flex:none;animation:dvPulseDot 2.1s infinite"></span>4 AGENTS ONLINE · ROUTING LIVE
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.1);position:relative;overflow:hidden;border-radius:2px;max-width:150px"><div style="position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,#2bb8c4,transparent);animation:dvFlow 2.6s linear infinite"></div></div>
+    </div>
+  </div>
+  <!-- form -->
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px;background:#f7f8fc">
+    <div style="width:100%;max-width:392px">
+      <h2 style="margin:0 0 5px;font-size:25px;font-weight:800;letter-spacing:-.02em">{{ authTitle }}</h2>
+      <p style="margin:0 0 26px;font-size:13.5px;color:#71768a">{{ authSub }}</p>
+
+      <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11.5px;font-weight:600;color:#71768a;margin-bottom:6px">Full name</label>
+        <input placeholder="Jordan Lee" style="width:100%;padding:11px 13px;border:1px solid #e2e4ee;border-radius:11px;font-size:13.5px;background:#fff" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.14)"/>
+      </div>
+      </sc-if>
+
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11.5px;font-weight:600;color:#71768a;margin-bottom:6px">Work email</label>
+        <input value="tom@acme.com" placeholder="you@company.com" style="width:100%;padding:11px 13px;border:1px solid #e2e4ee;border-radius:11px;font-size:13.5px;background:#fff" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.14)"/>
+      </div>
+      <div style="margin-bottom:18px">
+        <label style="display:block;font-size:11.5px;font-weight:600;color:#71768a;margin-bottom:6px">Password</label>
+        <input type="password" value="············" style="width:100%;padding:11px 13px;border:1px solid #e2e4ee;border-radius:11px;font-size:13.5px;background:#fff" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.14)"/>
+      </div>
+
+      <button onClick="{{ onLogin }}" style="width:100%;padding:13px;border-radius:12px;background:var(--ac-grad);color:#fff;font-size:14px;font-weight:700;box-shadow:0 8px 20px -8px rgba(109,77,255,.7)" style-hover="filter:brightness(1.06)">{{ authCta }}</button>
+
+      <div style="display:flex;align-items:center;gap:12px;margin:22px 0 16px">
+        <div style="flex:1;height:1px;background:#e6e8f0"></div>
+        <span style="font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#a3a8bd">OR JUMP IN AS</span>
+        <div style="flex:1;height:1px;background:#e6e8f0"></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <sc-for list="{{ personaCards }}" as="p" hint-placeholder-count="3">
+          <button onClick="{{ p.onClick }}" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border:1px solid #e6e8f0;border-radius:13px;background:#fff;text-align:left" style-hover="border-color:var(--ac);box-shadow:0 6px 16px -10px rgba(109,77,255,.6)">
+            <div style="width:36px;height:36px;border-radius:50%;background:{{ p.grad }};color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none">{{ p.initials }}</div>
+            <div style="flex:1;line-height:1.3">
+              <div style="font-size:13px;font-weight:700">{{ p.name }}</div>
+              <div style="font-size:11px;color:#9499ad">{{ p.title }}</div>
+            </div>
+            <span style="font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:{{ p.roleColor }};background:{{ p.roleBg }};padding:4px 8px;border-radius:6px">{{ p.roleLabel }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <p style="margin:22px 0 0;text-align:center;font-size:12.5px;color:#9499ad">{{ authSwitchText }} <button onClick="{{ onToggleAuth }}" style="color:var(--ac);font-weight:700;font-size:12.5px">{{ authSwitchCta }}</button></p>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============================== APP SHELL ============================== -->
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+<div style="height:100vh;display:flex;background:var(--ac-bg)">
+
+  <!-- SIDEBAR -->
+  <aside class="dv-side {{ collapsedClass }}" style="flex:none;background:#fff;border-right:1px solid #e9eaf2;display:flex;flex-direction:column;padding:20px 14px">
+    <!-- logo + collapse toggle -->
+    <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:10px;padding:2px 4px 18px">
+        <div style="width:32px;height:32px;border-radius:10px;background:var(--ac-logo);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex:none">D</div>
+        <div style="flex:1;font-weight:800;font-size:17px;letter-spacing:-.01em">Datacon</div>
+        <button onClick="{{ toggleCollapse }}" title="Collapse menu" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9499ad;font-size:15px" style-hover="background:#f5f6fb;color:var(--ac-deep)">«</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ collapsed }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:2px 0 16px">
+        <div style="width:34px;height:34px;border-radius:10px;background:var(--ac-logo);color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center">D</div>
+        <button onClick="{{ toggleCollapse }}" title="Expand menu" style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9499ad;font-size:15px" style-hover="background:#f5f6fb;color:var(--ac-deep)">»</button>
+      </div>
+    </sc-if>
+
+    <nav style="display:flex;flex-direction:column;gap:3px;flex:1">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="6">
+        <sc-if value="{{ n.divider }}" hint-placeholder-val="{{ false }}"><div style="height:1px;background:#e9eaf2;margin:9px 10px"></div></sc-if>
+        <button onClick="{{ n.onClick }}" class="dv-navitem" title="{{ n.nativeTip }}" style="display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border-radius:11px;font-size:13.5px;text-align:left;background:{{ n.bg }};color:{{ n.color }};font-weight:{{ n.weight }}" style-hover="background:{{ n.hoverBg }}">
+          <span style="width:22px;font-size:16px;display:flex;align-items:center;justify-content:center;flex:none">{{ n.icon }}</span>
+          <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}"><span style="flex:1">{{ n.label }}</span><sc-if value="{{ n.showChevron }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;color:{{ n.color }};margin-left:auto">{{ n.chevron }}</span></sc-if></sc-if>
+          <sc-if value="{{ n.showBadge }}" hint-placeholder-val="{{ false }}"><span style="font:600 9.5px 'IBM Plex Mono',monospace;color:{{ n.badgeColor }};background:{{ n.badgeBg }};padding:2px 6px;border-radius:6px">{{ n.badge }}</span></sc-if>
+          <sc-if value="{{ n.dotBadge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:8px;right:10px;width:7px;height:7px;border-radius:50%;background:{{ n.badgeColor }}"></span></sc-if>
+          <span class="dv-tip">{{ n.label }}</span>
+        </button>
+        <sc-if value="{{ n.showSubmenuHere }}" hint-placeholder-val="{{ false }}">
+          <div class="dv-sub" style="display:flex;flex-direction:column;gap:1px;margin-top:2px;margin-bottom:2px">
+            <sc-for list="{{ userMgmtSubNav }}" as="sub" hint-placeholder-count="4">
+              <button onClick="{{ sub.onClick }}" class="dv-navitem" title="{{ sub.nativeTip }}" style="display:flex;align-items:center;gap:9px;width:100%;padding:8px 11px;border-radius:9px;font-size:12.5px;text-align:left;background:{{ sub.bg }};color:{{ sub.color }};font-weight:{{ sub.weight }}" style-hover="background:#f5f6fb">
+                <span style="width:18px;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none">{{ sub.icon }}</span>
+                <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}"><span>{{ sub.label }}</span></sc-if>
+                <span class="dv-tip">{{ sub.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </sc-for>
+    </nav>
+
+    <!-- persona switcher -->
+    <sc-if value="{{ expanded }}" hint-placeholder-val="{{ true }}">
+    <div style="border-top:1px solid var(--ac-bg);padding-top:14px">
+      <div style="font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#a3a8bd;padding:0 6px 8px">VIEWING AS</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:#f5f6fb">
+        <div style="width:34px;height:34px;border-radius:50%;background:{{ persona.grad }};color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none">{{ persona.initials }}</div>
+        <div style="flex:1;line-height:1.25;min-width:0">
+          <div style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ persona.name }}</div>
+          <div style="font-size:10.5px;font-weight:600;color:{{ roleColor }}">{{ roleLabel }} · {{ persona.title }}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;margin-top:9px;padding:0 2px">
+        <sc-for list="{{ switcher }}" as="s" hint-placeholder-count="3">
+          <button onClick="{{ s.onClick }}" title="{{ s.tip }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 4px;border-radius:9px;background:{{ s.bg }};border:1px solid {{ s.border }}" style-hover="border-color:var(--ac-ring)">
+            <span style="width:22px;height:22px;border-radius:50%;background:{{ s.grad }};color:#fff;font-weight:700;font-size:10px;display:flex;align-items:center;justify-content:center">{{ s.initials }}</span>
+            <span style="font-size:10px;font-weight:700;color:{{ s.labelColor }}">{{ s.short }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:7px;margin-top:8px;padding:0 2px">
+        <button onClick="{{ openProfile }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:9px;background:#fff;border:1px solid #e2e4ee;font-size:11px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring);color:var(--ac-deep)"><span style="font-size:13px">👤</span>Profile</button>
+        <button onClick="{{ signOut }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:9px;background:#fff;border:1px solid #f0d5d5;font-size:11px;font-weight:700;color:#c0405a" style-hover="background:#fdf2f4;border-color:#e8a9b4"><span style="font-size:13px">⎋</span>Sign out</button>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ collapsed }}" hint-placeholder-val="{{ false }}">
+    <div style="border-top:1px solid var(--ac-bg);padding-top:12px;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <sc-for list="{{ switcher }}" as="s" hint-placeholder-count="3">
+        <button onClick="{{ s.onClick }}" class="dv-navitem" title="{{ s.tip }}" style="width:36px;height:36px;border-radius:50%;background:{{ s.grad }};color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;border:2px solid {{ s.ring }}" style-hover="filter:brightness(1.05)">{{ s.initials }}<span class="dv-tip">{{ s.tip }}</span></button>
+      </sc-for>
+      <button onClick="{{ openProfile }}" class="dv-navitem" title="View profile" style="width:36px;height:36px;border-radius:10px;background:#fff;border:1px solid #e2e4ee;font-size:15px;display:flex;align-items:center;justify-content:center;color:#5a5f72" style-hover="border-color:var(--ac-ring)">👤<span class="dv-tip">View profile</span></button>
+      <button onClick="{{ signOut }}" class="dv-navitem" title="Sign out" style="width:36px;height:36px;border-radius:10px;background:#fff;border:1px solid #f0d5d5;font-size:15px;display:flex;align-items:center;justify-content:center;color:#c0405a" style-hover="background:#fdf2f4;border-color:#e8a9b4">⎋<span class="dv-tip">Sign out</span></button>
+    </div>
+    </sc-if>
+  </aside>
+
+  <!-- MAIN -->
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+    <!-- ======== CHAT ======== -->
+    <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid #e9eaf2;background:#fff">
+        <div>
+          <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">Multi-agent chat</div>
+          <div style="font-size:11.5px;color:#9499ad">Plain-English questions, routed automatically</div>
+        </div>
+        <div style="display:flex;gap:7px">
+          <span style="font:600 10px 'IBM Plex Mono',monospace;color:var(--ac);background:var(--ac-soft);padding:5px 9px;border-radius:7px">Descriptive</span>
+          <span style="font:600 10px 'IBM Plex Mono',monospace;color:#1d8e9c;background:#e3f6f9;padding:5px 9px;border-radius:7px">Diagnostic</span>
+          <span style="font:600 10px 'IBM Plex Mono',monospace;color:#3f6fd6;background:#e9eefc;padding:5px 9px;border-radius:7px">Predictive</span>
+          <span style="font:600 10px 'IBM Plex Mono',monospace;color:#0f8a5c;background:#e4f6ee;padding:5px 9px;border-radius:7px">Prescriptive</span>
+        </div>
+      </header>
+
+      <div ref="{{ setScrollRef }}" style="flex:1;overflow-y:auto;padding:26px 28px;background:linear-gradient(180deg,#f7f8fc,var(--ac-bg))">
+        <div style="max-width:760px;margin:0 auto">
+
+          <sc-if value="{{ chatEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="text-align:center;padding:40px 0 30px">
+              <div style="width:52px;height:52px;border-radius:16px;background:var(--ac-logo);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px">✦</div>
+              <div style="font-size:19px;font-weight:800;letter-spacing:-.01em">Ask Datacon anything</div>
+              <div style="font-size:13px;color:#9499ad;margin-top:5px">Try one of these — each routes to a different agent.</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:620px;margin:0 auto">
+              <sc-for list="{{ suggestions }}" as="g" hint-placeholder-count="4">
+                <button onClick="{{ g.onClick }}" style="text-align:left;padding:15px 16px;border-radius:14px;background:#fff;border:1px solid #e9eaf2;box-shadow:0 2px 6px rgba(28,30,50,.04)" style-hover="border-color:var(--ac-ring);box-shadow:0 10px 24px -14px rgba(109,77,255,.5)">
+                  <span style="font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:{{ g.color }};background:{{ g.bg }};padding:3px 7px;border-radius:6px">{{ g.tag }}</span>
+                  <div style="font-size:13.5px;font-weight:600;margin-top:10px;line-height:1.4">{{ g.q }}</div>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-for list="{{ viewMessages }}" as="m" hint-placeholder-count="0">
+            <!-- user -->
+            <sc-if value="{{ m.isUser }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;justify-content:flex-end;margin-bottom:22px">
+                <div style="max-width:74%;background:var(--ac-grad);color:#fff;padding:11px 15px;border-radius:15px 15px 5px 15px;font-size:13.5px;line-height:1.5;box-shadow:0 8px 18px -10px rgba(109,77,255,.6)">{{ m.text }}</div>
+              </div>
+            </sc-if>
+            <!-- agent -->
+            <sc-if value="{{ m.isAgent }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:13px;margin-bottom:24px">
+                <div style="width:34px;height:34px;border-radius:11px;background:{{ m.grad }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none">✦</div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+                    <span style="font-size:13px;font-weight:700">Datacon</span>
+                    <span style="font:600 9.5px 'IBM Plex Mono',monospace;color:{{ m.intentColor }};background:{{ m.intentBg }};padding:3px 7px;border-radius:6px">{{ m.intentLabel }}</span>
+                  </div>
+
+                  <div style="background:#fff;border:1px solid #e9eaf2;border-radius:4px 15px 15px 15px;padding:15px 17px;box-shadow:0 2px 8px rgba(28,30,50,.04)">
+                    <!-- thinking -->
+                    <sc-if value="{{ m.thinking }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;gap:5px;padding:3px 0">
+                        <span style="width:7px;height:7px;border-radius:50%;background:#c3c7d6;animation:dvbounce 1.2s infinite"></span>
+                        <span style="width:7px;height:7px;border-radius:50%;background:#c3c7d6;animation:dvbounce 1.2s infinite .15s"></span>
+                        <span style="width:7px;height:7px;border-radius:50%;background:#c3c7d6;animation:dvbounce 1.2s infinite .3s"></span>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ m.hasText }}" hint-placeholder-val="{{ false }}">
+                      <div style="font-size:13.5px;line-height:1.62;color:#2a2d3c;white-space:pre-wrap">{{ m.visibleText }}<sc-if value="{{ m.caret }}" hint-placeholder-val="{{ false }}"><span style="display:inline-block;width:7px;height:15px;background:var(--ac);border-radius:1px;vertical-align:-2px;margin-left:2px;animation:dvblink 1s steps(1) infinite"></span></sc-if></div>
+                    </sc-if>
+
+                    <!-- DESCRIPTIVE viz -->
+                    <sc-if value="{{ m.showDescriptive }}" hint-placeholder-val="{{ false }}">
+                      <div style="margin-top:14px;padding:14px;border-radius:12px;background:var(--ac-softer);border:1px solid var(--ac-soft)">
+                        <div style="font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;color:#9489c4;margin-bottom:11px">REVENUE BY REGION · LAST QUARTER</div>
+                        <sc-for list="{{ m.bars }}" as="bar" hint-placeholder-count="4">
+                          <div style="display:flex;align-items:center;gap:11px;margin-bottom:8px">
+                            <div style="width:54px;font-size:11.5px;font-weight:600;color:#71768a">{{ bar.label }}</div>
+                            <div style="flex:1;height:10px;background:#eceaf8;border-radius:6px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,var(--ac),#8b6bff);border-radius:6px;width:{{ bar.pct }};animation:dvgrow .7s cubic-bezier(.2,.7,.3,1)"></div></div>
+                            <div style="width:58px;text-align:right;font-size:12px;font-weight:700">{{ bar.value }}</div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <!-- DIAGNOSTIC viz: citations -->
+                    <sc-if value="{{ m.showDiagnostic }}" hint-placeholder-val="{{ false }}">
+                      <div style="margin-top:14px">
+                        <div style="display:inline-flex;align-items:center;gap:7px;font:600 11px 'IBM Plex Mono',monospace;color:#1d8e9c;background:#e3f6f9;padding:6px 11px;border-radius:8px;margin-bottom:11px">deploy v4.2 ↔ tickets · r = 0.91</div>
+                        <div style="font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;color:#9499ad;margin-bottom:9px">SOURCES · 2 DOCUMENT CHUNKS</div>
+                        <sc-for list="{{ m.citations }}" as="c" hint-placeholder-count="2">
+                          <div style="border-left:2px solid #2bb8c4;padding:2px 0 2px 12px;margin-bottom:11px">
+                            <div style="font-size:12px;font-weight:700">{{ c.doc }}</div>
+                            <div style="font:500 9.5px 'IBM Plex Mono',monospace;color:#9499ad;margin:2px 0 5px">{{ c.meta }}</div>
+                            <div style="font-size:12px;color:#5a5f72;line-height:1.5;font-style:italic">“{{ c.snippet }}”</div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
+                    <!-- PREDICTIVE viz -->
+                    <sc-if value="{{ m.showPredictive }}" hint-placeholder-val="{{ false }}">
+                      <div style="margin-top:14px;padding:14px;border-radius:12px;background:#f7faff;border:1px solid #e6eefc">
+                        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+                          <span style="font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;color:#7f93c4">FORECAST · HOLT-WINTERS</span>
+                          <span style="font:600 10px 'IBM Plex Mono',monospace;color:#3f6fd6">95% CI</span>
+                        </div>
+                        <svg viewBox="0 0 320 96" preserveAspectRatio="none" style="width:100%;height:96px">
+                          <line x1="0" y1="24" x2="320" y2="24" stroke="#eaeefb" stroke-width="1"/><line x1="0" y1="60" x2="320" y2="60" stroke="#eaeefb" stroke-width="1"/>
+                          <polygon points="150,58 200,50 250,40 308,22 308,46 250,60 200,66 150,68" fill="#5b8def" opacity="0.14"/>
+                          <polyline points="0,80 40,72 80,76 120,64 150,60" fill="none" stroke="#1a1d29" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+                          <polyline points="150,60 200,55 250,50 308,34" fill="none" stroke="#3f6fd6" stroke-width="2.4" stroke-dasharray="5 4" stroke-linecap="round" style="stroke-dasharray:200;stroke-dashoffset:200;animation:dvdraw 1s ease forwards"/>
+                          <circle cx="150" cy="60" r="3.4" fill="#3f6fd6"/>
+                        </svg>
+                        <div style="display:flex;gap:18px;margin-top:10px">
+                          <div><div style="font:600 9px 'IBM Plex Mono',monospace;color:#9499ad">PROJECTED</div><div style="font-size:15px;font-weight:800">$4.55M</div></div>
+                          <div><div style="font:600 9px 'IBM Plex Mono',monospace;color:#9499ad">95% CI</div><div style="font-size:15px;font-weight:800">$4.31–4.79M</div></div>
+                          <div><div style="font:600 9px 'IBM Plex Mono',monospace;color:#9499ad">GROWTH</div><div style="font-size:15px;font-weight:800;color:#0f8a5c">+6.3%</div></div>
+                        </div>
+                      </div>
+                    </sc-if>
+
+                    <!-- PRESCRIPTIVE viz -->
+                    <sc-if value="{{ m.showPrescriptive }}" hint-placeholder-val="{{ false }}">
+                      <div style="margin-top:14px;border:1px solid #e4f1ea;border-radius:12px;overflow:hidden">
+                        <div style="display:grid;grid-template-columns:1fr 92px 70px 92px;gap:0;background:#eef9f3;font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#0f8a5c;padding:9px 13px">
+                          <span>RECOMMENDED ACTION</span><span>IMPACT</span><span>EFFORT</span><span>OWNER</span>
+                        </div>
+                        <sc-for list="{{ m.actions }}" as="a" hint-placeholder-count="3">
+                          <div style="display:grid;grid-template-columns:1fr 92px 70px 92px;gap:0;padding:11px 13px;border-top:1px solid var(--ac-bg);align-items:center">
+                            <span style="font-size:12.5px;font-weight:600;line-height:1.35;padding-right:8px">{{ a.action }}</span>
+                            <span style="font-size:11.5px;font-weight:700;color:#0f8a5c">{{ a.impact }}</span>
+                            <span style="font:600 10px 'IBM Plex Mono',monospace;color:{{ a.effortColor }};background:{{ a.effortBg }};padding:3px 7px;border-radius:6px;justify-self:start">{{ a.effort }}</span>
+                            <span style="font-size:11.5px;font-weight:600;color:#5a5f72">{{ a.owner }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+
+                  <!-- footer -->
+                  <sc-if value="{{ m.showViz }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:9px">
+                      <button onClick="{{ m.onUp }}" title="Helpful" style="display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:8px;border:1px solid {{ m.upBorder }};background:{{ m.upBg }};font-size:11px;font-weight:600;color:{{ m.upColor }}">▲ Helpful</button>
+                      <button onClick="{{ m.onDown }}" title="Not helpful" style="padding:5px 9px;border-radius:8px;border:1px solid {{ m.downBorder }};background:{{ m.downBg }};font-size:11px;font-weight:600;color:{{ m.downColor }}">▼</button>
+                      <span style="flex:1"></span>
+                      <span style="font:500 10px 'IBM Plex Mono',monospace;color:#b0b4c6">{{ m.feedHint }}</span>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </sc-for>
+
+        </div>
+      </div>
+
+      <!-- composer -->
+      <div style="padding:14px 28px 18px;background:#fff;border-top:1px solid #e9eaf2">
+        <div style="max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px;border:1px solid #e2e4ee;border-radius:14px;padding:7px 7px 7px 16px;background:#fff" style-focus-within="border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)">
+          <input value="{{ draft }}" onInput="{{ onDraft }}" onKeyDown="{{ onComposerKey }}" placeholder="Ask about revenue, churn, anomalies, forecasts…" style="flex:1;border:none;outline:none;font-size:13.5px;background:transparent;color:#1a1d29"/>
+          <button onClick="{{ onSend }}" style="display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700" style-hover="filter:brightness(1.06)">Ask ✦</button>
+        </div>
+        <div style="max-width:760px;margin:7px auto 0;font:500 10px 'IBM Plex Mono',monospace;color:#b0b4c6;text-align:center">Answers stream token-by-token · first token in &lt;1s</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ======== OVERVIEW ======== -->
+    <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;overflow-y:auto">
+      <header style="display:flex;align-items:flex-end;justify-content:space-between;padding:24px 32px 18px">
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:#9499ad">{{ todayLabel }}</div>
+          <h1 style="margin:4px 0 0;font-size:25px;font-weight:800;letter-spacing:-.02em">{{ greeting }}</h1>
+        </div>
+        <span style="display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:var(--ac-deep);background:var(--ac-soft);padding:7px 13px;border-radius:20px"><span style="width:7px;height:7px;border-radius:50%;background:var(--ac);animation:dvblink 1.6s infinite"></span>3 live syncs</span>
+      </header>
+      <div style="padding:4px 32px 32px;display:flex;flex-direction:column;gap:18px;max-width:1180px">
+        <!-- KPIs -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+          <div class="dvfu" style="background:#fff;border-radius:16px;padding:17px 18px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 18px 40px -28px rgba(28,30,50,.4)">
+            <div style="font-size:11.5px;font-weight:600;color:#9499ad">Total revenue</div>
+            <div style="font-size:26px;font-weight:800;letter-spacing:-.02em;margin:8px 0 5px">$4.28M</div>
+            <span style="font-size:11px;font-weight:700;color:#13a06b;background:#e6f7ef;padding:3px 9px;border-radius:20px">↑ 6.4%</span>
+          </div>
+          <div class="dvfu" style="background:#fff;border-radius:16px;padding:17px 18px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 18px 40px -28px rgba(28,30,50,.4)">
+            <div style="font-size:11.5px;font-weight:600;color:#9499ad">Net churn</div>
+            <div style="font-size:26px;font-weight:800;letter-spacing:-.02em;margin:8px 0 5px">3.1%</div>
+            <span style="font-size:11px;font-weight:700;color:#13a06b;background:#e6f7ef;padding:3px 9px;border-radius:20px">↓ 0.4pp</span>
+          </div>
+          <div class="dvfu" style="background:#fff;border-radius:16px;padding:17px 18px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 18px 40px -28px rgba(28,30,50,.4)">
+            <div style="font-size:11.5px;font-weight:600;color:#9499ad">Daily tickets</div>
+            <div style="font-size:26px;font-weight:800;letter-spacing:-.02em;margin:8px 0 5px">1,284</div>
+            <span style="font-size:11px;font-weight:700;color:#d4654a;background:#fdeee9;padding:3px 9px;border-radius:20px">↑ 18%</span>
+          </div>
+          <div class="dvfu" style="background:linear-gradient(140deg,#1a1d29,#34304f);border-radius:16px;padding:17px 18px;color:#fff">
+            <div style="font-size:11.5px;font-weight:600;color:#b3b1d6">Active anomalies</div>
+            <div style="font-size:26px;font-weight:800;letter-spacing:-.02em;margin:8px 0 5px">3</div>
+            <span style="font-size:11px;font-weight:700;color:#ffd4c4;background:rgba(255,255,255,.13);padding:3px 9px;border-radius:20px">2 high · 1 medium</span>
+          </div>
+        </div>
+        <!-- chart + anomalies -->
+        <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:16px">
+          <div style="background:#fff;border-radius:18px;padding:20px 22px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 18px 40px -28px rgba(28,30,50,.4)">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+              <div style="font-size:14.5px;font-weight:700">Revenue &amp; forecast</div>
+              <button onClick="{{ goForecasts }}" style="font-size:11.5px;font-weight:700;color:var(--ac)">Open forecast →</button>
+            </div>
+            <svg viewBox="0 0 320 150" preserveAspectRatio="none" style="width:100%;height:190px">
+              <defs><linearGradient id="ovg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--ac)" stop-opacity="0.20"/><stop offset="1" stop-color="var(--ac)" stop-opacity="0"/></linearGradient></defs>
+              <polygon points="0,112 26,100 52,104 78,84 104,90 130,70 156,78 182,58 200,52 200,150 0,150" fill="url(#ovg)"/>
+              <polygon points="200,44 236,34 272,32 308,20 308,52 272,58 236,58 200,58" fill="#2bb8c4" opacity="0.14"/>
+              <polyline points="0,112 26,100 52,104 78,84 104,90 130,70 156,78 182,58 200,52" fill="none" stroke="var(--ac)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+              <polyline points="200,52 236,44 272,40 308,30" fill="none" stroke="#2bb8c4" stroke-width="2.6" stroke-dasharray="5 4" stroke-linecap="round"/>
+              <circle cx="200" cy="52" r="4" fill="#fff" stroke="var(--ac)" stroke-width="2.4"/>
+            </svg>
+            <div style="display:flex;gap:18px;margin-top:8px;font-size:10.5px;font-weight:600;color:#71768a"><span style="color:var(--ac)">● Actual</span><span style="color:#2bb8c4">● Forecast (95% CI)</span></div>
+          </div>
+          <div style="background:#fff;border-radius:18px;padding:20px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 18px 40px -28px rgba(28,30,50,.4)">
+            <div style="font-size:14.5px;font-weight:700;margin-bottom:13px">Needs your attention</div>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <button onClick="{{ askSpike }}" style="display:flex;gap:11px;align-items:flex-start;padding:11px;border-radius:12px;background:#fdeee9;text-align:left;width:100%" style-hover="filter:brightness(.98)"><span style="width:8px;height:8px;border-radius:50%;background:#e2603f;margin-top:4px;flex:none"></span><span><span style="display:block;font-size:12.5px;font-weight:700">Ticket spike · EMEA</span><span style="font-size:11px;color:#9499ad;font-weight:500">+142% vs 7-day avg · ask why →</span></span></button>
+              <div style="display:flex;gap:11px;align-items:flex-start;padding:11px;border-radius:12px;background:#fdf6e8"><span style="width:8px;height:8px;border-radius:50%;background:#d9a23a;margin-top:4px;flex:none"></span><span><span style="display:block;font-size:12.5px;font-weight:700">Revenue dip · Enterprise</span><span style="font-size:11px;color:#9499ad;font-weight:500">−8.3% week over week</span></span></div>
+              <div style="display:flex;gap:11px;align-items:flex-start;padding:11px;border-radius:12px;background:var(--ac-soft)"><span style="width:8px;height:8px;border-radius:50%;background:var(--ac);margin-top:4px;flex:none"></span><span><span style="display:block;font-size:12.5px;font-weight:700">Churn risk · 12 accounts</span><span style="font-size:11px;color:#9499ad;font-weight:500">flagged by predictive agent</span></span></div>
+            </div>
+          </div>
+        </div>
+        <!-- composer -->
+        <div onClick="{{ goChat }}" style="display:flex;align-items:center;gap:12px;border-radius:14px;background:#fff;padding:15px 18px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 14px 30px -24px rgba(28,30,50,.35);cursor:text" style-hover="box-shadow:0 10px 26px -16px rgba(109,77,255,.5)">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--ac-logo);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px">✦</div>
+          <span style="flex:1;font-size:13.5px;color:#9499ad">Ask Datacon anything about your business…</span>
+          <span style="font-size:12px;font-weight:700;color:#fff;background:var(--ac-grad);padding:9px 16px;border-radius:11px">Ask ✦</span>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ======== CONNECTORS ======== -->
+    <sc-if value="{{ isConnectors }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;overflow-y:auto">
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:24px 32px 16px">
+        <div>
+          <h1 style="margin:0;font-size:21px;font-weight:800;letter-spacing:-.02em">Data connectors</h1>
+          <div style="font-size:12.5px;color:#9499ad;margin-top:3px">Seven engines supported · secrets encrypted with Fernet at rest</div>
+        </div>
+        <sc-if value="{{ canManage }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ openConnModal }}" style="display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:11px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700" style-hover="filter:brightness(1.06)">+ Add connector</button>
+        </sc-if>
+        <sc-if value="{{ cantManage }}" hint-placeholder-val="{{ false }}">
+          <span style="display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#9499ad;background:#f0f1f6;padding:9px 13px;border-radius:11px">🔒 View-only · ask an admin to change connections</span>
+        </sc-if>
+      </header>
+      <div style="padding:6px 32px 32px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:1080px">
+        <sc-for list="{{ connectorView }}" as="c" hint-placeholder-count="4">
+          <div style="background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 16px 36px -28px rgba(28,30,50,.4)">
+            <div style="display:flex;align-items:flex-start;gap:13px">
+              <div style="width:42px;height:42px;border-radius:12px;background:{{ c.letterBg }};color:{{ c.letterFg }};font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;flex:none">{{ c.letter }}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14px;font-weight:700">{{ c.name }}</div>
+                <div style="font-size:11.5px;color:#9499ad">{{ c.type }} · every {{ c.interval }}</div>
+              </div>
+              <span style="display:inline-flex;align-items:center;gap:6px;font:600 10px 'IBM Plex Mono',monospace;color:{{ c.statusColor }};background:{{ c.statusBg }};padding:5px 9px;border-radius:7px"><span style="width:6px;height:6px;border-radius:50%;background:{{ c.dot }};{{ c.dotAnim }}"></span>{{ c.statusLabel }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:13px;border-top:1px solid var(--ac-bg)">
+              <span style="font:500 10px 'IBM Plex Mono',monospace;color:#aeb2c4">🔒 secrets ***</span>
+              <span style="font-size:11px;color:#9499ad">· last sync {{ c.last }}</span>
+              <span style="flex:1"></span>
+              <sc-if value="{{ c.canManage }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ c.onSync }}" style="font-size:11.5px;font-weight:700;color:var(--ac);padding:5px 9px;border-radius:7px" style-hover="background:var(--ac-soft)">Sync now</button>
+                <button onClick="{{ c.onDelete }}" style="font-size:11.5px;font-weight:700;color:#d4654a;padding:5px 9px;border-radius:7px" style-hover="background:#fdeee9">Delete</button>
+              </sc-if>
+              <sc-if value="{{ c.locked }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ c.onBlocked }}" style="font-size:11.5px;font-weight:700;color:#b0b4c6;padding:5px 9px;border-radius:7px">🔒 Locked</button>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- imported tables catalog -->
+      <div style="padding:6px 32px 36px;max-width:1080px">
+        <div style="display:flex;align-items:center;gap:12px;margin:10px 0 14px">
+          <div style="font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;color:#a3a8bd">UNIFIED DATA STORE · CATALOG</div>
+          <div style="flex:1;height:1px;background:#e9eaf2"></div>
+          <span style="font-size:11.5px;color:#9499ad;font-weight:600">{{ tableCount }} tables imported</span>
+        </div>
+        <div style="background:#fff;border-radius:16px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 16px 36px -30px rgba(28,30,50,.4);overflow:hidden">
+          <div style="display:grid;grid-template-columns:1.4fr 1.2fr 160px 120px 92px;gap:0;padding:12px 18px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#9499ad;border-bottom:1px solid var(--ac-bg)">
+            <span>TABLE</span><span>SOURCE</span><span>SHAPE</span><span>STATUS</span><span style="text-align:right">ACTION</span>
+          </div>
+          <sc-for list="{{ tableView }}" as="tb" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:1.4fr 1.2fr 160px 120px 92px;gap:0;padding:13px 18px;border-bottom:1px solid #f3f4f9;align-items:center">
+              <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                <span style="width:26px;height:26px;border-radius:8px;background:{{ tb.letterBg }};color:{{ tb.letterFg }};font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none">{{ tb.letter }}</span>
+                <span style="font-size:13px;font-weight:700;font-family:'IBM Plex Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ tb.name }}</span>
+              </div>
+              <span style="font-size:12px;color:#5a5f72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ tb.source }}</span>
+              <span style="font-size:11.5px;color:#9499ad;font-family:'IBM Plex Mono',monospace">{{ tb.shape }}</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:{{ tb.statusColor }};justify-self:start"><span style="width:7px;height:7px;border-radius:50%;background:{{ tb.statusColor }};{{ tb.anim }}"></span>{{ tb.statusLabel }}</span>
+              <button onClick="{{ tb.onView }}" style="justify-self:end;display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--ac);padding:6px 11px;border-radius:8px;border:1px solid #e9eaf2;background:#fff" style-hover="border-color:var(--ac-ring);background:var(--ac-softer)">View table</button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- table preview modal -->
+    <sc-if value="{{ showTableModal }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeTable }}" style="position:fixed;inset:0;background:rgba(26,29,41,.42);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:42">
+      <div onClick="{{ stop }}" class="dvfu" style="width:760px;max-width:94vw;max-height:86vh;display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,29,41,.5)">
+        <div style="display:flex;align-items:center;gap:12px;padding:20px 22px;border-bottom:1px solid var(--ac-bg)">
+          <span style="width:34px;height:34px;border-radius:10px;background:{{ tableModal.letterBg }};color:{{ tableModal.letterFg }};font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none">{{ tableModal.letter }}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:800;font-family:'IBM Plex Mono',monospace">{{ tableModal.name }}</div>
+            <div style="font-size:11.5px;color:#9499ad">{{ tableModal.source }} · {{ tableModal.shape }}</div>
+          </div>
+          <span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:{{ tableModal.statusColor }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ tableModal.statusColor }}"></span>{{ tableModal.statusLabel }}</span>
+          <button onClick="{{ closeTable }}" style="font-size:18px;color:#9499ad;margin-left:4px">✕</button>
+        </div>
+        <div style="overflow:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr>
+              <sc-for list="{{ tableModal.columns }}" as="col" hint-placeholder-count="6">
+                <th style="position:sticky;top:0;text-align:left;padding:11px 14px;background:#f7f8fc;border-bottom:1px solid #e9eaf2;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.05em;color:#71768a;white-space:nowrap">{{ col }}</th>
+              </sc-for>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ tableModal.rows }}" as="row" hint-placeholder-count="4">
+                <tr>
+                  <sc-for list="{{ row }}" as="cell" hint-placeholder-count="6">
+                    <td style="padding:10px 14px;border-bottom:1px solid #f3f4f9;font-family:'IBM Plex Mono',monospace;color:#3a3d4c;white-space:nowrap">{{ cell }}</td>
+                  </sc-for>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 22px;border-top:1px solid var(--ac-bg)">
+          <span style="font-size:11.5px;color:#9499ad">Showing {{ tableModal.previewCount }} of {{ tableModal.rowsTotal }} rows · read-only preview</span>
+          <span style="flex:1"></span>
+          <button onClick="{{ closeTable }}" style="padding:9px 16px;border-radius:10px;border:1px solid #e2e4ee;background:#fff;font-size:12.5px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Close</button>
+          <button onClick="{{ tableModal.onAsk }}" style="padding:9px 16px;border-radius:10px;background:var(--ac-grad);color:#fff;font-size:12.5px;font-weight:700">Ask about this table ✦</button>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+    </sc-if>
+
+    <!-- ======== DOCUMENTS ======== -->
+    <sc-if value="{{ isDocuments }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;overflow-y:auto">
+      <header style="padding:28px 32px 14px;max-width:1120px">
+        <div style="font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.2em;color:#9489c4;margin-bottom:10px">DATA SOURCES</div>
+        <h1 style="margin:0;font-size:30px;font-weight:800;letter-spacing:-.03em">Your governed data inventory.</h1>
+        <p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:#71768a;max-width:680px">CSV datasets feed the Descriptive agent's structured queries. PDF &amp; TXT files feed the RAG pipeline that the Diagnostic agent cites in its answers.</p>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button onClick="{{ refreshSources }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring);background:var(--ac-softer)">↻ Refresh</button>
+          <sc-if value="{{ canUpload }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openSourceModal }}" style="display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:11px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700;box-shadow:0 8px 20px -8px rgba(109,77,255,.6)" style-hover="filter:brightness(1.06)">↑ New source</button></sc-if>
+        </div>
+      </header>
+      <div style="padding:14px 32px 36px;max-width:1120px">
+        <sc-if value="{{ cantUpload }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-bottom:16px;border:1px solid #e9eaf2;border-radius:14px;background:#f7f8fc;padding:16px 18px;display:flex;gap:12px;align-items:center">
+            <span style="font-size:18px">🔒</span>
+            <div><div style="font-size:13px;font-weight:700">Uploading is restricted to analysts and admins</div><div style="font-size:11.5px;color:#9499ad;margin-top:2px">You're viewing as a Viewer — switch to Sarah or Tom to add data sources.</div></div>
+          </div>
+        </sc-if>
+
+        <!-- inventory table -->
+        <div style="background:#fff;border-radius:16px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 16px 36px -30px rgba(28,30,50,.4);overflow:hidden">
+          <div style="display:grid;grid-template-columns:minmax(150px,1.7fr) 66px 118px 118px 160px;gap:0;padding:14px 20px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#9499ad;border-bottom:1px solid var(--ac-bg)">
+            <span>NAME</span><span>TYPE</span><span>SIZE</span><span>STATUS</span><span>UPLOADED</span>
+          </div>
+          <sc-for list="{{ documentView }}" as="d" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:minmax(150px,1.7fr) 66px 118px 118px 160px;gap:0;padding:15px 20px;border-bottom:1px solid #f3f4f9;align-items:center">
+              <div style="display:flex;align-items:center;gap:13px;min-width:0">
+                <span style="width:36px;height:36px;border-radius:10px;background:{{ d.typeBg }};color:{{ d.typeFg }};font:700 9px 'IBM Plex Mono',monospace;display:flex;align-items:center;justify-content:center;flex:none">{{ d.type }}</span>
+                <div style="min-width:0">
+                  <div style="font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.title }}</div>
+                  <div style="font:500 11px 'IBM Plex Mono',monospace;color:#9499ad;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.file }}</div>
+                </div>
+              </div>
+              <span style="font-size:12px;font-weight:600;color:#71768a">{{ d.type }}</span>
+              <span style="font-size:12px;color:#71768a">{{ d.sizeText }}</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:{{ d.statusColor }};justify-self:start"><span style="width:16px;height:16px;border-radius:50%;background:{{ d.statusColor }};color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;{{ d.anim }}">{{ d.statusIcon }}</span>{{ d.statusLabel }}</span>
+              <div style="line-height:1.35"><div style="font-size:11.5px;color:#5a5f72">{{ d.uploadedAt }}</div><div style="font:500 10.5px 'IBM Plex Mono',monospace;color:#b0b4c6">{{ d.by }}</div></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ======== FORECASTS ======== -->
+    <sc-if value="{{ isForecasts }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;overflow-y:auto">
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:24px 32px 16px;flex-wrap:wrap;gap:14px">
+        <div>
+          <h1 style="margin:0;font-size:21px;font-weight:800;letter-spacing:-.02em">Forecast · Revenue</h1>
+          <div style="font-size:12.5px;color:#9499ad;margin-top:3px">Predictive agent · raw NumPy time-series, 95% confidence intervals</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="display:flex;background:#f0f1f6;border-radius:10px;padding:3px">
+            <button onClick="{{ setOLS }}" style="padding:7px 13px;border-radius:8px;font-size:12px;font-weight:700;background:{{ olsBg }};color:{{ olsColor }}">OLS</button>
+            <button onClick="{{ setHW }}" style="padding:7px 13px;border-radius:8px;font-size:12px;font-weight:700;background:{{ hwBg }};color:{{ hwColor }}">Holt-Winters</button>
+          </div>
+        </div>
+      </header>
+      <div style="padding:6px 32px 32px;max-width:1080px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:grid;grid-template-columns:140px 140px 140px 1fr;gap:14px;align-items:center;background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 2px 6px rgba(28,30,50,.05)">
+          <div><div style="font:600 9.5px 'IBM Plex Mono',monospace;color:#9499ad">PROJECTED</div><div style="font-size:22px;font-weight:800;margin-top:4px">{{ fProj }}</div></div>
+          <div><div style="font:600 9.5px 'IBM Plex Mono',monospace;color:#9499ad">95% CI</div><div style="font-size:15px;font-weight:800;margin-top:7px">{{ fLo }}–{{ fHi }}</div></div>
+          <div><div style="font:600 9.5px 'IBM Plex Mono',monospace;color:#9499ad">GROWTH</div><div style="font-size:22px;font-weight:800;color:#0f8a5c;margin-top:4px">{{ fGrowth }}</div></div>
+          <div style="justify-self:end;text-align:right">
+            <div style="font:600 9.5px 'IBM Plex Mono',monospace;color:#9499ad;margin-bottom:7px">HORIZON · {{ fHorizonLabel }}</div>
+            <div style="display:flex;gap:6px">
+              <button onClick="{{ setH3 }}" style="padding:6px 11px;border-radius:8px;font-size:11.5px;font-weight:700;background:{{ h3bg }};color:{{ h3color }}">3 mo</button>
+              <button onClick="{{ setH6 }}" style="padding:6px 11px;border-radius:8px;font-size:11.5px;font-weight:700;background:{{ h6bg }};color:{{ h6color }}">6 mo</button>
+              <button onClick="{{ setH12 }}" style="padding:6px 11px;border-radius:8px;font-size:11.5px;font-weight:700;background:{{ h12bg }};color:{{ h12color }}">12 mo</button>
+            </div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:18px;padding:22px 24px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 18px 44px -28px rgba(28,30,50,.4)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+            <div style="font-size:14.5px;font-weight:700">{{ fModel }} projection · {{ fHorizonLabel }}</div>
+            <div style="font:500 11px 'IBM Plex Mono',monospace;color:#9499ad">MAPE {{ fMape }}</div>
+          </div>
+          <svg viewBox="0 0 320 150" preserveAspectRatio="none" style="width:100%;height:240px">
+            <line x1="0" y1="30" x2="320" y2="30" stroke="var(--ac-bg)" stroke-width="1"/><line x1="0" y1="70" x2="320" y2="70" stroke="var(--ac-bg)" stroke-width="1"/><line x1="0" y1="110" x2="320" y2="110" stroke="var(--ac-bg)" stroke-width="1"/>
+            <polygon points="{{ fBand }}" fill="#2bb8c4" opacity="0.16"/>
+            <polyline points="0,112 26,100 52,104 78,84 104,90 130,70 156,78 182,58 200,52" fill="none" stroke="var(--ac)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+            <polyline points="{{ fLine }}" fill="none" stroke="#2bb8c4" stroke-width="2.6" stroke-dasharray="6 4" stroke-linecap="round"/>
+            <circle cx="200" cy="52" r="4.2" fill="#fff" stroke="var(--ac)" stroke-width="2.4"/>
+          </svg>
+          <div style="display:flex;gap:20px;margin-top:10px;font-size:11px;font-weight:600;color:#71768a"><span style="color:var(--ac)">● Actual (18 mo)</span><span style="color:#2bb8c4">● Forecast</span><span style="color:#9eccd4">▣ 95% confidence band</span></div>
+        </div>
+        <div style="background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 2px 6px rgba(28,30,50,.05)">
+          <div style="font-size:13.5px;font-weight:700;margin-bottom:11px">Top drivers</div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <div style="display:flex;align-items:center;gap:11px"><span style="font-size:12px;width:160px;color:#5a5f72">NA enterprise renewals</span><div style="flex:1;height:8px;background:#eceaf8;border-radius:5px;overflow:hidden"><div style="height:100%;width:74%;background:var(--ac);border-radius:5px"></div></div><span style="font-size:11.5px;font-weight:700;width:44px;text-align:right">+74%</span></div>
+            <div style="display:flex;align-items:center;gap:11px"><span style="font-size:12px;width:160px;color:#5a5f72">APAC new logos</span><div style="flex:1;height:8px;background:#eceaf8;border-radius:5px;overflow:hidden"><div style="height:100%;width:41%;background:#2bb8c4;border-radius:5px"></div></div><span style="font-size:11.5px;font-weight:700;width:44px;text-align:right">+41%</span></div>
+            <div style="display:flex;align-items:center;gap:11px"><span style="font-size:12px;width:160px;color:#5a5f72">EMEA billing recovery</span><div style="flex:1;height:8px;background:#eceaf8;border-radius:5px;overflow:hidden"><div style="height:100%;width:23%;background:#9eccd4;border-radius:5px"></div></div><span style="font-size:11.5px;font-weight:700;width:44px;text-align:right">+23%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ======== SETTINGS / USER MANAGEMENT ======== -->
+    <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;overflow-y:auto">
+      <header style="display:flex;align-items:flex-end;justify-content:space-between;padding:24px 32px 16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <h1 style="margin:0;font-size:21px;font-weight:800;letter-spacing:-.02em">{{ settingsTitle }}</h1>
+          <div style="font-size:12.5px;color:#9499ad;margin-top:3px">{{ settingsSub }}</div>
+        </div>
+        <sc-if value="{{ canManageUsers }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ isSettingsUsers }}" hint-placeholder-val="{{ true }}"><button onClick="{{ openUserEditorNew }}" style="display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:11px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700" style-hover="filter:brightness(1.06)">+ Create user</button></sc-if>
+          <sc-if value="{{ isSettingsRoles }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openRoleEditorNew }}" style="display:flex;align-items:center;gap:7px;padding:10px 16px;border-radius:11px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700" style-hover="filter:brightness(1.06)">+ Create role</button></sc-if>
+        </sc-if>
+      </header>
+
+      <!-- ===== APPEARANCE PAGE (removed — now in Themes screen) ===== -->
+
+      <!-- gate: non-admins (RBAC pages only) -->
+      <sc-if value="{{ showAdminGate }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:6px 32px 32px;max-width:640px">
+          <div style="border:1px solid #e9eaf2;border-radius:16px;background:#f7f8fc;padding:24px;display:flex;gap:14px;align-items:center">
+            <span style="font-size:26px">🔒</span>
+            <div><div style="font-size:14px;font-weight:700">Admin access required</div><div style="font-size:12.5px;color:#9499ad;margin-top:3px;line-height:1.5">User, role and permission management is limited to admins. Switch to Tom (Admin) in the sidebar to manage access.</div></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ canManageUsers }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:6px 32px 36px;max-width:1080px">
+
+        <!-- ===== USERS PAGE ===== -->
+        <sc-if value="{{ isSettingsUsers }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#fff;border-radius:16px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 16px 36px -30px rgba(28,30,50,.4);overflow:hidden">
+            <div style="display:grid;grid-template-columns:1.5fr 1fr 150px 96px;gap:0;padding:12px 18px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#9499ad;border-bottom:1px solid var(--ac-bg)">
+              <span>USER</span><span>ROLE</span><span>PERMISSIONS</span><span style="text-align:right">ACTIONS</span>
+            </div>
+            <sc-for list="{{ usersPage }}" as="u" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.5fr 1fr 150px 96px;gap:0;padding:13px 18px;border-bottom:1px solid #f3f4f9;align-items:center">
+                <div style="display:flex;align-items:center;gap:11px;min-width:0">
+                  <div style="width:34px;height:34px;border-radius:50%;background:{{ u.grad }};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none">{{ u.initials }}</div>
+                  <div style="min-width:0"><div style="font-size:13px;font-weight:700">{{ u.name }} <sc-if value="{{ u.isSelf }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;font-weight:600;color:#9499ad">· you</span></sc-if></div><div style="font-size:11.5px;color:#9499ad;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.email }}</div></div>
+                </div>
+                <span style="justify-self:start;font:600 10px 'IBM Plex Mono',monospace;color:{{ u.roleColor }};background:{{ u.roleBg }};padding:5px 10px;border-radius:7px">{{ u.roleLabel }}</span>
+                <span style="font-size:12px;color:#71768a">{{ u.permCount }} granted</span>
+                <div style="justify-self:end;display:flex;gap:4px">
+                  <button onClick="{{ u.onEdit }}" title="Edit" style="font-size:12px;font-weight:700;color:var(--ac);padding:6px 9px;border-radius:8px" style-hover="background:var(--ac-soft)">Edit</button>
+                  <sc-if value="{{ u.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ u.onDelete }}" title="Delete" style="font-size:13px;color:#c9ccd8;padding:6px 8px;border-radius:8px" style-hover="color:#d4654a;background:#fdeee9">🗑</button></sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- ===== ROLES PAGE ===== -->
+        <sc-if value="{{ isSettingsRoles }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+            <sc-for list="{{ rolesPage }}" as="r" hint-placeholder-count="3">
+              <div style="background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 16px 36px -30px rgba(28,30,50,.4)">
+                <div style="display:flex;align-items:flex-start;gap:11px">
+                  <span style="width:38px;height:38px;border-radius:11px;background:{{ r.bg }};color:{{ r.color }};font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;flex:none">🛡</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;font-weight:800">{{ r.name }}</span><sc-if value="{{ r.system }}" hint-placeholder-val="{{ false }}"><span style="font:600 9px 'IBM Plex Mono',monospace;color:#9499ad;background:#f0f1f6;padding:2px 6px;border-radius:5px">SYSTEM</span></sc-if></div>
+                    <div style="font-size:11.5px;color:#9499ad;margin-top:2px">{{ r.permCount }} permissions · {{ r.userCount }} users</div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin:13px 0 14px">
+                  <sc-for list="{{ r.permNames }}" as="pn" hint-placeholder-count="3"><span style="font-size:10.5px;font-weight:600;color:#5a5f72;background:#f5f6fb;padding:4px 8px;border-radius:6px">{{ pn }}</span></sc-for>
+                  <sc-if value="{{ r.moreCount }}" hint-placeholder-val="{{ false }}"><span style="font-size:10.5px;font-weight:600;color:#9499ad;padding:4px 4px">+{{ r.moreCount }} more</span></sc-if>
+                </div>
+                <div style="display:flex;gap:8px;padding-top:13px;border-top:1px solid #f3f4f9">
+                  <button onClick="{{ r.onEdit }}" style="font-size:12px;font-weight:700;color:var(--ac);padding:7px 12px;border-radius:8px;border:1px solid #e9eaf2;background:#fff" style-hover="border-color:var(--ac-ring);background:var(--ac-softer)">Edit permissions</button>
+                  <span style="flex:1"></span>
+                  <sc-if value="{{ r.system }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;color:#c9ccd8;padding:7px 4px">🔒 Protected</span></sc-if>
+                  <sc-if value="{{ r.system }}" hint-placeholder-val="{{ false }}"></sc-if>
+                  <button onClick="{{ r.onDelete }}" style="font-size:12px;font-weight:700;color:#d4654a;padding:7px 11px;border-radius:8px" style-hover="background:#fdeee9">Delete</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- ===== ASSIGN PAGE ===== -->
+        <sc-if value="{{ isSettingsAssign }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border-radius:16px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 16px 36px -30px rgba(28,30,50,.4);overflow:hidden">
+            <div style="display:grid;grid-template-columns:1.6fr 1fr 120px;gap:0;padding:12px 18px;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#9499ad;border-bottom:1px solid var(--ac-bg)">
+              <span>USER</span><span>CURRENT ROLE</span><span style="text-align:right">ACTION</span>
+            </div>
+            <sc-for list="{{ assignPage }}" as="u" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.6fr 1fr 120px;gap:0;padding:13px 18px;border-bottom:1px solid #f3f4f9;align-items:center">
+                <div style="display:flex;align-items:center;gap:11px;min-width:0">
+                  <div style="width:34px;height:34px;border-radius:50%;background:{{ u.grad }};color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none">{{ u.initials }}</div>
+                  <div style="min-width:0"><div style="font-size:13px;font-weight:700">{{ u.name }}</div><div style="font-size:11.5px;color:#9499ad;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.email }}</div></div>
+                </div>
+                <span style="justify-self:start;font:600 10px 'IBM Plex Mono',monospace;color:{{ u.roleColor }};background:{{ u.roleBg }};padding:5px 10px;border-radius:7px">{{ u.roleLabel }}</span>
+                <button onClick="{{ u.onAssign }}" style="justify-self:end;font-size:12px;font-weight:700;color:var(--ac);padding:7px 12px;border-radius:8px;border:1px solid #e9eaf2;background:#fff" style-hover="border-color:var(--ac-ring);background:var(--ac-softer)">Change role</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- ===== PERMISSIONS PAGE ===== -->
+        <sc-if value="{{ isSettingsPerms }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;justify-content:flex-end;gap:9px;margin-bottom:14px">
+            <sc-if value="{{ permEditing }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ cancelPermEdit }}" style="font-size:12.5px;font-weight:700;color:#5a5f72;padding:9px 15px;border-radius:10px;border:1px solid #e2e4ee;background:#fff" style-hover="border-color:var(--ac-ring)">Cancel</button>
+              <button onClick="{{ savePerms }}" style="font-size:12.5px;font-weight:700;color:#fff;padding:9px 16px;border-radius:10px;background:var(--ac-grad)" style-hover="filter:brightness(1.06)">Apply changes</button>
+            </sc-if>
+            <sc-if value="{{ permReadonly }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ startPermEdit }}" style="font-size:12.5px;font-weight:700;color:var(--ac);padding:9px 16px;border-radius:10px;border:1px solid #e9eaf2;background:#fff" style-hover="border-color:var(--ac-ring);background:var(--ac-softer)">Edit permissions</button>
+            </sc-if>
+          </div>
+          <div style="background:#fff;border-radius:16px;box-shadow:0 2px 6px rgba(28,30,50,.05),0 16px 36px -30px rgba(28,30,50,.4);overflow:hidden">
+            <div style="display:grid;grid-template-columns:1fr {{ permColTemplate }};gap:0;padding:14px 18px;border-bottom:1px solid var(--ac-bg);align-items:center">
+              <span style="font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#9499ad">PERMISSION</span>
+              <sc-for list="{{ permCols }}" as="c" hint-placeholder-count="3"><span style="text-align:center;font:700 10px 'IBM Plex Mono',monospace;color:{{ c.color }}">{{ c.name }}</span></sc-for>
+            </div>
+            <sc-for list="{{ permMatrix }}" as="row" hint-placeholder-count="7">
+              <div style="display:grid;grid-template-columns:1fr {{ permColTemplate }};gap:0;padding:12px 18px;border-bottom:1px solid #f3f4f9;align-items:center">
+                <div style="min-width:0"><div style="font-size:12.5px;font-weight:600">{{ row.label }}</div><div style="font:500 9.5px 'IBM Plex Mono',monospace;color:#b0b4c6;letter-spacing:.05em">{{ row.group }}</div></div>
+                <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="3">
+                  <div style="display:flex;justify-content:center">
+                    <sc-if value="{{ cell.editing }}" hint-placeholder-val="{{ false }}">
+                      <button onClick="{{ cell.onToggle }}" style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:{{ cell.toggleBg }};color:{{ cell.toggleColor }};border:1.5px solid {{ cell.toggleBorder }}" style-hover="border-color:var(--ac)">{{ cell.mark }}</button>
+                    </sc-if>
+                    <sc-if value="{{ cell.readonly }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-size:14px;color:{{ cell.roColor }}">{{ cell.roMark }}</span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+      </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <!-- ======== THEMES ======== -->
+    <sc-if value="{{ isThemes }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;overflow-y:auto">
+      <header style="padding:24px 32px 16px">
+        <h1 style="margin:0;font-size:21px;font-weight:800;letter-spacing:-.02em">Themes</h1>
+        <div style="font-size:12.5px;color:#9499ad;margin-top:3px">Choose a premium theme or craft your own accent</div>
+      </header>
+      <div style="padding:6px 32px 36px;max-width:900px">
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:18px">
+          <sc-for list="{{ themePresets }}" as="t" hint-placeholder-count="4">
+            <button onClick="{{ t.onClick }}" style="text-align:left;background:#fff;border-radius:16px;padding:16px;border:2px solid {{ t.ring }};box-shadow:0 2px 6px rgba(28,30,50,.05),0 16px 36px -30px rgba(28,30,50,.4)" style-hover="border-color:{{ t.ac }}">
+              <div style="display:flex;align-items:center;gap:13px">
+                <span style="width:52px;height:52px;border-radius:13px;background:{{ t.grad }};flex:none;box-shadow:0 8px 18px -8px {{ t.ac }}"></span>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="font-size:14.5px;font-weight:800">{{ t.name }}</span><sc-if value="{{ t.active }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;font-weight:800;color:#fff;background:{{ t.ac }};padding:2px 8px;border-radius:20px">ACTIVE</span></sc-if></div>
+                  <div style="font-size:12px;color:#9499ad;margin-top:2px">{{ t.desc }}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:14px">
+                <span style="flex:1;height:8px;border-radius:5px;background:{{ t.ac }}"></span>
+                <span style="flex:1;height:8px;border-radius:5px;background:{{ t.ac2 }}"></span>
+                <span style="width:34px;height:8px;border-radius:5px;background:{{ t.tint }}"></span>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+        <div style="background:#fff;border-radius:16px;padding:18px;border:2px solid {{ customRing }};box-shadow:0 2px 6px rgba(28,30,50,.05),0 16px 36px -30px rgba(28,30,50,.4)">
+          <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:14px">
+            <label style="width:52px;height:52px;border-radius:13px;background:var(--ac-grad);flex:none;position:relative;cursor:pointer;box-shadow:0 8px 18px -8px var(--ac);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px">🎨
+              <input type="color" value="{{ customAccent }}" onInput="{{ onCustomAccent }}" style="position:absolute;inset:0;opacity:0;cursor:pointer"/>
+            </label>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px"><span style="font-size:14.5px;font-weight:800">Custom</span><sc-if value="{{ customActive }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;font-weight:800;color:#fff;background:var(--ac);padding:2px 8px;border-radius:20px">ACTIVE</span></sc-if></div>
+              <div style="font-size:12px;color:#9499ad;margin-top:2px">Pick any accent · <span style="font-family:'IBM Plex Mono',monospace">{{ customAccent }}</span></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;justify-content:flex-start">
+            <label style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:10px;border:1px solid #e2e4ee;cursor:pointer;font-size:12.5px;font-weight:600;color:#5a5f72">
+              <span style="width:20px;height:20px;border-radius:6px;background:{{ customAccent }};flex:none"></span>Choose color
+              <input type="color" value="{{ customAccent }}" onInput="{{ onCustomAccent }}" style="width:0;height:0;opacity:0"/>
+            </label>
+            <button onClick="{{ applyCustom }}" style="padding:9px 18px;border-radius:10px;background:var(--ac-grad);color:#fff;font-size:12.5px;font-weight:700" style-hover="filter:brightness(1.05)">Apply</button>
+          </div>
+        </div>
+        <div style="margin-top:16px;font-size:12px;color:#9499ad;display:flex;align-items:center;gap:8px"><span>✨</span>Themes apply instantly across the whole workspace and persist while you explore.</div>
+      </div>
+    </div>
+    </sc-if>
+
+  </main>
+
+  <!-- ======== CONNECTOR MODAL ======== -->
+  <sc-if value="{{ showConnModal }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeConnModal }}" style="position:fixed;inset:0;background:rgba(26,29,41,.42);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:40">
+    <div onClick="{{ stop }}" class="dvfu" style="width:520px;max-width:92vw;max-height:90vh;overflow-y:auto;background:#fff;border-radius:18px;padding:24px;box-shadow:0 30px 70px -20px rgba(26,29,41,.5)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div style="font-size:17px;font-weight:800;letter-spacing:-.01em">Add data connector</div>
+        <button onClick="{{ closeConnModal }}" style="font-size:18px;color:#9499ad">✕</button>
+      </div>
+      <!-- STEP 1 · pick engine -->
+      <sc-if value="{{ connStepPick }}" hint-placeholder-val="{{ true }}">
+      <p style="margin:0 0 14px;font-size:12.5px;color:#9499ad">Choose the engine you want to connect — you'll configure it next.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <sc-for list="{{ engineChips }}" as="e" hint-placeholder-count="7">
+          <button onClick="{{ e.onClick }}" style="display:flex;gap:10px;align-items:flex-start;text-align:left;padding:11px 12px;border-radius:12px;background:{{ e.bg }};border:1px solid {{ e.border }};box-shadow:{{ e.shadow }}" style-hover="border-color:var(--ac-ring)">
+            <span style="width:30px;height:30px;border-radius:9px;background:{{ e.letterBg }};color:{{ e.letterFg }};font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none">{{ e.letter }}</span>
+            <span style="min-width:0">
+              <span style="display:block;font-size:12.5px;font-weight:700;color:{{ e.nameColor }};line-height:1.25">{{ e.name }}</span>
+              <span style="display:block;font-size:10.5px;color:#9499ad;line-height:1.35;margin-top:3px">{{ e.desc }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+      </sc-if>
+
+      <!-- STEP 2 · configure -->
+      <sc-if value="{{ connStepConfig }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:18px">
+        <span style="width:26px;height:26px;border-radius:8px;background:{{ activeEngine.letterBg }};color:{{ activeEngine.letterFg }};font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none">{{ activeEngine.letter }}</span>
+        <span style="font-size:13.5px;font-weight:700">{{ activeEngine.name }}</span>
+        <button onClick="{{ backToPick }}" style="font-size:12px;font-weight:700;color:var(--ac);margin-left:2px" style-hover="text-decoration:underline">Change</button>
+      </div>
+
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:6px">CONNECTOR NAME</label>
+      <input value="{{ connDraft.name }}" onInput="{{ onConnName }}" placeholder="{{ activeEngine.name }}" style="width:100%;padding:10px 12px;border:1px solid #e2e4ee;border-radius:10px;font-size:13px;margin-bottom:15px" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)"/>
+
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:6px">{{ activeEngine.primaryLabelUpper }} <span style="color:#e2603f">*</span></label>
+      <input type="{{ activeEngine.primaryType }}" value="{{ connDraft.host }}" onInput="{{ onConnHost }}" placeholder="{{ activeEngine.primaryPh }}" style="width:100%;padding:10px 12px;border:1px solid #e2e4ee;border-radius:10px;font-size:13px;margin-bottom:{{ activeEngine.primaryMb }};font-family:{{ activeEngine.primaryFont }}" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)"/>
+      <sc-if value="{{ activeEngine.primaryHasHelp }}" hint-placeholder-val="{{ true }}"><div style="font-size:11px;color:#9499ad;margin-bottom:15px">{{ activeEngine.primaryHelp }}</div></sc-if>
+
+      <sc-for list="{{ activeEngine.secondary }}" as="f" hint-placeholder-count="0">
+        <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:6px">{{ f.labelUpper }} <sc-if value="{{ f.req }}" hint-placeholder-val="{{ false }}"><span style="color:#e2603f">*</span></sc-if></label>
+        <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
+        <select defaultValue="{{ f.value }}" style="width:100%;padding:10px 12px;border:1px solid #e2e4ee;border-radius:10px;font-size:13px;margin-bottom:{{ f.mb }};background:#fff;color:#1a1d29" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)">
+          <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="0"><option>{{ o }}</option></sc-for>
+        </select>
+        </sc-if>
+        <sc-if value="{{ f.isTextarea }}" hint-placeholder-val="{{ false }}">
+        <textarea placeholder="{{ f.ph }}" rows="4" style="width:100%;padding:10px 12px;border:1px solid #e2e4ee;border-radius:10px;font-size:12px;margin-bottom:{{ f.mb }};font-family:'IBM Plex Mono',monospace;resize:vertical;line-height:1.5;color:#1a1d29" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)"></textarea>
+        </sc-if>
+        <sc-if value="{{ f.isInput }}" hint-placeholder-val="{{ true }}">
+        <input type="{{ f.type }}" placeholder="{{ f.ph }}" style="width:100%;padding:10px 12px;border:1px solid #e2e4ee;border-radius:10px;font-size:13px;margin-bottom:{{ f.mb }};font-family:{{ f.font }}" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)"/>
+        </sc-if>
+        <sc-if value="{{ f.hasHelp }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#9499ad;margin-bottom:15px">{{ f.help }}</div></sc-if>
+      </sc-for>
+
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:6px">SYNC SCHEDULE</label>
+      <select value="{{ connDraft.schedule }}" onChange="{{ onSchedule }}" style="width:100%;padding:10px 12px;border:1px solid #e2e4ee;border-radius:10px;font-size:13px;margin-bottom:17px;background:#fff;color:#1a1d29" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)">
+        <option>Manual only</option>
+        <option>Every 15 minutes</option>
+        <option>Every 30 minutes</option>
+        <option>Hourly</option>
+        <option>Daily</option>
+      </select>
+
+      <!-- test result -->
+      <sc-if value="{{ testTesting }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:10px;background:#f0f1f6;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#5a5f72"><span style="width:14px;height:14px;border:2px solid var(--ac-ring);border-top-color:var(--ac);border-radius:50%;animation:dvspin .7s linear infinite"></span>Testing connection…</div></sc-if>
+      <sc-if value="{{ testPass }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:10px;background:#e6f7ef;margin-bottom:14px;font-size:12.5px;font-weight:700;color:#0f8a5c">✓ Connection succeeded · handshake 0.4s</div></sc-if>
+      <sc-if value="{{ testFail }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:10px;background:#fdeee9;margin-bottom:14px;font-size:12.5px;font-weight:700;color:#c0392b">✕ Couldn't connect — fill in the required field to test</div></sc-if>
+
+      <div style="display:flex;gap:10px">
+        <button onClick="{{ closeConnModal }}" style="padding:11px 18px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Cancel</button>
+        <button onClick="{{ testConn }}" style="flex:1;padding:11px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Test connection</button>
+        <button onClick="{{ saveConn }}" style="flex:1;padding:11px;border-radius:11px;background:{{ saveBg }};color:{{ saveColor }};font-size:13px;font-weight:700">Connect &amp; discover</button>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ======== USER EDITOR ======== -->
+  <sc-if value="{{ showUserEditor }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeUserEditor }}" style="position:fixed;inset:0;background:rgba(26,29,41,.42);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:44">
+    <div onClick="{{ stop }}" class="dvfu" style="width:440px;max-width:92vw;max-height:90vh;overflow-y:auto;background:#fff;border-radius:18px;padding:24px;box-shadow:0 30px 70px -20px rgba(26,29,41,.5)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div style="font-size:17px;font-weight:800;letter-spacing:-.01em">{{ userEditorTitle }}</div>
+        <button onClick="{{ closeUserEditor }}" style="font-size:18px;color:#9499ad">✕</button>
+      </div>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:6px">FULL NAME</label>
+      <input value="{{ userEditorName }}" onInput="{{ onUEName }}" placeholder="Jordan Lee" style="width:100%;padding:10px 12px;border:1px solid #e2e4ee;border-radius:10px;font-size:13px;margin-bottom:15px" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)"/>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:6px">WORK EMAIL</label>
+      <input value="{{ userEditorEmail }}" onInput="{{ onUEEmail }}" placeholder="jordan@acme.com" style="width:100%;padding:10px 12px;border:1px solid #e2e4ee;border-radius:10px;font-size:13px;margin-bottom:15px" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)"/>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:8px">ROLE</label>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+        <sc-for list="{{ userRoleOptions }}" as="ro" hint-placeholder-count="3">
+          <button onClick="{{ ro.onClick }}" style="display:flex;align-items:center;gap:11px;text-align:left;padding:11px 13px;border-radius:11px;background:{{ ro.bg }};border:1px solid {{ ro.border }}" style-hover="border-color:var(--ac-ring)">
+            <span style="width:9px;height:9px;border-radius:3px;background:{{ ro.color }};flex:none"></span>
+            <span style="flex:1;font-size:13px;font-weight:700">{{ ro.name }}</span>
+            <span style="font-size:11px;color:#9499ad">{{ ro.desc }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{ closeUserEditor }}" style="flex:1;padding:11px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Cancel</button>
+        <button onClick="{{ saveUser }}" style="flex:1;padding:11px;border-radius:11px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700">{{ userEditorCta }}</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ======== ROLE EDITOR ======== -->
+  <sc-if value="{{ showRoleEditor }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeRoleEditor }}" style="position:fixed;inset:0;background:rgba(26,29,41,.42);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:44">
+    <div onClick="{{ stop }}" class="dvfu" style="width:480px;max-width:92vw;max-height:90vh;overflow-y:auto;background:#fff;border-radius:18px;padding:24px;box-shadow:0 30px 70px -20px rgba(26,29,41,.5)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div style="font-size:17px;font-weight:800;letter-spacing:-.01em">{{ roleEditorTitle }}</div>
+        <button onClick="{{ closeRoleEditor }}" style="font-size:18px;color:#9499ad">✕</button>
+      </div>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:6px">ROLE NAME</label>
+      <input value="{{ roleEditorName }}" onInput="{{ onREName }}" placeholder="Finance analyst" style="width:100%;padding:10px 12px;border:1px solid #e2e4ee;border-radius:10px;font-size:13px;margin-bottom:15px" style-focus="outline:none;border-color:var(--ac);box-shadow:0 0 0 3px rgba(109,77,255,.12)"/>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:8px">COLOR</label>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <sc-for list="{{ roleColorSwatches }}" as="sw" hint-placeholder-count="7">
+          <button onClick="{{ sw.onClick }}" style="width:26px;height:26px;border-radius:8px;background:{{ sw.color }};border:2px solid {{ sw.ring }};box-shadow:{{ sw.shadow }}"></button>
+        </sc-for>
+      </div>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:8px">PERMISSIONS</label>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:18px">
+        <sc-for list="{{ roleEditorPerms }}" as="p" hint-placeholder-count="7">
+          <button onClick="{{ p.onToggle }}" style="display:flex;align-items:center;gap:11px;text-align:left;padding:10px 12px;border-radius:10px;background:{{ p.bg }};border:1px solid {{ p.border }}" style-hover="border-color:var(--ac-ring)">
+            <span style="width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:{{ p.boxBg }};color:#fff;flex:none">{{ p.mark }}</span>
+            <span style="flex:1;font-size:12.5px;font-weight:600">{{ p.label }}</span>
+            <span style="font:600 9px 'IBM Plex Mono',monospace;color:#b0b4c6">{{ p.group }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{ closeRoleEditor }}" style="flex:1;padding:11px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Cancel</button>
+        <button onClick="{{ saveRole }}" style="flex:1;padding:11px;border-radius:11px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700">{{ roleEditorCta }}</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ======== ASSIGN ROLE ======== -->
+  <sc-if value="{{ showAssign }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeAssign }}" style="position:fixed;inset:0;background:rgba(26,29,41,.42);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:44">
+    <div onClick="{{ stop }}" class="dvfu" style="width:440px;max-width:92vw;background:#fff;border-radius:18px;padding:24px;box-shadow:0 30px 70px -20px rgba(26,29,41,.5)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:17px;font-weight:800;letter-spacing:-.01em">Assign role</div>
+        <button onClick="{{ closeAssign }}" style="font-size:18px;color:#9499ad">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:11px;padding:11px;border-radius:12px;background:#f5f6fb;margin-bottom:16px">
+        <div style="width:36px;height:36px;border-radius:50%;background:{{ assignUserGrad }};color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none">{{ assignUserInitials }}</div>
+        <div><div style="font-size:13px;font-weight:700">{{ assignUserName }}</div><div style="font-size:11.5px;color:#9499ad">{{ assignUserEmail }}</div></div>
+      </div>
+      <label style="display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:#9499ad;margin-bottom:8px">SELECT ROLE</label>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+        <sc-for list="{{ assignRoleOptions }}" as="ro" hint-placeholder-count="3">
+          <button onClick="{{ ro.onClick }}" style="display:flex;align-items:center;gap:11px;text-align:left;padding:11px 13px;border-radius:11px;background:{{ ro.bg }};border:1px solid {{ ro.border }}" style-hover="border-color:var(--ac-ring)">
+            <span style="width:9px;height:9px;border-radius:3px;background:{{ ro.color }};flex:none"></span>
+            <span style="flex:1;font-size:13px;font-weight:700">{{ ro.name }}</span>
+            <span style="font-size:11px;color:#9499ad">{{ ro.desc }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{ closeAssign }}" style="flex:1;padding:11px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Cancel</button>
+        <button onClick="{{ saveAssign }}" style="flex:1;padding:11px;border-radius:11px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700">Assign role</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ======== NEW DATA SOURCE MODAL ======== -->
+  <sc-if value="{{ showSourceModal }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeSourceModal }}" style="position:fixed;inset:0;background:rgba(26,29,41,.42);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:44">
+    <div onClick="{{ stop }}" class="dvfu" style="width:480px;max-width:92vw;background:#fff;border-radius:18px;padding:24px;box-shadow:0 30px 70px -20px rgba(26,29,41,.5)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <div style="font-size:18px;font-weight:800;letter-spacing:-.01em">Upload a data source</div>
+        <button onClick="{{ closeSourceModal }}" style="font-size:18px;color:#9499ad">✕</button>
+      </div>
+      <p style="margin:0 0 18px;font-size:12.5px;color:#9499ad;line-height:1.5">Accepts CSV (structured, feeds the Descriptive agent) or PDF / TXT (unstructured, feeds the RAG pipeline). Max 10&nbsp;MB.</p>
+
+      <sc-if value="{{ uploadIdle }}" hint-placeholder-val="{{ true }}">
+        <div style="border:1.5px dashed #d5d8e4;border-radius:12px;background:#faf9fc;padding:16px 16px;display:flex;align-items:center;gap:14px;margin-bottom:22px">
+          <button onClick="{{ chooseFile }}" style="padding:8px 14px;border-radius:9px;border:1px solid #cdd0dc;background:#f0f1f5;font-size:12.5px;font-weight:700;color:#3a3d4c;white-space:nowrap;flex:none" style-hover="background:#e7e8ef;border-color:var(--ac-ring)">Choose File</button>
+          <span style="font-size:13px;color:{{ chosenColor }};font-family:'IBM Plex Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chosenFileName }}</span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px">
+          <button onClick="{{ closeSourceModal }}" style="padding:10px 20px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Cancel</button>
+          <button onClick="{{ doUpload }}" style="padding:10px 22px;border-radius:11px;background:{{ uploadBtnBg }};color:{{ uploadBtnColor }};font-size:13px;font-weight:700;box-shadow:{{ uploadBtnShadow }}" style-hover="filter:brightness(1.05)">Upload</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ uploadBusy }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:6px 0 4px">
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:9px"><span style="font-family:'IBM Plex Mono',monospace">{{ uploadName }}</span><span style="color:var(--ac)">{{ uploadPctLabel }}</span></div>
+          <div style="height:9px;background:#eceaf8;border-radius:6px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,var(--ac),#2bb8c4);border-radius:6px;width:{{ uploadPctLabel }};transition:width .2s"></div></div>
+          <div style="font-size:11.5px;color:#9499ad;margin-top:10px">{{ uploadStage }}</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ uploadErr }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:12px;align-items:flex-start;background:#fdeee9;border:1px solid #f6cfc2;border-radius:12px;padding:14px 16px;margin-bottom:18px">
+          <span style="font-size:18px">⚠</span>
+          <div style="flex:1"><div style="font-size:13px;font-weight:700;color:#c0392b">Upload rejected</div><div style="font-size:12.5px;color:#8a5a4e;margin-top:3px;line-height:1.5">{{ uploadMsg }}</div></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button onClick="{{ closeSourceModal }}" style="flex:1;padding:11px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Cancel</button>
+          <button onClick="{{ resetUpload }}" style="flex:1;padding:11px;border-radius:11px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700">Choose another</button>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+
+  <!-- ======== CONFIRM DIALOG ======== -->
+  <sc-if value="{{ showConfirm }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ confirmNo }}" style="position:fixed;inset:0;background:rgba(26,29,41,.5);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:60">
+    <div onClick="{{ stop }}" class="dvfu" style="width:400px;max-width:92vw;background:#fff;border-radius:18px;padding:24px;box-shadow:0 30px 70px -20px rgba(26,29,41,.55)">
+      <div style="font-size:17px;font-weight:800;letter-spacing:-.01em;margin-bottom:8px">{{ confirmTitle }}</div>
+      <p style="margin:0 0 20px;font-size:13px;color:#71768a;line-height:1.55">{{ confirmBody }}</p>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{ confirmNo }}" style="flex:1;padding:11px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Cancel</button>
+        <sc-if value="{{ confirmDanger }}" hint-placeholder-val="{{ true }}"><button onClick="{{ confirmYes }}" style="flex:1;padding:11px;border-radius:11px;background:linear-gradient(135deg,#e2603f,#c0392b);color:#fff;font-size:13px;font-weight:700" style-hover="filter:brightness(1.05)">{{ confirmLabel }}</button></sc-if>
+        <sc-if value="{{ confirmPrimary }}" hint-placeholder-val="{{ false }}"><button onClick="{{ confirmYes }}" style="flex:1;padding:11px;border-radius:11px;background:var(--ac-grad);color:#fff;font-size:13px;font-weight:700" style-hover="filter:brightness(1.06)">{{ confirmLabel }}</button></sc-if>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ======== PROFILE ======== -->
+  <sc-if value="{{ showProfile }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeProfile }}" style="position:fixed;inset:0;background:rgba(26,29,41,.5);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:60">
+    <div onClick="{{ stop }}" class="dvfu" style="width:440px;max-width:92vw;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,29,41,.55)">
+      <div style="height:96px;background:linear-gradient(135deg,#221c46,#3a2f73 55%,var(--ac));position:relative">
+        <button onClick="{{ closeProfile }}" style="position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.16);color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer" style-hover="background:rgba(255,255,255,.28)">✕</button>
+      </div>
+      <div style="padding:0 26px 26px;margin-top:-38px">
+        <div style="width:76px;height:76px;border-radius:20px;background:{{ persona.grad }};color:#fff;font-weight:800;font-size:30px;display:flex;align-items:center;justify-content:center;border:4px solid #fff;box-shadow:0 10px 24px -10px rgba(26,29,41,.4)">{{ persona.initials }}</div>
+        <div style="display:flex;align-items:center;gap:9px;margin-top:14px">
+          <span style="font-size:20px;font-weight:800;letter-spacing:-.02em">{{ persona.name }}</span>
+          <span style="font-size:10px;font-weight:800;color:#fff;background:{{ roleColor }};padding:3px 9px;border-radius:20px;letter-spacing:.03em">{{ roleLabel }}</span>
+        </div>
+        <div style="font-size:13px;color:#71768a;margin-top:2px">{{ persona.title }}</div>
+        <div style="display:flex;flex-direction:column;gap:1px;margin-top:20px;border:1px solid #edeef4;border-radius:14px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:#fafbfe">
+            <span style="font-size:15px;width:20px;text-align:center">✉️</span>
+            <div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:#a3a8bd;letter-spacing:.06em">EMAIL</div><div style="font-size:13px;font-weight:600;color:#2b2e3f">{{ persona.email }}</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 15px">
+            <span style="font-size:15px;width:20px;text-align:center">🛡️</span>
+            <div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:#a3a8bd;letter-spacing:.06em">ROLE &amp; ACCESS</div><div style="font-size:13px;font-weight:600;color:#2b2e3f">{{ profileRoleName }} · {{ profilePermCount }} permissions</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 15px;background:#fafbfe">
+            <span style="font-size:15px;width:20px;text-align:center">🕑</span>
+            <div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:#a3a8bd;letter-spacing:.06em">LAST ACTIVE</div><div style="font-size:13px;font-weight:600;color:#2b2e3f">Just now · This session</div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button onClick="{{ closeProfile }}" style="flex:1;padding:11px;border-radius:11px;border:1px solid #e2e4ee;background:#fff;font-size:13px;font-weight:700;color:#5a5f72" style-hover="border-color:var(--ac-ring)">Close</button>
+          <button onClick="{{ signOut }}" style="flex:1;padding:11px;border-radius:11px;background:#fff;border:1px solid #f0d5d5;font-size:13px;font-weight:700;color:#c0405a;display:flex;align-items:center;justify-content:center;gap:7px" style-hover="background:#fdf2f4;border-color:#e8a9b4"><span>⎋</span>Sign out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+  <div style="position:fixed;right:22px;bottom:22px;display:flex;flex-direction:column;gap:11px;z-index:50;width:320px">
+    <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+      <div style="display:flex;gap:12px;align-items:flex-start;background:#fff;border-radius:13px;padding:13px 15px;box-shadow:0 16px 40px -14px rgba(26,29,41,.4);border-left:3px solid {{ t.accent }};animation:dvtoast .35s cubic-bezier(.2,.7,.3,1)">
+        <span style="font-size:16px;line-height:1.2">{{ t.icon }}</span>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">{{ t.title }}</div><div style="font-size:11.5px;color:#71768a;margin-top:2px;line-height:1.4">{{ t.desc }}</div></div>
+        <button onClick="{{ t.onClose }}" style="font-size:14px;color:#b0b4c6">✕</button>
+      </div>
+    </sc-for>
+  </div>
+
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    screen: 'auth', authMode: 'login', personaId: 'tom', draft: '', tableModalId: null, collapsed: false,
+    messages: [], nextId: 1,
+    connectors: [
+      { id: 1, name: 'Production Postgres', type: 'Postgres', status: 'synced', last: '2 min ago', interval: '15 min' },
+      { id: 2, name: 'Snowflake — Finance', type: 'Snowflake', status: 'synced', last: '9 min ago', interval: '1 hr' },
+      { id: 3, name: 'Support MySQL', type: 'MySQL', status: 'syncing', last: 'in progress', interval: '30 min' },
+      { id: 4, name: 'BigQuery — Product', type: 'BigQuery', status: 'synced', last: '6 min ago', interval: '1 hr' },
+    ],
+    showConnModal: false, connStep: 'pick', connDraft: { name: '', type: 'Postgres', host: '', schedule: 'Manual only' }, testState: 'idle',
+    documents: [
+      { id: 1, title: 'INC-2026-074 Billing incident', file: 'INC-2026-074.pdf', type: 'PDF', status: 'indexed', chunks: 48, uploadedAt: '6/29/2026, 6:11:28 PM', by: 'analyst@lyra.ai' },
+      { id: 2, title: 'Support runbook', file: 'support_sop.md', type: 'MD', status: 'indexed', chunks: 12, uploadedAt: '6/29/2026, 6:11:28 PM', by: 'analyst@lyra.ai' },
+      { id: 3, title: 'TEST_incident', file: 'TEST_incident.txt', type: 'TXT', status: 'indexed', chunks: 1, uploadedAt: '6/29/2026, 5:45:19 PM', by: 'analyst@lyra.ai' },
+      { id: 4, title: 'TEST_upload', file: 'TEST_upload.csv', type: 'CSV', status: 'indexed', rows: 2, cols: 3, uploadedAt: '6/29/2026, 5:45:19 PM', by: 'analyst@lyra.ai' },
+      { id: 5, title: 'Q2 research brief', file: 'q2_research_brief.pdf', type: 'PDF', status: 'indexing', chunks: 0, uploadedAt: '6/30/2026, 9:02:11 AM', by: 'sarah@acme.com' },
+    ],
+    uploadState: 'idle', uploadPct: 0, uploadMsg: '', uploadName: '', uploadStage: '', showSourceModal: false, uploadPick: 'good',
+    forecastModel: 'Holt-Winters', forecastHorizon: 6,
+    theme: 'soft', customAccent: '#8b5cf6',
+    settingsExpanded: false,
+    toasts: [], toastSeq: 1, anomalyFired: false,
+    users: [
+      { id: 'sarah', name: 'Sarah Okonkwo', email: 'sarah@acme.com', initials: 'S', grad: 'var(--ac-grad)', role: 'analyst', core: true },
+      { id: 'david', name: 'David Reyes', email: 'david@acme.com', initials: 'D', grad: 'linear-gradient(135deg,#ff8a5c,#ff5c7a)', role: 'viewer', core: true },
+      { id: 'tom', name: 'Tom Halvorsen', email: 'tom@acme.com', initials: 'T', grad: 'linear-gradient(135deg,#1fb6a6,#13a06b)', role: 'admin', core: true },
+      { id: 'maria', name: 'Maria Santos', email: 'maria@acme.com', initials: 'M', grad: 'linear-gradient(135deg,#5b8def,#3f6fd6)', role: 'analyst', core: false },
+    ],
+    roles: [
+      { id: 'viewer', name: 'Viewer', color: '#b9743a', bg: '#fbeede', system: true, perms: ['view_dashboards', 'ask_agents'] },
+      { id: 'analyst', name: 'Analyst', color: 'var(--ac-deep)', bg: 'var(--ac-soft)', system: true, perms: ['view_dashboards', 'ask_agents', 'export_data', 'upload_docs', 'manage_connectors'] },
+      { id: 'admin', name: 'Admin', color: '#1d8e9c', bg: '#e3f6f9', system: true, perms: ['view_dashboards', 'ask_agents', 'export_data', 'upload_docs', 'manage_connectors', 'manage_users', 'manage_roles'] },
+    ],
+    permissions: [
+      { key: 'view_dashboards', label: 'View dashboards & forecasts', group: 'Analytics' },
+      { key: 'ask_agents', label: 'Ask the AI agents', group: 'Analytics' },
+      { key: 'export_data', label: 'Export data & reports', group: 'Analytics' },
+      { key: 'upload_docs', label: 'Upload & index documents', group: 'Data' },
+      { key: 'manage_connectors', label: 'Manage data connectors', group: 'Data' },
+      { key: 'manage_users', label: 'Create & manage users', group: 'Administration' },
+      { key: 'manage_roles', label: 'Manage roles & permissions', group: 'Administration' },
+    ],
+    settingsPage: 'users',
+    confirm: null,
+    userEditor: { open: false, id: null, name: '', email: '', roleId: 'viewer' },
+    roleEditor: { open: false, id: null, name: '', color: 'var(--ac)', perms: [] },
+    assignEditor: { open: false, userId: null, roleId: null },
+    permDraft: null, roleColors: ['var(--ac)', '#2bb8c4', '#e2603f', '#3f6fd6', '#13a06b', '#b9743a', '#c0392b'],
+  };
+
+  PERSONAS = {
+    sarah: { id: 'sarah', name: 'Sarah Okonkwo', short: 'Sarah', title: 'Senior Analyst', email: 'sarah@acme.com', initials: 'S', grad: 'var(--ac-grad)' },
+    david: { id: 'david', name: 'David Reyes', short: 'David', title: 'VP Sales & Ops', email: 'david@acme.com', initials: 'D', grad: 'linear-gradient(135deg,#ff8a5c,#ff5c7a)' },
+    tom: { id: 'tom', name: 'Tom Halvorsen', short: 'Tom', title: 'Database Admin', email: 'tom@acme.com', initials: 'T', grad: 'linear-gradient(135deg,#1fb6a6,#13a06b)' },
+  };
+  ROLE_META = {
+    viewer: { label: 'VIEWER', color: '#b9743a', bg: '#fbeede' },
+    analyst: { label: 'ANALYST', color: 'var(--ac-deep)', bg: 'var(--ac-soft)' },
+    admin: { label: 'ADMIN', color: '#1d8e9c', bg: '#e3f6f9' },
+  };
+  ENGINES = [
+    { id: 'SQLite', name: 'SQLite', desc: 'Local SQLite database file. Ships with a sample warehouse for demos.' },
+    { id: 'Postgres', name: 'PostgreSQL / Redshift', desc: 'PostgreSQL or Amazon Redshift via the standard PG protocol.' },
+    { id: 'MySQL', name: 'MySQL / MariaDB', desc: 'MySQL or MariaDB via the PyMySQL driver.' },
+    { id: 'MongoDB', name: 'MongoDB (external)', desc: 'External MongoDB cluster — Atlas, EC2 or self-hosted via URI.' },
+    { id: 'HTTP', name: 'HTTP CSV / Parquet', desc: 'Fetch a tabular file (CSV or Parquet) from an HTTP(S) URL.' },
+    { id: 'BigQuery', name: 'Google BigQuery', desc: 'BigQuery warehouse via a Google service-account JSON key.' },
+    { id: 'Snowflake', name: 'Snowflake', desc: 'Snowflake warehouse using the official Python driver.' },
+  ];
+  TYPE_STYLE = {
+    Postgres: { letter: 'P', bg: '#e9eefc', fg: '#3b6fd4' },
+    MySQL: { letter: 'M', bg: '#fdf0e6', fg: '#d9822b' },
+    Snowflake: { letter: 'S', bg: '#e3f6fb', fg: '#2ba6c4' },
+    BigQuery: { letter: 'B', bg: '#eef0f4', fg: '#5a6b86' },
+    SQLite: { letter: 'L', bg: '#e6f6ee', fg: '#3a9d6a' },
+    MongoDB: { letter: 'G', bg: '#e6f6ee', fg: '#1d8e5a' },
+    HTTP: { letter: 'H', bg: 'var(--ac-soft)', fg: 'var(--ac)' },
+  };
+  ENGINE_FIELDS = {
+    SQLite: { primary: { label: 'Database file path', ph: '/app/backend/data/sample_warehouse.sqlite', help: 'Absolute path to a .sqlite or .db file readable by the backend.' }, secondary: [] },
+    Postgres: { primary: { label: 'Host', ph: 'db.example.com', help: '' }, secondary: [ { label: 'Port', ph: '5432', type: 'text' }, { label: 'Database', ph: 'analytics', type: 'text', req: true }, { label: 'Username', ph: 'analyst@lyra.ai', type: 'text', req: true }, { label: 'Password', ph: '••••••••', type: 'password' }, { label: 'Schema', ph: 'public', type: 'text', help: 'PG schema to read (default: public). Leave blank to scan all non-system schemas.' }, { label: 'SSL mode', kind: 'select', options: ['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full'], value: 'prefer' } ] },
+    MySQL: { primary: { label: 'Host', ph: 'mysql.example.com', help: '' }, secondary: [ { label: 'Port', ph: '3306', type: 'text' }, { label: 'Database / Schema', ph: 'analytics', type: 'text', req: true }, { label: 'Username', ph: 'analyst@lyra.ai', type: 'text', req: true }, { label: 'Password', ph: '••••••••', type: 'password' } ] },
+    MongoDB: { primary: { label: 'Connection URI', ph: 'mongodb+srv://cluster.acme.net', help: 'Standard MongoDB URI. Treated as a secret.', secret: true }, secondary: [ { label: 'Database', ph: 'analytics', type: 'text', req: true } ] },
+    HTTP: { primary: { label: 'File URL', ph: 'https://example.com/exports/sales.csv', help: 'Direct link to a .csv or .parquet file (presigned S3/GCS URLs work).' }, secondary: [ { label: 'Dataset name', ph: 'analyst@lyra.ai', type: 'text', req: true, help: 'Logical name for this dataset in the unified store.' }, { label: 'Format', kind: 'select', options: ['auto', 'csv', 'parquet'], value: 'auto' }, { label: 'Authorization header', ph: '••••••••', type: 'password', help: 'Optional Authorization header value (sent verbatim).' } ] },
+    BigQuery: { primary: { label: 'GCP project ID', ph: 'my-gcp-project', help: '' }, secondary: [ { label: 'BigQuery dataset', ph: 'analytics', type: 'text', req: true }, { label: 'Service-account JSON', kind: 'textarea', ph: '{"type":"service_account","project_id":"…","private_key":"-----BEGIN…"}', req: true, help: 'Paste the full JSON contents of your service-account key. Stored encrypted at rest.' }, { label: 'Location', ph: 'US', type: 'text' } ] },
+    Snowflake: { primary: { label: 'Account identifier', ph: 'abc-xy12345 or xy12345.us-east-1', help: '' }, secondary: [ { label: 'Username', ph: 'analyst@lyra.ai', type: 'text', req: true }, { label: 'Password', ph: '••••••••', type: 'password', req: true }, { label: 'Warehouse', ph: 'COMPUTE_WH', type: 'text', req: true }, { label: 'Database', ph: 'ANALYTICS', type: 'text', req: true }, { label: 'Schema', ph: 'PUBLIC', type: 'text', req: true }, { label: 'Role', ph: 'ANALYST', type: 'text' } ] },
+  };
+  TABLES = [
+    { id: 'orders', name: 'orders', type: 'Postgres', source: 'Production Postgres', cols: 12, rows: 8420, status: 'synced',
+      columns: ['order_id', 'customer_id', 'region', 'amount', 'status', 'created_at'],
+      sample: [ ['ORD-10482', 'CUS-2231', 'NA', '$1,240.00', 'paid', '2026-06-29'], ['ORD-10483', 'CUS-0192', 'EMEA', '$430.50', 'refunded', '2026-06-29'], ['ORD-10484', 'CUS-7741', 'APAC', '$2,980.00', 'paid', '2026-06-30'], ['ORD-10485', 'CUS-3310', 'NA', '$76.20', 'pending', '2026-06-30'] ] },
+    { id: 'customers', name: 'customers', type: 'Postgres', source: 'Production Postgres', cols: 9, rows: 2310, status: 'synced',
+      columns: ['customer_id', 'name', 'tier', 'mrr', 'seats', 'active'],
+      sample: [ ['CUS-2231', 'Northwind Traders', 'Enterprise', '$4,200', '45', 'true'], ['CUS-0192', 'Acme EMEA', 'Growth', '$980', '12', 'true'], ['CUS-7741', 'Globex APAC', 'Enterprise', '$3,100', '38', 'true'], ['CUS-3310', 'Initech', 'Starter', '$120', '3', 'false'] ] },
+    { id: 'tickets', name: 'tickets', type: 'MySQL', source: 'Support MySQL', cols: 14, rows: 1284, status: 'syncing',
+      columns: ['ticket_id', 'account', 'region', 'priority', 'category', 'opened_at'],
+      sample: [ ['TK-88120', 'Acme EMEA', 'EMEA', 'high', 'billing', '09:24'], ['TK-88121', 'Acme EMEA', 'EMEA', 'high', 'billing', '09:31'], ['TK-88122', 'Globex APAC', 'APAC', 'medium', 'how-to', '10:02'], ['TK-88123', 'Northwind', 'NA', 'low', 'feature', '10:15'] ] },
+    { id: 'revenue_daily', name: 'revenue_daily', type: 'Snowflake', source: 'Snowflake — Finance', cols: 6, rows: 540, status: 'synced',
+      columns: ['date', 'region', 'revenue', 'new_arr', 'churned_arr', 'net'],
+      sample: [ ['2026-06-28', 'NA', '$64,200', '$5,100', '$1,200', '+$3,900'], ['2026-06-29', 'EMEA', '$31,050', '$2,200', '$2,900', '-$700'], ['2026-06-30', 'APAC', '$22,800', '$3,400', '$400', '+$3,000'] ] },
+    { id: 'product_events', name: 'product_events', type: 'BigQuery', source: 'BigQuery — Product', cols: 22, rows: 91200, status: 'synced',
+      columns: ['event_id', 'user_id', 'event', 'feature', 'ts'],
+      sample: [ ['ev_9a21', 'u_4410', 'feature_used', 'forecast', '12:03:11'], ['ev_9a22', 'u_1188', 'login', '—', '12:03:14'], ['ev_9a23', 'u_7740', 'feature_used', 'connectors', '12:03:20'], ['ev_9a24', 'u_3310', 'export', 'dashboard', '12:03:25'] ] },
+    { id: 'churn_scores', name: 'churn_scores', type: 'Snowflake', source: 'Snowflake — Finance', cols: 5, rows: 827, status: 'synced',
+      columns: ['customer_id', 'score', 'risk', 'top_signal', 'updated'],
+      sample: [ ['CUS-3310', '0.82', 'high', 'seats -60%', '2026-06-30'], ['CUS-0192', '0.74', 'high', 'billing errors', '2026-06-30'], ['CUS-5521', '0.41', 'medium', 'usage flat', '2026-06-29'], ['CUS-2231', '0.08', 'low', '—', '2026-06-29'] ] },
+  ];
+  INTENT = {
+    descriptive: { label: 'Descriptive', color: 'var(--ac)', bg: 'var(--ac-soft)', grad: 'linear-gradient(135deg,var(--ac),#8b6bff)' },
+    diagnostic: { label: 'Diagnostic', color: '#1d8e9c', bg: '#e3f6f9', grad: 'linear-gradient(135deg,#2bb8c4,#1d8e9c)' },
+    predictive: { label: 'Predictive', color: '#3f6fd6', bg: '#e9eefc', grad: 'linear-gradient(135deg,#5b8def,#3f6fd6)' },
+    prescriptive: { label: 'Prescriptive', color: '#0f8a5c', bg: '#e4f6ee', grad: 'linear-gradient(135deg,#13a06b,#0f8a5c)' },
+  };
+
+  curRole() { const u = this.state.users.find(x => x.id === this.state.personaId); return u ? u.role : 'viewer'; }
+  rolePerms(id) { const r = this.state.roles.find(x => x.id === id); return r ? r.perms : []; }
+  roleMeta(id) { const r = this.state.roles.find(x => x.id === id); if (r) return { label: r.name.toUpperCase(), name: r.name, color: r.color, bg: r.bg }; return { label: '—', name: '—', color: '#9499ad', bg: '#f0f1f6' }; }
+  caps(role) { const p = this.rolePerms(role); return { manageConnectors: p.includes('manage_connectors'), uploadDocs: p.includes('upload_docs'), manageUsers: p.includes('manage_users'), manageRoles: p.includes('manage_roles'), admin: p.includes('manage_users') || p.includes('manage_roles') }; }
+
+  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._u); if (this._onMove) window.removeEventListener('pointermove', this._onMove); }
+  componentDidMount() { this.applyTheme();
+    this._onMove = (e) => { const el = this._brand; if (!el) return; const r = el.getBoundingClientRect(); const mx = ((e.clientX - r.left) / r.width - 0.5); const my = ((e.clientY - r.top) / r.height - 0.5); el.style.setProperty('--mx', Math.max(-0.5, Math.min(0.5, mx)).toFixed(3)); el.style.setProperty('--my', Math.max(-0.5, Math.min(0.5, my)).toFixed(3)); };
+    window.addEventListener('pointermove', this._onMove);
+  }
+  componentDidUpdate() { if (this._scroll && this.state.screen === 'chat') this._scroll.scrollTop = this._scroll.scrollHeight; this.applyTheme(); }
+  applyTheme() { const el = this._root; if (!el) return; if (this.state.theme === 'custom') el.style.setProperty('--ac', this.state.customAccent); else el.style.removeProperty('--ac'); }
+  setTheme(id) { this.setState({ theme: id }); const t = this.THEMES.find(x => x.id === id); this.addToast({ icon: '🎨', accent: 'var(--ac)', title: 'Theme applied', desc: (t ? t.name : 'Custom') + ' is now active' }); }
+  setCustomAccent(hex) { this.setState({ theme: 'custom', customAccent: hex }); }
+  applyCustom() { this.setState({ theme: 'custom' }); this.addToast({ icon: '🎨', accent: 'var(--ac)', title: 'Custom theme applied', desc: 'Accent set to ' + this.state.customAccent }); }
+
+  THEMES = [
+    { id: 'soft', name: 'Soft Premium', desc: 'Signature indigo · violet', ac: '#6d4dff', ac2: '#7d5cff', tint: '#efeaff' },
+    { id: 'emerald', name: 'Emerald Lux', desc: 'Deep green · jade', ac: '#0f9d6b', ac2: '#17b884', tint: '#e3f6ee' },
+    { id: 'sapphire', name: 'Sapphire Blue', desc: 'Royal blue · cyan', ac: '#2f66f0', ac2: '#4d84ff', tint: '#e7eeff' },
+    { id: 'sunset', name: 'Sunset Coral', desc: 'Warm coral · amber', ac: '#e2544f', ac2: '#f0725c', tint: '#fdeaec' },
+  ];
+
+  // ---------- auth / nav ----------
+  toggleAuth() { this.setState(s => ({ authMode: s.authMode === 'login' ? 'register' : 'login' })); }
+  enterApp(pid) { this.setState({ screen: 'overview', personaId: pid || this.state.personaId }); this.fireAnomaly(); }
+  go(id) { this.setState({ screen: id, settingsExpanded: id === 'settings' }); if (id === 'settings') this.setState({ settingsPage: 'users' }); if (id === 'themes') this.setState({ screen: 'themes' }); }
+  toggleSettingsExpand() { this.setState(s => ({ settingsExpanded: !s.settingsExpanded, screen: 'settings', settingsPage: 'users' })); }
+  toggleCollapse() { this.setState(s => ({ collapsed: !s.collapsed })); }
+  openProfile() { this.setState({ showProfile: true }); }
+  closeProfile() { this.setState({ showProfile: false }); }
+  signOut() {
+    const p = this.PERSONAS[this.state.personaId];
+    this.setState({ showProfile: false, screen: 'auth', authMode: 'login', settingsExpanded: false });
+    this.addToast({ icon: '⎋', accent: 'var(--ac)', title: 'Signed out', desc: 'You have been securely signed out of Datacon.' });
+  }
+  switchPersona(pid) {
+    this.setState({ personaId: pid });
+    const p = this.PERSONAS[pid]; const r = (this.state.users.find(u => u.id === pid) || {}).role || 'viewer';
+    const meta = this.roleMeta(r);
+    this.addToast({ icon: '👤', accent: 'var(--ac)', title: 'Now viewing as ' + p.short, desc: meta.name + ' permissions applied' });
+  }
+  fireAnomaly() {
+    if (this.state.anomalyFired) return;
+    this.setState({ anomalyFired: true });
+    setTimeout(() => this.addToast({ icon: '⚠️', accent: '#e2603f', title: 'New anomaly detected', desc: 'EMEA support tickets +142% vs 7-day average' }), 4500);
+  }
+  addToast(t) {
+    const id = this.state.toastSeq;
+    this.setState(s => ({ toastSeq: s.toastSeq + 1, toasts: [...s.toasts, { ...t, id }] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== id) })), 5200);
+  }
+
+  // ---------- chat ----------
+  route(t) {
+    t = (t || '').toLowerCase();
+    if (/forecast|predict|next quarter|next two|projection|will be|expect/.test(t)) return 'predictive';
+    if (/why|cause|spike|reason|driv|because|root/.test(t)) return 'diagnostic';
+    if (/reduce|should|recommend|how do we|improve|cut |lower |action|fix/.test(t)) return 'prescriptive';
+    return 'descriptive';
+  }
+  answer(kind) {
+    if (kind === 'descriptive') return {
+      text: 'Revenue last quarter totaled $4.28M across four regions. North America led at $1.94M (45%), followed by EMEA at $1.12M (26%), APAC at $0.82M (19%) and LATAM at $0.40M (9%). Quarter-over-quarter growth was +6.4%, driven mainly by NA enterprise renewals.',
+      bars: [
+        { label: 'NA', value: '$1.94M', pct: '90%' }, { label: 'EMEA', value: '$1.12M', pct: '52%' },
+        { label: 'APAC', value: '$0.82M', pct: '38%' }, { label: 'LATAM', value: '$0.40M', pct: '18%' },
+      ],
+    };
+    if (kind === 'diagnostic') return {
+      text: 'EMEA support tickets rose +142% versus the 7-day average. Correlating the ticket database with your uploaded incident memos, the spike aligns with the v4.2 billing deployment on Jun 26 — three of the five largest ticket clusters reference invoice errors documented in the incident report.',
+      citations: [
+        { doc: 'INC-2026-074 Billing incident.pdf', meta: 'chunk 12 · ingested Jun 27', snippet: 'Invoice generation returned 500s for EMEA VAT accounts between 08:00–11:30 UTC.' },
+        { doc: 'Support SOP.md', meta: 'chunk 4 · ingested May 02', snippet: 'Escalate billing-class tickets to Tier 2 within 30 minutes of detection.' },
+      ],
+    };
+    if (kind === 'predictive') return {
+      text: 'Using a Holt-Winters model on 18 months of revenue, next quarter is projected at $4.55M (95% CI: $4.31M–$4.79M), a +6.3% increase. Seasonality suggests a softer quarter-start followed by acceleration in the final month.',
+      predictive: true,
+    };
+    return {
+      text: 'Three actions are projected to bring churn from 3.1% toward 2.4% this quarter:',
+      actions: [
+        { action: 'Launch save-offer for 12 at-risk enterprise accounts', impact: '−0.4pp', effort: 'Low', owner: 'Success' },
+        { action: 'Fix EMEA billing errors from INC-2026-074', impact: '−0.2pp', effort: 'Medium', owner: 'Engineering' },
+        { action: 'Add usage-drop alerts for accounts under 40% active seats', impact: '−0.1pp', effort: 'Low', owner: 'Product' },
+      ],
+    };
+  }
+  sendChat(text) {
+    text = (text || '').trim(); if (!text) return;
+    const kind = this.route(text);
+    const uid = this.state.nextId, aid = this.state.nextId + 1;
+    const ans = this.answer(kind);
+    this.setState(s => ({
+      draft: '', nextId: s.nextId + 2, screen: 'chat',
+      messages: [...s.messages, { id: uid, role: 'user', text }, { id: aid, role: 'agent', kind, ...ans, shown: 0, streaming: true, done: false, vote: 0 }],
+    }));
+    clearInterval(this._t);
+    this._t = setTimeout(() => this.stream(aid), 520);
+  }
+  stream(aid) {
+    clearInterval(this._t);
+    this._t = setInterval(() => {
+      let finished = false;
+      this.setState(s => ({
+        messages: s.messages.map(m => {
+          if (m.id !== aid || !m.streaming) return m;
+          const shown = Math.min(m.text.length, m.shown + 3 + Math.floor(Math.random() * 4));
+          const done = shown >= m.text.length;
+          if (done) finished = true;
+          return { ...m, shown, streaming: !done, done };
+        }),
+      }));
+      if (finished) clearInterval(this._t);
+    }, 24);
+  }
+  vote(id, dir) { this.setState(s => ({ messages: s.messages.map(m => m.id === id ? { ...m, vote: m.vote === dir ? 0 : dir } : m) })); }
+  onDraft(e) { this.setState({ draft: e.target.value }); }
+  onKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendChat(this.state.draft); } }
+
+  // ---------- connectors ----------
+  openConnModal() {
+    if (!this.caps(this.curRole()).manageConnectors) { this.blocked(); return; }
+    this.setState({ showConnModal: true, connStep: 'pick', connDraft: { name: '', type: 'Postgres', host: '', schedule: 'Manual only' }, testState: 'idle' });
+  }
+  closeConnModal() { this.setState({ showConnModal: false }); }
+  setEngine(t) { this.setState(s => ({ connStep: 'config', testState: 'idle', connDraft: { ...s.connDraft, type: t, host: '' } })); }
+  backToPick() { this.setState({ connStep: 'pick', testState: 'idle' }); }
+  testConn() {
+    if (!this.state.connDraft.host) { this.setState({ testState: 'fail' }); return; }
+    this.setState({ testState: 'testing' });
+    setTimeout(() => this.setState({ testState: 'pass' }), 1300);
+  }
+  saveConn() {
+    if (this.state.testState !== 'pass') return;
+    const d = this.state.connDraft;
+    const id = Date.now();
+    const name = d.name || (d.type + ' connector');
+    this.setState(s => ({ showConnModal: false, connectors: [...s.connectors, { id, name, type: d.type, status: 'syncing', last: 'in progress', interval: '30 min' }] }));
+    this.addToast({ icon: '🔌', accent: 'var(--ac)', title: 'Connector added', desc: name + ' · running first sync' });
+    setTimeout(() => {
+      this.setState(s => ({ connectors: s.connectors.map(c => c.id === id ? { ...c, status: 'synced', last: 'just now' } : c) }));
+      this.addToast({ icon: '✅', accent: '#13a06b', title: 'Sync complete', desc: name + ' is up to date' });
+    }, 2600);
+  }
+  syncNow(id) {
+    this.setState(s => ({ connectors: s.connectors.map(c => c.id === id ? { ...c, status: 'syncing', last: 'in progress' } : c) }));
+    setTimeout(() => {
+      this.setState(s => ({ connectors: s.connectors.map(c => c.id === id ? { ...c, status: 'synced', last: 'just now' } : c) }));
+      const c = this.state.connectors.find(x => x.id === id);
+      this.addToast({ icon: '✅', accent: '#13a06b', title: 'Sync complete', desc: (c ? c.name : 'Connector') + ' is up to date' });
+    }, 2200);
+  }
+  deleteConn(id) {
+    this.setState(s => ({ connectors: s.connectors.filter(c => c.id !== id) }));
+    this.addToast({ icon: '🗑️', accent: '#e2603f', title: 'Connector removed', desc: 'Encrypted secrets were purged' });
+  }
+  blocked() { this.addToast({ icon: '🔒', accent: '#d9a23a', title: 'View-only access', desc: 'Ask an admin (Tom) to change data connections.' }); }
+  openTable(id) { this.setState({ tableModalId: id }); }
+  closeTable() { this.setState({ tableModalId: null }); }
+
+  // ---------- RBAC: settings nav + confirm ----------
+  goSettings(page) { this.setState({ screen: 'settings', settingsPage: page }); }
+  ask(cfg) { this.setState({ confirm: cfg }); }
+  confirmNo() { this.setState({ confirm: null }); }
+  confirmYes() { const c = this.state.confirm; this.setState({ confirm: null }); if (c && c.onOk) c.onOk(); }
+
+  // ---------- RBAC: users CRUD ----------
+  openUserEditor(id) {
+    if (!this.caps(this.curRole()).manageUsers) return;
+    const u = id ? this.state.users.find(x => x.id === id) : null;
+    this.setState({ userEditor: { open: true, id: id || null, name: u ? u.name : '', email: u ? u.email : '', roleId: u ? u.role : this.state.roles[0].id } });
+  }
+  closeUserEditor() { this.setState(s => ({ userEditor: { ...s.userEditor, open: false } })); }
+  setUserEditor(patch) { this.setState(s => ({ userEditor: { ...s.userEditor, ...patch } })); }
+  saveUser() {
+    const d = this.state.userEditor;
+    if (!d.name.trim() || !d.email.trim()) return;
+    if (d.id) {
+      this.setState(s => ({ userEditor: { ...s.userEditor, open: false }, users: s.users.map(u => u.id === d.id ? { ...u, name: d.name.trim(), email: d.email.trim(), role: d.roleId } : u) }));
+      this.addToast({ icon: '✏️', accent: 'var(--ac)', title: 'User updated', desc: d.name.trim() + ' saved as ' + this.roleMeta(d.roleId).name });
+    } else {
+      const grads = ['var(--ac-grad)', 'linear-gradient(135deg,#2bb8c4,#1d8e9c)', 'linear-gradient(135deg,#e2603f,#d9a23a)', 'linear-gradient(135deg,#5b8def,#3f6fd6)', 'linear-gradient(135deg,#13a06b,#1fb6a6)'];
+      const initials = d.name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+      const id = 'u' + Date.now();
+      this.setState(s => ({ userEditor: { ...s.userEditor, open: false }, users: [...s.users, { id, name: d.name.trim(), email: d.email.trim(), initials, grad: grads[s.users.length % grads.length], role: d.roleId, core: false }] }));
+      this.addToast({ icon: '✅', accent: '#13a06b', title: 'User created', desc: d.name.trim() + ' added as ' + this.roleMeta(d.roleId).name });
+    }
+  }
+  askDeleteUser(id) {
+    const u = this.state.users.find(x => x.id === id); if (!u) return;
+    this.ask({ title: 'Remove ' + u.name + '?', body: 'They will immediately lose all access to Datacon. This cannot be undone.', label: 'Remove user', tone: 'danger', onOk: () => { this.setState(s => ({ users: s.users.filter(x => x.id !== id) })); this.addToast({ icon: '🗑️', accent: '#e2603f', title: 'User removed', desc: u.name + ' no longer has access' }); } });
+  }
+
+  // ---------- RBAC: roles CRUD ----------
+  openRoleEditor(id) {
+    if (!this.caps(this.curRole()).manageRoles) return;
+    const r = id ? this.state.roles.find(x => x.id === id) : null;
+    this.setState({ roleEditor: { open: true, id: id || null, name: r ? r.name : '', color: r ? r.color : this.state.roleColors[0], perms: r ? [...r.perms] : ['view_dashboards'] } });
+  }
+  closeRoleEditor() { this.setState(s => ({ roleEditor: { ...s.roleEditor, open: false } })); }
+  setRoleEditor(patch) { this.setState(s => ({ roleEditor: { ...s.roleEditor, ...patch } })); }
+  toggleRoleEditorPerm(key) { this.setState(s => { const has = s.roleEditor.perms.includes(key); return { roleEditor: { ...s.roleEditor, perms: has ? s.roleEditor.perms.filter(p => p !== key) : [...s.roleEditor.perms, key] } }; }); }
+  saveRole() {
+    const d = this.state.roleEditor;
+    if (!d.name.trim()) return;
+    const bg = d.color + '1f';
+    if (d.id) {
+      this.setState(s => ({ roleEditor: { ...s.roleEditor, open: false }, roles: s.roles.map(r => r.id === d.id ? { ...r, name: d.name.trim(), color: d.color, bg, perms: [...d.perms] } : r) }));
+      this.addToast({ icon: '✏️', accent: 'var(--ac)', title: 'Role updated', desc: d.name.trim() + ' · ' + d.perms.length + ' permissions' });
+    } else {
+      const id = 'role' + Date.now();
+      this.setState(s => ({ roleEditor: { ...s.roleEditor, open: false }, roles: [...s.roles, { id, name: d.name.trim(), color: d.color, bg, system: false, perms: [...d.perms] }] }));
+      this.addToast({ icon: '✅', accent: '#13a06b', title: 'Role created', desc: d.name.trim() + ' · ' + d.perms.length + ' permissions' });
+    }
+  }
+  askDeleteRole(id) {
+    const r = this.state.roles.find(x => x.id === id); if (!r) return;
+    const inUse = this.state.users.filter(u => u.role === id).length;
+    if (inUse > 0) { this.addToast({ icon: '⚠️', accent: '#d9a23a', title: 'Role in use', desc: r.name + ' is assigned to ' + inUse + ' user' + (inUse > 1 ? 's' : '') + '. Reassign them first.' }); return; }
+    this.ask({ title: 'Delete the ' + r.name + ' role?', body: 'The role and its permission set will be permanently removed.', label: 'Delete role', tone: 'danger', onOk: () => { this.setState(s => ({ roles: s.roles.filter(x => x.id !== id) })); this.addToast({ icon: '🗑️', accent: '#e2603f', title: 'Role deleted', desc: r.name + ' was removed' }); } });
+  }
+
+  // ---------- RBAC: assign role ----------
+  openAssign(userId) {
+    if (!this.caps(this.curRole()).manageUsers) return;
+    const u = this.state.users.find(x => x.id === userId);
+    this.setState({ assignEditor: { open: true, userId, roleId: u ? u.role : this.state.roles[0].id } });
+  }
+  closeAssign() { this.setState(s => ({ assignEditor: { ...s.assignEditor, open: false } })); }
+  setAssignRole(roleId) { this.setState(s => ({ assignEditor: { ...s.assignEditor, roleId } })); }
+  saveAssign() {
+    const d = this.state.assignEditor;
+    const u = this.state.users.find(x => x.id === d.userId); if (!u) return;
+    this.ask({ title: 'Assign ' + this.roleMeta(d.roleId).name + ' to ' + u.name + '?', body: 'Their access will change immediately to match the ' + this.roleMeta(d.roleId).name + ' permission set.', label: 'Assign role', tone: 'primary', onOk: () => { this.setState(s => ({ assignEditor: { ...s.assignEditor, open: false }, users: s.users.map(x => x.id === d.userId ? { ...x, role: d.roleId } : x) })); this.addToast({ icon: '🔑', accent: 'var(--ac)', title: 'Role assigned', desc: u.name + ' is now ' + this.roleMeta(d.roleId).name }); } });
+  }
+
+  // ---------- RBAC: permissions matrix ----------
+  startPermEdit() { this.setState(s => ({ permDraft: s.roles.reduce((a, r) => { a[r.id] = [...r.perms]; return a; }, {}) })); }
+  togglePermCell(roleId, key) { this.setState(s => { const cur = (s.permDraft && s.permDraft[roleId]) || []; const has = cur.includes(key); return { permDraft: { ...s.permDraft, [roleId]: has ? cur.filter(p => p !== key) : [...cur, key] } }; }); }
+  cancelPermEdit() { this.setState({ permDraft: null }); }
+  savePerms() {
+    this.ask({ title: 'Apply permission changes?', body: 'Every user inherits their role\u2019s permissions immediately across the app.', label: 'Apply changes', tone: 'primary', onOk: () => { this.setState(s => ({ roles: s.roles.map(r => ({ ...r, perms: [...(s.permDraft[r.id] || [])] })), permDraft: null })); this.addToast({ icon: '🛡️', accent: '#0f8a5c', title: 'Permissions saved', desc: 'Role permission sets updated' }); } });
+  }
+
+  // ---------- documents / data sources ----------
+  openSourceModal() { if (!this.caps(this.curRole()).uploadDocs) return; this.setState({ showSourceModal: true, uploadState: 'idle', uploadPick: null }); }
+  closeSourceModal() { clearTimeout(this._u); this.setState({ showSourceModal: false, uploadState: 'idle', uploadPct: 0, uploadMsg: '' }); }
+  setUploadPick(p) { this.setState({ uploadPick: p, uploadState: 'idle', uploadMsg: '' }); }
+  chooseFile() { const order = ['good', 'big', 'bad']; const i = order.indexOf(this.state.uploadPick); this.setState({ uploadPick: order[(i + 1) % order.length], uploadState: 'idle', uploadMsg: '' }); }
+  doUpload() { const p = this.state.uploadPick; if (!p) return; if (p === 'big') this.uploadBig(); else if (p === 'bad') this.uploadBad(); else this.uploadGood(); }
+  refreshSources() { this.addToast({ icon: '🔄', accent: 'var(--ac)', title: 'Inventory refreshed', desc: this.state.documents.length + ' data sources · up to date' }); }
+  uploadGood() {
+    if (!this.caps(this.curRole()).uploadDocs) return;
+    clearTimeout(this._u);
+    this.setState({ uploadState: 'uploading', uploadPct: 0, uploadName: 'Customer_churn.csv', uploadStage: 'Uploading…' });
+    const tick = () => {
+      this._u = setTimeout(() => {
+        const p = Math.min(100, this.state.uploadPct + 14 + Math.floor(Math.random() * 12));
+        this.setState({ uploadPct: p, uploadStage: p < 100 ? 'Uploading…' : 'Chunking & embedding in ChromaDB…' });
+        if (p < 100) tick();
+        else this._u = setTimeout(() => {
+          const id = Date.now();
+          this.setState(s => ({ uploadState: 'idle', uploadPct: 0, showSourceModal: false, documents: [{ id, title: 'Customer_churn', file: 'Customer_churn.csv', type: 'CSV', status: 'indexing', rows: 0, cols: 0, uploadedAt: 'just now', by: 'analyst@lyra.ai' }, ...s.documents] }));
+          this.addToast({ icon: '📄', accent: 'var(--ac)', title: 'Customer_churn.csv uploaded', desc: 'Indexing in ChromaDB…' });
+          setTimeout(() => {
+            this.setState(s => ({ documents: s.documents.map(d => d.id === id ? { ...d, status: 'indexed', rows: 1284, cols: 9 } : d) }));
+            this.addToast({ icon: '✅', accent: '#13a06b', title: 'Processed · 1,284 rows', desc: 'Customer_churn.csv is now queryable' });
+          }, 2400);
+        }, 600);
+      }, 230);
+    };
+    tick();
+  }
+  uploadBig() { if (!this.caps(this.curRole()).uploadDocs) return; this.setState({ uploadState: 'error', uploadMsg: 'huge_export.csv is 14 MB — that exceeds the 10 MB per-file limit. Split the export or compress it before uploading.' }); }
+  uploadBad() { if (!this.caps(this.curRole()).uploadDocs) return; this.setState({ uploadState: 'error', uploadMsg: '.xlsx files aren\u2019t supported yet. Datacon ingests PDF, CSV, TXT and MD — export the sheet as CSV and try again.' }); }
+  resetUpload() { this.setState({ uploadState: 'idle', uploadPct: 0, uploadMsg: '' }); }
+
+  // ---------- forecast ----------
+  setModel(m) { this.setState({ forecastModel: m }); }
+  setHorizon(h) { this.setState({ forecastHorizon: h }); }
+
+  setTeamRole() {}
+
+  renderVals() {
+    const st = this.state;
+    const persona = this.PERSONAS[st.personaId];
+    const role = this.curRole();
+    const rm = this.ROLE_META[role];
+    const cap = this.caps(role);
+
+    // nav
+    const collapsed = st.collapsed;
+    const navDefs = [['chat', 'Chat', '💬'], ['overview', 'Insights', '📊'], ['connectors', 'Connectors', '🔌'], ['documents', 'Data Sources', '🗄️'], ['forecasts', 'Forecasts', '📈'], ['settings', 'User management', '⚙️'], ['themes', 'Themes', '🎨']];
+    const navItems = navDefs.map(([id, label, icon]) => {
+      const active = (id === 'settings' && st.screen === 'settings') || (id === 'themes' && st.screen === 'themes') || (id !== 'settings' && id !== 'themes' && st.screen === id);
+      const badge = id === 'connectors' && st.connectors.some(c => c.status === 'error') ? '1' : (id === 'overview' ? '3' : '');
+      return {
+        id, label, icon, onClick: () => { if (id === 'settings') this.toggleSettingsExpand(); else this.go(id); },
+        bg: active ? 'var(--ac-grad)' : 'transparent',
+        hoverBg: active ? 'var(--ac-grad)' : '#f5f6fb',
+        color: active ? '#ffffff' : '#71768a', weight: active ? '700' : '500',
+        badge, showBadge: !collapsed && !!badge, dotBadge: collapsed && !!badge,
+        badgeColor: id === 'connectors' ? '#c0392b' : '#b9743a', badgeBg: id === 'connectors' ? '#fdeee9' : '#fbeede',
+        nativeTip: collapsed ? '' : label,
+        chevron: id === 'settings' ? (st.settingsExpanded ? '▼' : '▶') : '', showChevron: id === 'settings' && !collapsed,
+        divider: id === 'themes',
+        showSubmenuHere: id === 'settings' && st.screen === 'settings' && !collapsed && cap.manageUsers,
+      };
+    });
+
+    // persona switcher
+    const switcher = Object.values(this.PERSONAS).map(p => {
+      const on = p.id === st.personaId;
+      return { initials: p.initials, short: p.short, grad: p.grad, ring: on ? 'var(--ac)' : 'transparent', tip: p.name + ' · ' + this.roleMeta((st.users.find(u => u.id === p.id) || {}).role || 'viewer').label, onClick: () => this.switchPersona(p.id), bg: on ? 'var(--ac-soft)' : '#fff', border: on ? 'var(--ac-ring)' : '#eceef5', labelColor: on ? 'var(--ac-deep)' : '#9499ad' };
+    });
+
+    // auth
+    const personaCards = Object.values(this.PERSONAS).map(p => {
+      const r = (this.state.users.find(u => u.id === p.id) || {}).role || 'viewer'; const meta = this.roleMeta(r);
+      return { name: p.name, title: p.title, initials: p.initials, grad: p.grad, roleLabel: meta.label, roleColor: meta.color, roleBg: meta.bg, onClick: () => this.enterApp(p.id) };
+    });
+
+    // chat view models
+    const viewMessages = st.messages.map(m => {
+      if (m.role === 'user') return { id: m.id, isUser: true, isAgent: false, text: m.text };
+      const it = this.INTENT[m.kind];
+      const visible = m.text.slice(0, m.shown);
+      return {
+        id: m.id, isUser: false, isAgent: true,
+        grad: it.grad, intentLabel: it.label + ' agent', intentColor: it.color, intentBg: it.bg,
+        thinking: m.streaming && m.shown === 0, hasText: m.shown > 0, visibleText: visible,
+        caret: m.streaming && m.shown > 0,
+        showViz: m.done,
+        showDescriptive: m.done && m.kind === 'descriptive', showDiagnostic: m.done && m.kind === 'diagnostic',
+        showPredictive: m.done && m.kind === 'predictive', showPrescriptive: m.done && m.kind === 'prescriptive',
+        bars: m.bars || [], citations: m.citations || [],
+        actions: (m.actions || []).map(a => ({ ...a, effortColor: a.effort === 'Low' ? '#0f8a5c' : '#b9743a', effortBg: a.effort === 'Low' ? '#e4f6ee' : '#fbeede' })),
+        onUp: () => this.vote(m.id, 1), onDown: () => this.vote(m.id, -1),
+        upBg: m.vote === 1 ? '#e4f6ee' : '#fff', upBorder: m.vote === 1 ? '#bfe6d2' : '#e9eaf2', upColor: m.vote === 1 ? '#0f8a5c' : '#71768a',
+        downBg: m.vote === -1 ? '#fdeee9' : '#fff', downBorder: m.vote === -1 ? '#f6cfc2' : '#e9eaf2', downColor: m.vote === -1 ? '#c0392b' : '#71768a',
+        feedHint: m.vote === 1 ? 'Thanks — feeds insight accuracy' : (m.vote === -1 ? 'Noted — we\u2019ll improve routing' : 'Was this helpful?'),
+      };
+    });
+
+    const suggestions = [
+      { tag: 'DESCRIPTIVE', color: 'var(--ac)', bg: 'var(--ac-soft)', q: 'Summarize revenue by region last quarter', onClick: () => this.sendChat('Summarize revenue by region last quarter') },
+      { tag: 'DIAGNOSTIC', color: '#1d8e9c', bg: '#e3f6f9', q: 'Why did EMEA support tickets spike this week?', onClick: () => this.sendChat('Why did EMEA support tickets spike this week?') },
+      { tag: 'PREDICTIVE', color: '#3f6fd6', bg: '#e9eefc', q: 'Forecast revenue for the next two quarters', onClick: () => this.sendChat('Forecast revenue for the next two quarters') },
+      { tag: 'PRESCRIPTIVE', color: '#0f8a5c', bg: '#e4f6ee', q: 'What should we do to reduce churn this quarter?', onClick: () => this.sendChat('What should we do to reduce churn this quarter?') },
+    ];
+
+    // connectors
+    const statusMeta = {
+      synced: { label: 'Synced', color: '#0f8a5c', bg: '#e6f7ef', dot: '#1bbf6b', anim: '' },
+      syncing: { label: 'Syncing', color: '#b9743a', bg: '#fbeede', dot: '#d9a23a', anim: 'animation:dvblink 1s infinite' },
+      error: { label: 'Sync failed', color: '#c0392b', bg: '#fdeee9', dot: '#e2603f', anim: '' },
+    };
+    const connectorView = st.connectors.map(c => {
+      const ts = this.TYPE_STYLE[c.type] || this.TYPE_STYLE.Postgres; const sm = statusMeta[c.status];
+      return { id: c.id, name: c.name, type: c.type, interval: c.interval, last: c.last, letter: ts.letter, letterBg: ts.bg, letterFg: ts.fg, statusLabel: sm.label, statusColor: sm.color, statusBg: sm.bg, dot: sm.dot, dotAnim: sm.anim, canManage: cap.manageConnectors, locked: !cap.manageConnectors, onSync: () => this.syncNow(c.id), onDelete: () => this.deleteConn(c.id), onBlocked: () => this.blocked() };
+    });
+
+    // documents
+    const docMeta = {
+      indexed: { label: 'Processed', color: '#0f8a5c', anim: '', icon: '✓' },
+      indexing: { label: 'Processing', color: '#b9743a', anim: 'animation:dvblink 1s infinite', icon: '◷' },
+      failed: { label: 'Failed', color: '#c0392b', anim: '', icon: '✕' },
+    };
+    const typeChip = { PDF: { bg: '#fdeee9', fg: '#c0392b' }, CSV: { bg: '#e6f7ef', fg: '#0f8a5c' }, MD: { bg: '#e9eefc', fg: '#3f6fd6' }, TXT: { bg: '#f0f1f6', fg: '#5a5f72' } };
+    const documentView = st.documents.map(d => {
+      const dm = docMeta[d.status] || docMeta.indexing; const tc = typeChip[d.type] || typeChip.TXT;
+      const isCsv = d.type === 'CSV';
+      const sizeText = d.status !== 'indexed' ? '—' : (isCsv ? ((d.rows || 0).toLocaleString() + ' rows · ' + (d.cols || 0) + ' cols') : ((d.chunks || 0) + ' chunk' + (d.chunks === 1 ? '' : 's')));
+      return { id: d.id, title: d.title, file: d.file, type: d.type, sizeText, statusLabel: dm.label, statusColor: dm.color, statusIcon: dm.icon, anim: dm.anim, typeBg: tc.bg, typeFg: tc.fg, uploadedAt: d.uploadedAt, by: 'by ' + d.by };
+    });
+    const uploadFiles = { good: 'Customer_churn.csv', big: 'huge_export.csv', bad: 'forecast.xlsx' };
+    const uploadPickOptions = [
+      { id: 'good', file: 'Customer_churn.csv', meta: 'CSV · 1.8 MB · structured' },
+      { id: 'big', file: 'huge_export.csv', meta: 'CSV · 14 MB · exceeds limit' },
+      { id: 'bad', file: 'forecast.xlsx', meta: 'XLSX · unsupported type' },
+    ].map(o => ({ ...o, active: st.uploadPick === o.id, onClick: () => this.setUploadPick(o.id), bg: st.uploadPick === o.id ? 'var(--ac-softer)' : '#fff', border: st.uploadPick === o.id ? 'var(--ac)' : '#e2e4ee', mark: st.uploadPick === o.id ? '●' : '○', markColor: st.uploadPick === o.id ? 'var(--ac)' : '#c9ccd8' }));
+    const chosen = st.uploadPick ? uploadFiles[st.uploadPick] : null;
+
+    // forecast
+    const h = st.forecastHorizon; const base = 4.28;
+    const growth = 0.063 * (h / 6) * 2 / 2 + 0.063 * (h / 6) * 0; // keep growth scaling smooth
+    const g = 0.063 * (h / 6);
+    const proj = base * (1 + g);
+    const half = base * (0.018 + 0.012 * (h / 6));
+    const fmt = v => '$' + v.toFixed(2) + 'M';
+    const xs = [200, 236, 272, 308];
+    const y0 = 52, yEnd = 52 - g * 150;
+    const cy = xs.map((x, i) => y0 + (yEnd - y0) * (i / 3));
+    const bandPx = 5 + (h / 6) * 7;
+    const upper = xs.map((x, i) => x + ',' + (cy[i] - bandPx));
+    const lower = xs.map((x, i) => x + ',' + (cy[i] + bandPx)).reverse();
+    const fBand = upper.concat(lower).join(' ');
+    const fLine = xs.map((x, i) => x + ',' + cy[i]).join(' ');
+    const horizonLabel = h === 3 ? 'next 3 months' : h === 12 ? 'next 12 months' : 'next 6 months';
+
+    // ===== RBAC page view-models =====
+    const roleMeta = id => this.roleMeta(id);
+    const userCount = rid => st.users.filter(u => u.role === rid).length;
+
+    // Users page
+    const usersPage = st.users.map(u => {
+      const meta = roleMeta(u.role);
+      return { id: u.id, name: u.name, email: u.email, initials: u.initials, grad: u.grad,
+        roleLabel: meta.label, roleColor: meta.color, roleBg: meta.bg, permCount: this.rolePerms(u.role).length,
+        isSelf: u.id === st.personaId, tag: u.core ? 'Core' : 'Member',
+        onEdit: () => this.openUserEditor(u.id), onDelete: () => this.askDeleteUser(u.id), canDelete: !u.core };
+    });
+
+    // Roles page
+    const rolesPage = st.roles.map(r => ({ id: r.id, name: r.name, color: r.color, bg: r.bg, system: r.system,
+      permCount: r.perms.length, userCount: userCount(r.id),
+      permNames: r.perms.map(k => (st.permissions.find(p => p.key === k) || {}).label).filter(Boolean).slice(0, 3),
+      moreCount: Math.max(0, r.perms.length - 3),
+      onEdit: () => this.openRoleEditor(r.id), onDelete: () => this.askDeleteRole(r.id) }));
+
+    // Assign page
+    const assignPage = st.users.map(u => { const meta = roleMeta(u.role); return { id: u.id, name: u.name, email: u.email, initials: u.initials, grad: u.grad, roleLabel: meta.label, roleColor: meta.color, roleBg: meta.bg, onAssign: () => this.openAssign(u.id) }; });
+
+    // Permissions matrix (draft-aware)
+    const draft = st.permDraft;
+    const permEditing = !!draft;
+    const permMatrix = st.permissions.map(perm => ({
+      key: perm.key, label: perm.label, group: perm.group,
+      cells: st.roles.map(r => {
+        const set = draft ? (draft[r.id] || []) : r.perms; const on = set.includes(perm.key);
+        return { roleId: r.id, editing: permEditing, readonly: !permEditing, mark: on ? '✓' : '',
+          toggleBg: on ? 'var(--ac-soft)' : '#fff', toggleColor: on ? 'var(--ac-deep)' : '#c9ccd8', toggleBorder: on ? 'var(--ac-ring)' : '#e2e4ee',
+          roColor: on ? '#0f8a5c' : '#d3d6e0', roMark: on ? '✓' : '–',
+          onToggle: () => this.togglePermCell(r.id, perm.key) };
+      }),
+    }));
+    const permCols = st.roles.map(r => ({ id: r.id, name: r.name, color: r.color }));
+    const permColTemplate = st.roles.map(() => '82px').join(' ');
+
+    // editor helpers
+    const ued = st.userEditor;
+    const userRoleOptions = st.roles.map(r => ({ id: r.id, name: r.name, desc: this.rolePerms(r.id).length + ' permissions', active: ued.roleId === r.id, color: r.color, onClick: () => this.setUserEditor({ roleId: r.id }), bg: ued.roleId === r.id ? 'var(--ac-softer)' : '#fff', border: ued.roleId === r.id ? 'var(--ac)' : '#e2e4ee' }));
+    const red = st.roleEditor;
+    const roleEditorPerms = st.permissions.map(p => ({ key: p.key, label: p.label, group: p.group, on: red.perms.includes(p.key), onToggle: () => this.toggleRoleEditorPerm(p.key), bg: red.perms.includes(p.key) ? 'var(--ac-softer)' : '#fff', border: red.perms.includes(p.key) ? 'var(--ac)' : '#e2e4ee', boxBg: red.perms.includes(p.key) ? 'var(--ac)' : '#d3d6e0', mark: red.perms.includes(p.key) ? '✓' : '' }));
+    const roleColorSwatches = st.roleColors.map(c => ({ color: c, active: red.color === c, onClick: () => this.setRoleEditor({ color: c }), ring: red.color === c ? '#1a1d29' : 'transparent', shadow: red.color === c ? '0 0 0 2px #fff inset' : 'none' }));
+    const asn = st.assignEditor;
+    const assignUser = st.users.find(u => u.id === asn.userId) || {};
+    const assignRoleOptions = st.roles.map(r => ({ id: r.id, name: r.name, desc: this.rolePerms(r.id).length + ' permissions · ' + userCount(r.id) + ' users', active: asn.roleId === r.id, color: r.color, onClick: () => this.setAssignRole(r.id), bg: asn.roleId === r.id ? 'var(--ac-softer)' : '#fff', border: asn.roleId === r.id ? 'var(--ac)' : '#e2e4ee' }));
+
+    // user management submenu (RBAC only)
+    const rbacSubDefs = [['users', 'Users', '👤'], ['roles', 'Roles', '🛡️'], ['assign', 'Assign roles', '🔗'], ['permissions', 'Permissions', '🔑']];
+    const userMgmtSubNav = rbacSubDefs.map(([id, label, icon]) => ({ id, label, icon, active: st.settingsPage === id, onClick: () => this.goSettings(id), nativeTip: collapsed ? '' : label,
+      bg: st.settingsPage === id ? 'var(--ac-soft)' : 'transparent', color: st.settingsPage === id ? 'var(--ac-deep)' : '#71768a', weight: st.settingsPage === id ? '700' : '500' }));
+    const pageMeta = { users: { title: 'Users', sub: 'Create, edit and remove people in this workspace' }, roles: { title: 'Roles', sub: 'Define roles and the permissions each one grants' }, assign: { title: 'Assign roles', sub: 'Give each user exactly one role' }, permissions: { title: 'Permissions', sub: 'Toggle what each role can do, then apply' }, appearance: { title: 'Appearance', sub: 'Choose a premium theme or craft your own accent' } }[st.settingsPage] || { title: 'Settings', sub: '' };
+
+    // appearance / themes
+    const themePresets = this.THEMES.map(t => ({ id: t.id, name: t.name, desc: t.desc, ac: t.ac, ac2: t.ac2, tint: t.tint,
+      grad: 'linear-gradient(135deg,' + t.ac + ',' + t.ac2 + ')', active: st.theme === t.id,
+      ring: st.theme === t.id ? t.ac : '#e9eaf2', onClick: () => this.setTheme(t.id) }));
+    const customActive = st.theme === 'custom';
+
+    // engine chips
+    const engineChips = this.ENGINES.map(e => {
+      const on = st.connDraft.type === e.id;
+      const ts = this.TYPE_STYLE[e.id] || this.TYPE_STYLE.Postgres;
+      return { id: e.id, name: e.name, desc: e.desc, letter: ts.letter, letterBg: ts.bg, letterFg: ts.fg, onClick: () => this.setEngine(e.id), bg: on ? 'var(--ac-softer)' : '#fff', border: on ? 'var(--ac)' : '#e9eaf2', shadow: on ? '0 0 0 3px rgba(109,77,255,.13)' : 'none', nameColor: on ? 'var(--ac-deep)' : '#1a1d29' };
+    });
+
+    const hour = 9;
+    const greet = (role === 'viewer') ? ('Welcome back, ' + persona.short) : ('Good morning, ' + persona.short);
+
+    return {
+      isAuth: st.screen === 'auth', isApp: st.screen !== 'auth',
+      isChat: st.screen === 'chat', isOverview: st.screen === 'overview', isConnectors: st.screen === 'connectors',
+      isDocuments: st.screen === 'documents', isForecasts: st.screen === 'forecasts', isSettings: st.screen === 'settings', isThemes: st.screen === 'themes',
+      // auth
+      isRegister: st.authMode === 'register',
+      authTitle: st.authMode === 'register' ? 'Create your account' : 'Sign in to Datacon',
+      authSub: st.authMode === 'register' ? 'Set up secure, role-based access for your team.' : 'Use your work account, or jump straight into a role to explore.',
+      authCta: st.authMode === 'register' ? 'Create account' : 'Sign in',
+      authSwitchText: st.authMode === 'register' ? 'Already have an account?' : 'New to Datacon?',
+      authSwitchCta: st.authMode === 'register' ? 'Sign in' : 'Create one',
+      onToggleAuth: () => this.toggleAuth(), onLogin: () => this.enterApp(), personaCards,
+      // shell
+      persona, roleLabel: rm.label.charAt(0) + rm.label.slice(1).toLowerCase(), roleColor: rm.color,
+      navItems, switcher,
+      collapsed, expanded: !collapsed, collapsedClass: collapsed ? 'dv-collapsed' : '',
+      toggleCollapse: () => this.toggleCollapse(),
+      openProfile: () => this.openProfile(), closeProfile: () => this.closeProfile(), signOut: () => this.signOut(),
+      showProfile: !!st.showProfile,
+      profileRoleName: this.roleMeta(role).name, profilePermCount: this.rolePerms(role).length,
+      // chat
+      viewMessages, suggestions, chatEmpty: st.messages.length === 0,
+      draft: st.draft, onDraft: e => this.onDraft(e), onComposerKey: e => this.onKey(e), onSend: () => this.sendChat(st.draft),
+      setScrollRef: el => { this._scroll = el; },
+      // overview
+      todayLabel: 'Tuesday · June 30', greeting: greet,
+      goChat: () => this.go('chat'), goForecasts: () => this.go('forecasts'),
+      askSpike: () => this.sendChat('Why did EMEA support tickets spike this week?'),
+      // connectors
+      canManage: cap.manageConnectors, cantManage: !cap.manageConnectors,
+      connectorView, openConnModal: () => this.openConnModal(),
+      tableCount: this.TABLES.length,
+      tableView: this.TABLES.map(tb => { const ts = this.TYPE_STYLE[tb.type] || this.TYPE_STYLE.Postgres; const sm = statusMeta[tb.status]; return { name: tb.name, source: tb.source, shape: tb.cols + ' cols · ' + tb.rows.toLocaleString() + ' rows', letter: ts.letter, letterBg: ts.bg, letterFg: ts.fg, statusLabel: sm.label, statusColor: sm.color, anim: sm.anim, onView: () => this.openTable(tb.id) }; }),
+      showTableModal: !!st.tableModalId, closeTable: () => this.closeTable(),
+      tableModal: (() => { const tb = this.TABLES.find(x => x.id === st.tableModalId); if (!tb) return { columns: [], rows: [], name: '', source: '', shape: '', letter: '', letterBg: '#eee', letterFg: '#888', statusLabel: '', statusColor: '#888', previewCount: 0, rowsTotal: '0', onAsk: () => {} }; const ts = this.TYPE_STYLE[tb.type] || this.TYPE_STYLE.Postgres; const sm = statusMeta[tb.status]; return { name: tb.name, source: tb.source, shape: tb.cols + ' cols · ' + tb.rows.toLocaleString() + ' rows', letter: ts.letter, letterBg: ts.bg, letterFg: ts.fg, statusLabel: sm.label, statusColor: sm.color, columns: tb.columns, rows: tb.sample, previewCount: tb.sample.length, rowsTotal: tb.rows.toLocaleString(), onAsk: () => { this.closeTable(); this.sendChat('Give me a summary of the ' + tb.name + ' table'); } }; })(),
+      showConnModal: st.showConnModal, closeConnModal: () => this.closeConnModal(), stop: e => e.stopPropagation(),
+      connDraft: st.connDraft, onConnName: e => this.setState(s => ({ connDraft: { ...s.connDraft, name: e.target.value } })),
+      onConnHost: e => this.setState(s => ({ connDraft: { ...s.connDraft, host: e.target.value } })),
+      engineChips, testConn: () => this.testConn(), saveConn: () => this.saveConn(),
+      connStepPick: st.connStep === 'pick', connStepConfig: st.connStep === 'config',
+      backToPick: () => this.backToPick(), onSchedule: e => this.setState(s => ({ connDraft: { ...s.connDraft, schedule: e.target.value } })),
+      activeEngine: (() => {
+        const ef = this.ENGINE_FIELDS[st.connDraft.type] || this.ENGINE_FIELDS.Postgres;
+        const ets = this.TYPE_STYLE[st.connDraft.type] || this.TYPE_STYLE.Postgres;
+        const em = this.ENGINES.find(x => x.id === st.connDraft.type) || { name: st.connDraft.type };
+        return { name: em.name, letter: ets.letter, letterBg: ets.bg, letterFg: ets.fg,
+          primaryLabelUpper: ef.primary.label.toUpperCase(), primaryPh: ef.primary.ph, primaryHelp: ef.primary.help || '',
+          primaryHasHelp: !!ef.primary.help, primaryMb: ef.primary.help ? '7px' : '15px',
+          primaryType: ef.primary.secret ? 'password' : 'text', primaryFont: ef.primary.secret ? 'inherit' : "'IBM Plex Mono',monospace",
+          secondary: ef.secondary.map(f => { const isSelect = f.kind === 'select'; const isTextarea = f.kind === 'textarea'; const hasHelp = !!f.help; return { labelUpper: f.label.toUpperCase(), ph: f.ph, type: f.type || 'text', font: (isSelect || f.type === 'password') ? 'inherit' : "'IBM Plex Mono',monospace", req: !!f.req, help: f.help || '', hasHelp, mb: hasHelp ? '6px' : '15px', isSelect, isTextarea, isInput: !isSelect && !isTextarea, options: f.options || [], value: f.value || '' }; }) };
+      })(),
+      testTesting: st.testState === 'testing', testPass: st.testState === 'pass', testFail: st.testState === 'fail',
+      saveBg: st.testState === 'pass' ? 'var(--ac-grad)' : '#e7e8ef', saveColor: st.testState === 'pass' ? '#fff' : '#aab',
+      // data sources
+      canUpload: cap.uploadDocs, cantUpload: !cap.uploadDocs,
+      uploadIdle: st.uploadState === 'idle', uploadBusy: st.uploadState === 'uploading', uploadErr: st.uploadState === 'error',
+      uploadName: st.uploadName, uploadPctLabel: st.uploadPct + '%', uploadStage: st.uploadStage, uploadMsg: st.uploadMsg,
+      onUploadGood: () => this.uploadGood(), onUploadBig: () => this.uploadBig(), onUploadBad: () => this.uploadBad(), resetUpload: () => this.resetUpload(),
+      documentView, sourceCount: st.documents.length,
+      showSourceModal: st.showSourceModal, openSourceModal: () => this.openSourceModal(), closeSourceModal: () => this.closeSourceModal(),
+      doUpload: () => this.doUpload(), refreshSources: () => this.refreshSources(), uploadPickOptions,
+      chooseFile: () => this.chooseFile(), chosenFileName: chosen || 'No file chosen', chosenColor: chosen ? '#1a1d29' : '#9499ad',
+      uploadBtnBg: chosen ? 'var(--ac-grad)' : '#e7e8ef', uploadBtnColor: chosen ? '#fff' : '#aab', uploadBtnShadow: chosen ? '0 8px 18px -8px rgba(109,77,255,.6)' : 'none',
+      // forecast
+      fModel: st.forecastModel, fProj: fmt(proj), fLo: fmt(proj - half), fHi: fmt(proj + half), fGrowth: '+' + (g * 100).toFixed(1) + '%',
+      fMape: st.forecastModel === 'OLS' ? '5.8%' : '4.1%', fHorizonLabel: horizonLabel, fBand, fLine,
+      olsBg: st.forecastModel === 'OLS' ? '#fff' : 'transparent', olsColor: st.forecastModel === 'OLS' ? 'var(--ac)' : '#71768a',
+      hwBg: st.forecastModel === 'Holt-Winters' ? '#fff' : 'transparent', hwColor: st.forecastModel === 'Holt-Winters' ? 'var(--ac)' : '#71768a',
+      setOLS: () => this.setModel('OLS'), setHW: () => this.setModel('Holt-Winters'),
+      setH3: () => this.setHorizon(3), setH6: () => this.setHorizon(6), setH12: () => this.setHorizon(12),
+      h3bg: h === 3 ? 'var(--ac-soft)' : '#f5f6fb', h3color: h === 3 ? 'var(--ac-deep)' : '#71768a',
+      h6bg: h === 6 ? 'var(--ac-soft)' : '#f5f6fb', h6color: h === 6 ? 'var(--ac-deep)' : '#71768a',
+      h12bg: h === 12 ? 'var(--ac-soft)' : '#f5f6fb', h12color: h === 12 ? 'var(--ac-deep)' : '#71768a',
+      // settings / RBAC
+      cantManageUsers: !cap.manageUsers, canManageUsers: cap.manageUsers, canManageRoles: cap.manageRoles,
+      userMgmtSubNav, settingsTitle: pageMeta.title, settingsSub: pageMeta.sub,
+      isSettingsUsers: st.settingsPage === 'users', isSettingsRoles: st.settingsPage === 'roles',
+      isSettingsAssign: st.settingsPage === 'assign', isSettingsPerms: st.settingsPage === 'permissions',
+      showUserMgmtSubmenu: st.screen === 'settings' && !collapsed,
+      isSettingsAppearance: st.settingsPage === 'appearance',
+      themePresets, customActive, customAccent: st.customAccent, customRing: customActive ? st.customAccent : '#e9eaf2',
+      showAdminGate: !cap.manageUsers && st.settingsPage !== 'appearance',
+      onCustomAccent: e => this.setCustomAccent(e.target.value), applyCustom: () => this.applyCustom(),
+      themeClass: st.theme === 'custom' ? 'dc-theme-custom' : 'dc-theme-' + st.theme,
+      setRootRef: el => { this._root = el; if (el && st.theme === 'custom') el.style.setProperty('--ac', st.customAccent); },
+      setBrandRef: el => { this._brand = el; },
+      usersPage, rolesPage, assignPage, permMatrix, permCols, permColTemplate, permEditing, permReadonly: !permEditing,
+      startPermEdit: () => this.startPermEdit(), cancelPermEdit: () => this.cancelPermEdit(), savePerms: () => this.savePerms(),
+      openUserEditorNew: () => this.openUserEditor(null), openRoleEditorNew: () => this.openRoleEditor(null),
+      // user editor
+      showUserEditor: ued.open, userEditorTitle: ued.id ? 'Edit user' : 'Create user', userEditorCta: ued.id ? 'Save changes' : 'Create user',
+      userEditorName: ued.name, userEditorEmail: ued.email, userRoleOptions,
+      onUEName: e => this.setUserEditor({ name: e.target.value }), onUEEmail: e => this.setUserEditor({ email: e.target.value }),
+      closeUserEditor: () => this.closeUserEditor(), saveUser: () => this.saveUser(),
+      // role editor
+      showRoleEditor: red.open, roleEditorTitle: red.id ? 'Edit role' : 'Create role', roleEditorCta: red.id ? 'Save changes' : 'Create role',
+      roleEditorName: red.name, onREName: e => this.setRoleEditor({ name: e.target.value }),
+      roleEditorPerms, roleColorSwatches, closeRoleEditor: () => this.closeRoleEditor(), saveRole: () => this.saveRole(),
+      // assign editor
+      showAssign: asn.open, assignUserName: assignUser.name || '', assignUserEmail: assignUser.email || '',
+      assignUserInitials: assignUser.initials || '', assignUserGrad: assignUser.grad || '#ccc', assignRoleOptions,
+      closeAssign: () => this.closeAssign(), saveAssign: () => this.saveAssign(),
+      // confirm dialog
+      showConfirm: !!st.confirm, confirmTitle: (st.confirm || {}).title || '', confirmBody: (st.confirm || {}).body || '',
+      confirmLabel: (st.confirm || {}).label || 'Confirm', confirmDanger: (st.confirm || {}).tone === 'danger', confirmPrimary: (st.confirm || {}).tone !== 'danger',
+      confirmYes: () => this.confirmYes(), confirmNo: () => this.confirmNo(),
+      // toasts
+      toasts: st.toasts.map(t => ({ ...t, onClose: () => this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== t.id) })) })),
+    };
+  }
+}
+</script>
+</body>
+</html>
