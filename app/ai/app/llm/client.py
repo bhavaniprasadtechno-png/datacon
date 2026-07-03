@@ -1,5 +1,8 @@
+import logging
 from typing import Protocol
 from app.config import settings
+
+logger = logging.getLogger("app.llm.client")
 
 
 class LLMClient(Protocol):
@@ -17,7 +20,9 @@ def get_llm_client() -> LLMClient:
     if settings.gemini_api_key:
         from app.llm.litellm_client import LiteLLMClient
 
+        logger.info("Using LiteLLMClient (model=%s) — GEMINI_API_KEY is set.", settings.llm_model)
         return LiteLLMClient()
     from app.llm.offline_client import OfflineLLMClient
 
+    logger.warning("Using OfflineLLMClient — GEMINI_API_KEY is not set, chat will use static templates.")
     return OfflineLLMClient()
