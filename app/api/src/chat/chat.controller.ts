@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Logger, Param, Patch, Post, Res, UseGuards } from "@nestjs/common";
 import type { Response } from "express";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PermissionsGuard } from "../auth/guards/permissions.guard";
@@ -17,6 +17,8 @@ const DEFAULT_HORIZON = 6;
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller("chat")
 export class ChatController {
+  private readonly logger = new Logger(ChatController.name);
+
   constructor(
     private readonly chat: ChatService,
     private readonly metrics: MetricsService,
@@ -35,15 +37,28 @@ export class ChatController {
     await this.chat.appendUserMessage(conversation.id, dto.message);
     const context = await this.metrics.chatContext(DEFAULT_MODEL, DEFAULT_HORIZON);
 
+    let upstream;
+    try {
+      upstream = await this.ai.client.post(
+        "/internal/chat/stream",
+        { message: dto.message, context },
+        { responseType: "stream" },
+      );
+    } catch (e: unknown) {
+      // Respond as a clean JSON error *before* touching any SSE headers —
+      // if we set them first and this call throws, Nest's exception filter
+      // can't cleanly override an already-started response, and the client
+      // gets a generic "Internal server error" with no useful detail.
+      this.logger.error(`AI service call failed for chat stream: ${e instanceof Error ? e.message : e}`);
+      res.status(502).json({
+        message: "The AI service is temporarily unavailable — please try again in a moment.",
+      });
+      return;
+    }
+
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
-
-    const upstream = await this.ai.client.post(
-      "/internal/chat/stream",
-      { message: dto.message, context },
-      { responseType: "stream" },
-    );
 
     let buffer = "";
     let finalIntent = "descriptive";
