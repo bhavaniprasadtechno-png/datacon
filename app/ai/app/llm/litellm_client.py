@@ -1,5 +1,8 @@
+import logging
 import litellm
 from app.config import settings
+
+logger = logging.getLogger("app.llm.litellm")
 
 
 class LiteLLMClient:
@@ -23,5 +26,8 @@ class LiteLLMClient:
             )
             return resp.choices[0].message.content or offline_text
         except Exception:
-            # A transient provider outage (rate limit, timeout, etc.) shouldn't break the demo.
+            # A transient provider outage (rate limit, timeout, etc.) shouldn't break the demo,
+            # but silently swallowing this makes "why does chat look static" undiagnosable —
+            # log it so the real cause (bad key, quota, wrong model) shows up in server logs.
+            logger.exception("LiteLLM call failed for model=%s; falling back to offline text", self._model)
             return offline_text
