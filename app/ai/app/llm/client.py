@@ -18,10 +18,10 @@ class LLMClient(Protocol):
 
 def get_llm_client() -> LLMClient:
     if settings.gemini_api_key:
-        from app.llm.litellm_client import LiteLLMClient
+        from app.llm.gemini_rest_client import GeminiRestClient
 
-        logger.info("Using LiteLLMClient (model=%s) — GEMINI_API_KEY is set.", settings.llm_model)
-        return LiteLLMClient()
+        logger.info("Using GeminiRestClient (model=%s) — GEMINI_API_KEY is set.", settings.llm_model)
+        return GeminiRestClient()
     from app.llm.offline_client import OfflineLLMClient
 
     logger.warning("Using OfflineLLMClient — GEMINI_API_KEY is not set, chat will use static templates.")
