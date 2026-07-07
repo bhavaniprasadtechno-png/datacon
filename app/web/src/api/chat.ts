@@ -58,11 +58,19 @@ export function useFeedback() {
   });
 }
 
+export interface AgentStreamResult {
+  intent: string;
+  text: string;
+  payload: unknown;
+}
+
 interface StreamHandlers {
   onConversation: (conversationId: string) => void;
-  onIntent: (intent: string) => void;
-  onToken: (text: string) => void;
-  onDone: (final: { intent: string; text: string; payload: unknown }) => void;
+  /** Upfront agent assignment — one question can fan out to several agents. */
+  onAgents: (intents: string[]) => void;
+  onAgentDelta: (intent: string, text: string) => void;
+  onAgentDone: (result: AgentStreamResult) => void;
+  onDone: (results: AgentStreamResult[]) => void;
   onError: (message: string) => void;
 }
 
@@ -99,9 +107,10 @@ export async function streamChat(message: string, conversationId: string | null,
       const event = eventMatch[1];
       const data = JSON.parse(dataMatch[1]);
       if (event === "conversation") handlers.onConversation(data.conversationId);
-      else if (event === "intent") handlers.onIntent(data.intent);
-      else if (event === "token") handlers.onToken(data.text);
-      else if (event === "done") handlers.onDone(data);
+      else if (event === "agents") handlers.onAgents(data.intents);
+      else if (event === "agent_delta") handlers.onAgentDelta(data.intent, data.text);
+      else if (event === "agent_done") handlers.onAgentDone(data);
+      else if (event === "done") handlers.onDone(data.results);
     }
   }
 }

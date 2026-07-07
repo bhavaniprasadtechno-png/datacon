@@ -1,5 +1,4 @@
-from app.agents.types import AgentResult
-from app.llm.client import LLMClient
+from app.agents.types import AgentPrep
 
 SYSTEM = (
     "You are Datacon's descriptive analytics agent. Given real computed revenue-by-region "
@@ -8,7 +7,7 @@ SYSTEM = (
 )
 
 
-async def run(question: str, context: dict, llm: LLMClient) -> AgentResult:
+def prepare(question: str, context: dict) -> AgentPrep:
     current = context["regionRevenue"]["current"]  # [{region, revenue}]
     previous = context["regionRevenue"]["previous"]
 
@@ -42,5 +41,4 @@ async def run(question: str, context: dict, llm: LLMClient) -> AgentResult:
         f"- Leading region: {top_region['region']}"
     )
 
-    text = await llm.compose(SYSTEM, prompt, offline_text)
-    return AgentResult(text=text, payload={"bars": bars})
+    return AgentPrep(system=SYSTEM, prompt=prompt, offline_text=offline_text, payload={"bars": bars})

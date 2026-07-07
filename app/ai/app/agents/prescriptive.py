@@ -1,5 +1,4 @@
-from app.agents.types import AgentResult
-from app.llm.client import LLMClient
+from app.agents.types import AgentPrep
 
 SYSTEM = (
     "You are Datacon's prescriptive analytics agent. Given real churn/at-risk-account "
@@ -8,7 +7,7 @@ SYSTEM = (
 )
 
 
-async def run(question: str, context: dict, llm: LLMClient) -> AgentResult:
+def prepare(question: str, context: dict) -> AgentPrep:
     churn = context["churnSnapshot"]  # {churnPct, atRiskAccounts}
     incident_title = context.get("topIncidentTitle") or "the latest billing incident report"
     target = max(churn["churnPct"] - 0.7, 0.0)
@@ -27,5 +26,4 @@ async def run(question: str, context: dict, llm: LLMClient) -> AgentResult:
         f"- Planned actions: {[a['title'] for a in actions]}"
     )
 
-    text = await llm.compose(SYSTEM, prompt, offline_text)
-    return AgentResult(text=text, payload={"actions": actions})
+    return AgentPrep(system=SYSTEM, prompt=prompt, offline_text=offline_text, payload={"actions": actions})

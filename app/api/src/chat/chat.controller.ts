@@ -80,23 +80,27 @@ export class ChatController {
     // very first message ever) and the server picked/created one.
     res.write(`event: conversation\ndata: ${JSON.stringify({ conversationId: conversation.id })}\n\n`);
 
+    // Pass the raw stream through untouched while incrementally parsing SSE
+    // frames on the side, collecting each agent's finished result — one
+    // question can now fan out to several agents (SRS Fig. 2's per-agent
+    // loop), so there are multiple agent_done frames to persist, one
+    // Message row each.
     let buffer = "";
-    let finalIntent = "descriptive";
-    let finalText = "";
-    let finalPayload: unknown = null;
+    const results: { intent: string; text: string; payload: unknown }[] = [];
 
     upstream.data.on("data", (chunk: Buffer) => {
-      const text = chunk.toString("utf8");
-      buffer += text;
       res.write(chunk);
+      buffer += chunk.toString("utf8");
 
-      const doneMatch = buffer.match(/event: done\ndata: (.+)\n\n/);
-      if (doneMatch) {
+      let idx: number;
+      while ((idx = buffer.indexOf("\n\n")) >= 0) {
+        const frame = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+        const eventMatch = frame.match(/^event: (.+)$/m);
+        const dataMatch = frame.match(/^data: (.+)$/m);
+        if (eventMatch?.[1] !== "agent_done" || !dataMatch) continue;
         try {
-          const parsed = JSON.parse(doneMatch[1]);
-          finalIntent = parsed.intent;
-          finalText = parsed.text;
-          finalPayload = parsed.payload;
+          results.push(JSON.parse(dataMatch[1]));
         } catch {
           // ignore parse errors — the client already has the raw event either way
         }
@@ -104,8 +108,10 @@ export class ChatController {
     });
 
     upstream.data.on("end", async () => {
-      if (finalText) {
-        await this.chat.appendAgentMessage(conversation.id, finalIntent, finalText, finalPayload);
+      for (const result of results) {
+        if (result.text) {
+          await this.chat.appendAgentMessage(conversation.id, result.intent, result.text, result.payload);
+        }
       }
       res.end();
     });

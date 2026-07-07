@@ -68,25 +68,37 @@ export function ChatPage() {
     setDraft("");
 
     const userMsg: ChatMessage = { id: `local-${localIdSeq++}`, role: "user", intent: null, text: trimmed, payload: null, vote: 0 };
-    const agentId = `local-${localIdSeq++}`;
-    const agentMsg: ChatMessage = { id: agentId, role: "agent", intent: null, text: "", payload: null, vote: 0, streaming: true };
-    setMessages((prev) => [...prev, userMsg, agentMsg]);
+    setMessages((prev) => [...prev, userMsg]);
+
+    // One question can fan out to several agents (e.g. "why did X happen and
+    // what should we do?" → diagnostic + prescriptive), each streaming into
+    // its own bubble. Ids assigned per intent when the agents frame arrives.
+    const agentIds = new Map<string, string>();
 
     await streamChat(trimmed, activeConversationId, model, {
       onConversation: (conversationId) => {
         loadedConversationId.current = conversationId;
         setActiveConversationId(conversationId);
       },
-      onIntent: (intent) => {
-        setMessages((prev) => prev.map((m) => (m.id === agentId ? { ...m, intent: intent as ChatIntent } : m)));
+      onAgents: (intents) => {
+        const placeholders = intents.map((intent) => {
+          const id = `local-${localIdSeq++}`;
+          agentIds.set(intent, id);
+          return { id, role: "agent", intent: intent as ChatIntent, text: "", payload: null, vote: 0, streaming: true } as ChatMessage;
+        });
+        setMessages((prev) => [...prev, ...placeholders]);
       },
-      onToken: (chunk) => {
-        setMessages((prev) => prev.map((m) => (m.id === agentId ? { ...m, text: m.text + chunk } : m)));
+      onAgentDelta: (intent, chunk) => {
+        const id = agentIds.get(intent);
+        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: m.text + chunk } : m)));
       },
-      onDone: (final) => {
+      onAgentDone: (result) => {
+        const id = agentIds.get(result.intent);
         setMessages((prev) =>
-          prev.map((m) => (m.id === agentId ? { ...m, intent: final.intent as ChatIntent, text: final.text, payload: final.payload as ChatPayload, streaming: false } : m)),
+          prev.map((m) => (m.id === id ? { ...m, text: result.text, payload: result.payload as ChatPayload, streaming: false } : m)),
         );
+      },
+      onDone: () => {
         setSending(false);
         // Refreshes the sidebar's title (auto-set from the first message),
         // preview snippet, and updatedAt-based ordering.
@@ -94,7 +106,8 @@ export function ChatPage() {
       },
       onError: (message) => {
         addToast({ icon: "⚠️", accent: "#e2603f", title: "Chat failed", desc: message });
-        setMessages((prev) => prev.filter((m) => m.id !== agentId));
+        const pendingIds = new Set(agentIds.values());
+        setMessages((prev) => prev.filter((m) => !pendingIds.has(m.id)));
         setSending(false);
       },
     });

@@ -1,5 +1,4 @@
-from app.agents.types import AgentResult
-from app.llm.client import LLMClient
+from app.agents.types import AgentPrep
 from app.forecasting import ols, holt_winters
 
 SYSTEM = (
@@ -9,7 +8,7 @@ SYSTEM = (
 )
 
 
-async def run(question: str, context: dict, llm: LLMClient) -> AgentResult:
+def prepare(question: str, context: dict) -> AgentPrep:
     series = context["revenueHistory"]  # list[float], chronological monthly revenue ($M)
     model = context.get("model", "Holt-Winters")
     horizon = int(context.get("horizonMonths", 6))
@@ -29,8 +28,6 @@ async def run(question: str, context: dict, llm: LLMClient) -> AgentResult:
         f"- Growth: {result['growth_pct']:+.1f}%\n- MAPE: {result['mape']:.1f}%"
     )
 
-    text = await llm.compose(SYSTEM, prompt, offline_text)
-
     payload = {
         "model": model,
         "projected": f"${result['projected']:.2f}M",
@@ -40,4 +37,4 @@ async def run(question: str, context: dict, llm: LLMClient) -> AgentResult:
         "mape": f"{result['mape']:.1f}%",
         "series": [{"label": f"m{i}", "value": v} for i, v in enumerate(series)],
     }
-    return AgentResult(text=text, payload=payload)
+    return AgentPrep(system=SYSTEM, prompt=prompt, offline_text=offline_text, payload=payload)

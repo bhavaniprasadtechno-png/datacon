@@ -1,5 +1,4 @@
-from app.agents.types import AgentResult
-from app.llm.client import LLMClient
+from app.agents.types import AgentPrep
 from app.rag.chroma_store import query as chroma_query
 
 SYSTEM = (
@@ -9,7 +8,7 @@ SYSTEM = (
 )
 
 
-async def run(question: str, context: dict, llm: LLMClient) -> AgentResult:
+def prepare(question: str, context: dict) -> AgentPrep:
     daily = context["ticketDaily"]  # [{date, region, count}], chronological, last = today
     baseline = daily[:-1]
     spike = daily[-1]
@@ -46,5 +45,9 @@ async def run(question: str, context: dict, llm: LLMClient) -> AgentResult:
         f"- Cited excerpts: {[c['snippet'] for c in citations]}"
     )
 
-    text = await llm.compose(SYSTEM, prompt, offline_text)
-    return AgentResult(text=text, payload={"citations": citations, "correlation": f"ticket spike ↔ {citations[0]['documentTitle']}" if citations else None})
+    return AgentPrep(
+        system=SYSTEM,
+        prompt=prompt,
+        offline_text=offline_text,
+        payload={"citations": citations, "correlation": f"ticket spike ↔ {citations[0]['documentTitle']}" if citations else None},
+    )
