@@ -1,11 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import type { DataSourceRecord } from "../lib/types";
+import type { DataSourcePreview, DataSourceRecord } from "../lib/types";
 
 export function useDataSources() {
   return useQuery({
     queryKey: ["documents"],
     queryFn: async () => (await api.get<DataSourceRecord[]>("/documents")).data,
+  });
+}
+
+export function useDataSourcePreview(id: string | null) {
+  return useQuery({
+    queryKey: ["documents", id, "preview"],
+    queryFn: async () => (await api.get<DataSourcePreview>(`/documents/${id}/preview`)).data,
+    enabled: !!id,
+    retry: false,
   });
 }
 

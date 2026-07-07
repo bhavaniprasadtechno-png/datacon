@@ -22,6 +22,8 @@ class IngestOut(BaseModel):
     chunkCount: int | None = None
     rowCount: int | None = None
     colCount: int | None = None
+    columns: list[str] | None = None
+    sampleRows: list[list[str]] | None = None
 
 
 @router.post("/ingest", response_model=IngestOut)
@@ -30,8 +32,15 @@ async def ingest(payload: IngestPayload):
     data = base64.b64decode(payload.contentBase64)
     try:
         if doc_type == "csv":
-            columns, row_count = parse_csv(data)
-            return IngestOut(ok=True, message=f"Parsed {row_count} rows.", rowCount=row_count, colCount=len(columns))
+            columns, row_count, sample_rows = parse_csv(data)
+            return IngestOut(
+                ok=True,
+                message=f"Parsed {row_count} rows.",
+                rowCount=row_count,
+                colCount=len(columns),
+                columns=columns,
+                sampleRows=sample_rows,
+            )
 
         if doc_type == "pdf":
             text = extract_pdf_text(data)

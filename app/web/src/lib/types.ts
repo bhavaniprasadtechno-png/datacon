@@ -119,6 +119,15 @@ export interface DataSourceRecord {
   createdAt: string;
 }
 
+export interface DataSourcePreview {
+  id: string;
+  title: string;
+  filename: string;
+  columns: string[];
+  rowCount: number | null;
+  sampleRows: string[][];
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "agent";

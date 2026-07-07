@@ -3,6 +3,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { useDataSources } from "../../api/documents";
 import { Button } from "../../components/ui/Button";
 import { UploadModal } from "./UploadModal";
+import { DataSourceTableModal } from "./DataSourceTableModal";
 import type { DataSourceRecord, DocStatus, DocType } from "../../lib/types";
 
 const TYPE_CHIP: Record<DocType, { bg: string; color: string }> = {
@@ -29,6 +30,7 @@ export function DataSourcesPage() {
   const { caps, user } = useAuth();
   const { data: rows, isLoading, refetch, isFetching } = useDataSources();
   const [showUpload, setShowUpload] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   return (
     <div style={{ padding: 32, maxWidth: 1080, margin: "0 auto" }}>
@@ -61,19 +63,20 @@ export function DataSourcesPage() {
       )}
 
       <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.7fr) 66px 150px 120px 170px", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "#9499ad", borderBottom: "1px solid #f0f1f6" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.7fr) 66px 150px 120px 170px 100px", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "#9499ad", borderBottom: "1px solid #f0f1f6" }}>
           <span>NAME</span>
           <span>TYPE</span>
           <span>SIZE</span>
           <span>STATUS</span>
           <span>UPLOADED</span>
+          <span></span>
         </div>
         {isLoading && <div style={{ padding: 20, color: "#9499ad" }}>Loading…</div>}
         {rows?.map((row) => {
           const chip = TYPE_CHIP[row.type];
           const status = STATUS_META[row.status];
           return (
-            <div key={row.id} style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.7fr) 66px 150px 120px 170px", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #f5f6fb" }}>
+            <div key={row.id} style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.7fr) 66px 150px 120px 170px 100px", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #f5f6fb" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: chip.bg, color: chip.color, display: "flex", alignItems: "center", justifyContent: "center", font: "700 10px 'IBM Plex Mono',monospace", flexShrink: 0 }}>
                   {row.type}
@@ -93,12 +96,31 @@ export function DataSourcesPage() {
                 {new Date(row.createdAt).toLocaleString()}
                 <div>by {row.uploadedBy}</div>
               </div>
+              <div>
+                {row.type === "CSV" && row.status === "INDEXED" && (
+                  <button
+                    onClick={() => setPreviewId(row.id)}
+                    style={{
+                      font: "600 11px 'IBM Plex Mono',monospace",
+                      color: "#5b3fd6",
+                      background: "#efeaff",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "6px 10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ⊞ View table
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
 
       <UploadModal open={showUpload} onClose={() => setShowUpload(false)} />
+      <DataSourceTableModal id={previewId} onClose={() => setPreviewId(null)} />
     </div>
   );
 }

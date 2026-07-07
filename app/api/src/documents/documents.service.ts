@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { DocType } from "@datacon/prisma";
 import * as path from "path";
 import { PrismaService } from "../prisma/prisma.service";
@@ -37,6 +37,22 @@ export class DocumentsService {
       orderBy: { createdAt: "desc" },
     });
     return rows.map((r) => this.shape(r));
+  }
+
+  async preview(id: string) {
+    const row = await this.prisma.dataSource.findUnique({ where: { id } });
+    if (!row) throw new NotFoundException("Data source not found.");
+    if (!row.columns || !row.sampleRows) {
+      throw new NotFoundException("No table preview available for this file — try re-uploading it.");
+    }
+    return {
+      id: row.id,
+      title: row.title,
+      filename: row.filename,
+      columns: row.columns as string[],
+      rowCount: row.rowCount,
+      sampleRows: row.sampleRows as string[][],
+    };
   }
 
   async upload(file: Express.Multer.File, uploadedById: string) {
@@ -82,7 +98,15 @@ export class DocumentsService {
         },
         { timeout: 120_000 }, // embedding a large PDF's chunks can take longer than the default 30s
       );
-      const data = res.data as { ok: boolean; message: string; chunkCount?: number; rowCount?: number; colCount?: number };
+      const data = res.data as {
+        ok: boolean;
+        message: string;
+        chunkCount?: number;
+        rowCount?: number;
+        colCount?: number;
+        columns?: string[];
+        sampleRows?: string[][];
+      };
       const updated = await this.prisma.dataSource.update({
         where: { id: row.id },
         data: {
@@ -90,6 +114,8 @@ export class DocumentsService {
           chunkCount: data.chunkCount ?? null,
           rowCount: data.rowCount ?? null,
           colCount: data.colCount ?? null,
+          columns: data.columns ?? undefined,
+          sampleRows: data.sampleRows ?? undefined,
         },
         include: { uploadedBy: { select: { email: true } } },
       });

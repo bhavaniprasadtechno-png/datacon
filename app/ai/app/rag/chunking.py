@@ -41,6 +41,15 @@ def chunk_words(text: str, size: int = CHUNK_SIZE_WORDS, overlap: int = CHUNK_OV
     return chunks
 
 
-def parse_csv(data: bytes) -> tuple[list[str], int]:
-    df = pd.read_csv(io.BytesIO(data))
-    return [str(c) for c in df.columns], len(df)
+PREVIEW_ROWS = 20
+
+
+def parse_csv(data: bytes) -> tuple[list[str], int, list[list[str]]]:
+    # keep_default_na=False: pandas' default na_values list includes plain
+    # business tokens like "NA", "NULL", "N/A" — this app uses "NA" as the
+    # North America region code throughout its own seed data, so without
+    # this a region column full of "NA" silently becomes NaN.
+    df = pd.read_csv(io.BytesIO(data), keep_default_na=False)
+    columns = [str(c) for c in df.columns]
+    sample_rows = df.head(PREVIEW_ROWS).astype(str).values.tolist()
+    return columns, len(df), sample_rows

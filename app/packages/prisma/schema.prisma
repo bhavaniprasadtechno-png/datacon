@@ -160,6 +160,8 @@ model DataSource {
   chunkCount   Int?
   rowCount     Int?
   colCount     Int?
+  columns      Json?
+  sampleRows   Json?
   storageKey   String?
   failureMsg   String?
   uploadedById String

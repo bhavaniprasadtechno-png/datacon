@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { Controller, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PermissionsGuard } from "../auth/guards/permissions.guard";
@@ -15,6 +15,11 @@ export class DocumentsController {
   @Get()
   list() {
     return this.documents.list();
+  }
+
+  @Get(":id/preview")
+  preview(@Param("id") id: string) {
+    return this.documents.preview(id);
   }
 
   @RequirePermissions("upload_docs")
