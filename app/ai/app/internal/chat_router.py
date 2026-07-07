@@ -22,6 +22,7 @@ _AGENTS = {
 class ChatPayload(BaseModel):
     message: str
     context: dict
+    model: str | None = None
 
 
 def _tokenize(text: str) -> list[str]:
@@ -39,7 +40,7 @@ def _tokenize(text: str) -> list[str]:
 async def stream(payload: ChatPayload):
     intent = route(payload.message)
     agent_fn = _AGENTS[intent]
-    result = await agent_fn(payload.message, payload.context, get_llm_client())
+    result = await agent_fn(payload.message, payload.context, get_llm_client(payload.model))
 
     async def event_gen():
         yield f"event: intent\ndata: {json.dumps({'intent': intent})}\n\n"

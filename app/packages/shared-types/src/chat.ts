@@ -70,3 +70,18 @@ export const INTENT_META: Record<ChatIntent, { label: string; color: string; bg:
   predictive: { label: "Predictive agent", color: "#3f6fd6", bg: "#e9eefc" },
   prescriptive: { label: "Prescriptive agent", color: "#0f8a5c", bg: "#e4f6ee" },
 };
+
+// Keep in sync with app/ai/app/llm/models.py's AVAILABLE_MODELS — this is
+// the picker shown in chat; that file is what the ai service accepts/
+// validates a per-request model override against.
+export interface LlmModelOption {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export const AVAILABLE_LLM_MODELS: LlmModelOption[] = [
+  { id: "gemini/gemini-2.5-flash", label: "Gemini 2.5 Flash", description: "Fast, low-cost default" },
+  { id: "gemini/gemini-3-flash-preview", label: "Gemini 3 Flash Preview", description: "Newer, more capable" },
+  { id: "gemini/gemma-4-31b-it", label: "Gemma 4 31B", description: "Open-weight reasoning model" },
+];

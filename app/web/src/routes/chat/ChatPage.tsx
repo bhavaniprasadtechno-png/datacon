@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CHAT_SUGGESTIONS, INTENT_META, type ChatIntent } from "@datacon/shared-types";
+import { AVAILABLE_LLM_MODELS, CHAT_SUGGESTIONS, INTENT_META, type ChatIntent } from "@datacon/shared-types";
 import { useChatMessages, useConversations, useCreateConversation, useDeleteConversation, useFeedback, streamChat } from "../../api/chat";
 import { useToast } from "../../components/ui/ToastContext";
 import { AgentVisualization } from "./AgentVisualization";
 import type { ChatMessage, ChatPayload } from "../../lib/types";
 
 let localIdSeq = 1;
+const STORAGE_MODEL = "datacon:llmModel";
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -29,6 +30,7 @@ export function ChatPage() {
   const feedback = useFeedback();
   const { addToast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [model, setModel] = useState<string>(() => localStorage.getItem(STORAGE_MODEL) || AVAILABLE_LLM_MODELS[0].id);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -55,6 +57,10 @@ export function ChatPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_MODEL, model);
+  }, [model]);
+
   const send = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
@@ -66,7 +72,7 @@ export function ChatPage() {
     const agentMsg: ChatMessage = { id: agentId, role: "agent", intent: null, text: "", payload: null, vote: 0, streaming: true };
     setMessages((prev) => [...prev, userMsg, agentMsg]);
 
-    await streamChat(trimmed, activeConversationId, {
+    await streamChat(trimmed, activeConversationId, model, {
       onConversation: (conversationId) => {
         loadedConversationId.current = conversationId;
         setActiveConversationId(conversationId);
@@ -211,12 +217,34 @@ export function ChatPage() {
             <div style={{ fontSize: 16, fontWeight: 800 }}>Multi-agent chat</div>
             <div style={{ fontSize: 11.5, color: "#9499ad" }}>Plain-English questions, routed automatically</div>
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            {(Object.keys(INTENT_META) as ChatIntent[]).map((k) => (
-              <span key={k} style={{ font: "600 10px 'IBM Plex Mono',monospace", padding: "4px 9px", borderRadius: 7, color: INTENT_META[k].color, background: INTENT_META[k].bg, textTransform: "capitalize" }}>
-                {k}
-              </span>
-            ))}
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ display: "flex", gap: 6 }}>
+              {(Object.keys(INTENT_META) as ChatIntent[]).map((k) => (
+                <span key={k} style={{ font: "600 10px 'IBM Plex Mono',monospace", padding: "4px 9px", borderRadius: 7, color: INTENT_META[k].color, background: INTENT_META[k].bg, textTransform: "capitalize" }}>
+                  {k}
+                </span>
+              ))}
+            </div>
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              title="LLM model for this chat"
+              style={{
+                font: "600 11px 'IBM Plex Mono',monospace",
+                color: "#5b3fd6",
+                background: "#efeaff",
+                border: "none",
+                borderRadius: 8,
+                padding: "6px 8px",
+                cursor: "pointer",
+              }}
+            >
+              {AVAILABLE_LLM_MODELS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

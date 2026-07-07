@@ -57,7 +57,7 @@ export class ChatController {
     try {
       upstream = await this.ai.client.post(
         "/internal/chat/stream",
-        { message: dto.message, context },
+        { message: dto.message, context, model: dto.model },
         { responseType: "stream" },
       );
     } catch (e: unknown) {

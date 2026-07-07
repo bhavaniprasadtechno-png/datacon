@@ -1,6 +1,7 @@
 import logging
 from typing import Protocol
 from app.config import settings
+from app.llm.models import AVAILABLE_MODELS
 
 logger = logging.getLogger("app.llm.client")
 
@@ -16,12 +17,15 @@ class LLMClient(Protocol):
         ...
 
 
-def get_llm_client() -> LLMClient:
+def get_llm_client(model: str | None = None) -> LLMClient:
+    if model and model not in AVAILABLE_MODELS:
+        logger.warning("Rejected unknown model override %r, falling back to default.", model)
+        model = None
     if settings.gemini_api_key:
-        from app.llm.gemini_rest_client import GeminiRestClient
+        from app.llm.litellm_client import LiteLLMClient
 
-        logger.info("Using GeminiRestClient (model=%s) — GEMINI_API_KEY is set.", settings.llm_model)
-        return GeminiRestClient()
+        logger.info("Using LiteLLMClient (model=%s) — GEMINI_API_KEY is set.", model or settings.llm_model)
+        return LiteLLMClient(model)
     from app.llm.offline_client import OfflineLLMClient
 
     logger.warning("Using OfflineLLMClient — GEMINI_API_KEY is not set, chat will use static templates.")

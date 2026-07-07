@@ -66,12 +66,12 @@ interface StreamHandlers {
   onError: (message: string) => void;
 }
 
-export async function streamChat(message: string, conversationId: string | null, handlers: StreamHandlers): Promise<void> {
+export async function streamChat(message: string, conversationId: string | null, model: string | null, handlers: StreamHandlers): Promise<void> {
   const res = await fetch("/api/chat/stream", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, conversationId: conversationId ?? undefined }),
+    body: JSON.stringify({ message, conversationId: conversationId ?? undefined, model: model ?? undefined }),
   });
 
   if (!res.ok || !res.body) {

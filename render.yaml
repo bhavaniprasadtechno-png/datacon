@@ -65,7 +65,14 @@ services:
   - type: web
     name: datacon-ai
     env: python
-    plan: free
+    # Upgraded off the free 512MB plan — that ceiling was OOM-killing this
+    # service on real chat/upload requests (measured: chromadb's embedding
+    # model + litellm's full import together needed 400-600MB+ depending on
+    # request). "standard" is Render's ~2GB-RAM tier as of this writing —
+    # reread from this environment's blocked network policy, so re-confirm
+    # the exact spec/price in Render's dashboard before deploying; adjust to
+    # "pro" if 2GB still isn't enough headroom once litellm is back in.
+    plan: standard
     region: oregon
     rootDir: app/ai
     buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
@@ -80,12 +87,8 @@ services:
         value: 3.11.15
       - key: INTERNAL_AUTH_TOKEN
         value: D5kFW75jd7oLQhF0Tx_yMk3JsAnr8Tkd8YbF1WjlzoE
-      # No persistent disk on the free plan, so this lives on the service's
-      # ephemeral local filesystem — the ChromaDB index is rebuilt from
-      # re-uploaded documents after a redeploy/restart. Upgrade to a paid
-      # plan and add a `disk:` block back here if that's undesirable.
       - key: CHROMA_PERSIST_DIR
-        value: /tmp/chroma
+        value: /var/data/chroma
       # LiteLLM "provider/model" string (SRS §2.2) — switching providers is
       # a config change here, not a code change.
       - key: LLM_MODEL
@@ -95,3 +98,9 @@ services:
       # never commit it here.
       - key: GEMINI_API_KEY
         sync: false
+    # Persistent disk so the ChromaDB vector index survives redeploys —
+    # only available on paid plans, which is why this was removed earlier.
+    disk:
+      name: datacon-ai-data
+      mountPath: /var/data
+      sizeGB: 1
