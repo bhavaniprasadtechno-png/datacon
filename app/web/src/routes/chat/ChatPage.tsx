@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AVAILABLE_LLM_MODELS, CHAT_SUGGESTIONS, INTENT_META, type ChatIntent } from "@datacon/shared-types";
-import { useChatMessages, useConversations, useCreateConversation, useDeleteConversation, useFeedback, streamChat } from "../../api/chat";
+import { useChatMessages, useFeedback, streamChat } from "../../api/chat";
 import { useToast } from "../../components/ui/ToastContext";
 import { AgentVisualization } from "./AgentVisualization";
 import type { ChatMessage, ChatPayload } from "../../lib/types";
@@ -9,24 +10,14 @@ import type { ChatMessage, ChatPayload } from "../../lib/types";
 let localIdSeq = 1;
 const STORAGE_MODEL = "datacon:llmModel";
 
-function relativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.round(diffMs / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.round(hours / 24);
-  return `${days}d ago`;
-}
-
 export function ChatPage() {
   const qc = useQueryClient();
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const { data: conversations } = useConversations();
+  // The active conversation lives in the URL (?c=...) — the sidebar's
+  // "New chat" button and RECENT CONVERSATIONS list drive it by navigating,
+  // so they work from any page, not just this one.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeConversationId = searchParams.get("c");
   const { data: history } = useChatMessages(activeConversationId);
-  const createConversation = useCreateConversation();
-  const deleteConversation = useDeleteConversation();
   const feedback = useFeedback();
   const { addToast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -34,14 +25,15 @@ export function ChatPage() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const loadedConversationId = useRef<string | null | undefined>(undefined);
+  const sendingRef = useRef(false);
   const sentPending = useRef(false);
 
   useEffect(() => {
-    if (!history || loadedConversationId.current === history.conversationId) return;
-    loadedConversationId.current = history.conversationId;
+    // Mirror server history into local state whenever it (re)loads — except
+    // mid-stream, when local streaming placeholders are ahead of the server.
+    if (!history || sendingRef.current) return;
     setMessages(history.messages);
-    if (!activeConversationId) setActiveConversationId(history.conversationId);
+    if (!activeConversationId) setSearchParams({ c: history.conversationId }, { replace: true });
 
     if (sentPending.current) return;
     sentPending.current = true;
@@ -63,7 +55,8 @@ export function ChatPage() {
 
   const send = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || sending) return;
+    if (!trimmed || sendingRef.current) return;
+    sendingRef.current = true;
     setSending(true);
     setDraft("");
 
@@ -77,8 +70,7 @@ export function ChatPage() {
 
     await streamChat(trimmed, activeConversationId, model, {
       onConversation: (conversationId) => {
-        loadedConversationId.current = conversationId;
-        setActiveConversationId(conversationId);
+        if (conversationId !== activeConversationId) setSearchParams({ c: conversationId }, { replace: true });
       },
       onAgents: (intents) => {
         const placeholders = intents.map((intent) => {
@@ -99,6 +91,7 @@ export function ChatPage() {
         );
       },
       onDone: () => {
+        sendingRef.current = false;
         setSending(false);
         // Refreshes the sidebar's title (auto-set from the first message),
         // preview snippet, and updatedAt-based ordering.
@@ -108,34 +101,10 @@ export function ChatPage() {
         addToast({ icon: "⚠️", accent: "#e2603f", title: "Chat failed", desc: message });
         const pendingIds = new Set(agentIds.values());
         setMessages((prev) => prev.filter((m) => !pendingIds.has(m.id)));
+        sendingRef.current = false;
         setSending(false);
       },
     });
-  };
-
-  const startNewChat = async () => {
-    if (sending) return;
-    const conversation = await createConversation.mutateAsync();
-    loadedConversationId.current = conversation.id;
-    setActiveConversationId(conversation.id);
-    setMessages([]);
-  };
-
-  const switchConversation = (id: string) => {
-    if (id === activeConversationId || sending) return;
-    loadedConversationId.current = undefined;
-    setActiveConversationId(id);
-  };
-
-  const removeConversation = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm("Delete this conversation? This can't be undone.")) return;
-    await deleteConversation.mutateAsync(id);
-    if (id === activeConversationId) {
-      loadedConversationId.current = undefined;
-      setActiveConversationId(null);
-      setMessages([]);
-    }
   };
 
   const vote = (id: string, dir: -1 | 1) => {
@@ -147,84 +116,7 @@ export function ChatPage() {
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
-      <div style={{ width: 232, flexShrink: 0, borderRight: "1px solid #e9eaf2", background: "#fbfbfd", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "16px 14px 10px" }}>
-          <button
-            onClick={startNewChat}
-            disabled={createConversation.isPending}
-            style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              background: "var(--ac-grad)",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: 12.5,
-              padding: "9px 12px",
-              borderRadius: 10,
-              opacity: createConversation.isPending ? 0.6 : 1,
-            }}
-          >
-            + New chat
-          </button>
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "4px 8px 12px" }}>
-          {conversations?.map((c) => {
-            const active = c.id === activeConversationId;
-            return (
-              <div
-                key={c.id}
-                onClick={() => switchConversation(c.id)}
-                style={{
-                  position: "relative",
-                  cursor: "pointer",
-                  borderRadius: 10,
-                  padding: "9px 10px",
-                  marginBottom: 2,
-                  background: active ? "#efeaff" : "transparent",
-                }}
-                className="dv-conv-item"
-              >
-                <div
-                  style={{
-                    fontSize: 12.5,
-                    fontWeight: active ? 700 : 600,
-                    color: active ? "#4a2fc9" : "#1a1d29",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    paddingRight: 20,
-                  }}
-                >
-                  {c.title}
-                </div>
-                <div style={{ font: "500 10.5px 'IBM Plex Mono',monospace", color: "#9499ad", marginTop: 2 }}>{relativeTime(c.updatedAt)}</div>
-                <button
-                  onClick={(e) => removeConversation(c.id, e)}
-                  title="Delete conversation"
-                  style={{
-                    position: "absolute",
-                    top: 8,
-                    right: 6,
-                    fontSize: 12,
-                    color: "#b0b4c6",
-                    padding: 4,
-                    borderRadius: 6,
-                    lineHeight: 1,
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", minWidth: 0 }}>
         <div style={{ padding: "18px 28px", borderBottom: "1px solid #e9eaf2", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 800 }}>Multi-agent chat</div>
@@ -367,7 +259,6 @@ export function ChatPage() {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

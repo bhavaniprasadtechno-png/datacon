@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { usePersonas } from "../../api/auth";
+import { useConversations, useCreateConversation, useDeleteConversation } from "../../api/chat";
 
 interface NavDef {
   id: string;
@@ -35,8 +36,27 @@ export function Sidebar() {
   const { data: personas } = usePersonas();
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { data: conversations } = useConversations();
+  const createConversation = useCreateConversation();
+  const deleteConversation = useDeleteConversation();
 
   const onUserMgmtPage = location.pathname.startsWith("/settings");
+  const activeConversationId = location.pathname === "/chat" ? searchParams.get("c") : null;
+
+  const startNewChat = async () => {
+    const conversation = await createConversation.mutateAsync();
+    navigate(`/chat?c=${conversation.id}`);
+  };
+
+  const removeConversation = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("Delete this conversation? This can't be undone.")) return;
+    await deleteConversation.mutateAsync(id);
+    // If the open conversation was just deleted, fall back to the default
+    // (most recent / freshly created) one by dropping the URL param.
+    if (id === activeConversationId) navigate("/chat", { replace: true });
+  };
 
   return (
     <>
@@ -83,7 +103,31 @@ export function Sidebar() {
           </button>
         )}
 
-        <nav style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1, overflowY: "auto" }}>
+        {!collapsed && (
+          <button
+            onClick={startNewChat}
+            disabled={createConversation.isPending}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              width: "100%",
+              background: "var(--ac-grad)",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: 13.5,
+              padding: "11px 12px",
+              borderRadius: 11,
+              marginBottom: 16,
+              opacity: createConversation.isPending ? 0.6 : 1,
+            }}
+          >
+            + New chat
+          </button>
+        )}
+
+        <nav style={{ display: "flex", flexDirection: "column", gap: 3, flexShrink: 0 }}>
           {NAV.map((item) => {
             if (item.id === "settings" && !caps.admin) return null;
             return (
@@ -142,6 +186,57 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        {!collapsed ? (
+          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", marginTop: 16 }}>
+            <div style={{ font: "600 9.5px 'IBM Plex Mono',monospace", letterSpacing: ".14em", color: "#a3a8bd", marginBottom: 6, padding: "0 4px" }}>
+              RECENT CONVERSATIONS
+            </div>
+            <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+              {conversations?.map((c) => {
+                const active = c.id === activeConversationId;
+                return (
+                  <div
+                    key={c.id}
+                    onClick={() => navigate(`/chat?c=${c.id}`)}
+                    style={{
+                      position: "relative",
+                      cursor: "pointer",
+                      borderRadius: 9,
+                      padding: "8px 24px 8px 8px",
+                      marginBottom: 2,
+                      background: active ? "var(--ac-soft)" : "transparent",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: active ? 700 : 500,
+                        color: active ? "var(--ac-deep)" : "#3c4157",
+                        lineHeight: 1.35,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {c.title}
+                    </div>
+                    <button
+                      onClick={(e) => removeConversation(c.id, e)}
+                      title="Delete conversation"
+                      style={{ position: "absolute", top: 7, right: 4, fontSize: 11, color: "#b0b4c6", padding: 4, borderRadius: 6, lineHeight: 1 }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div style={{ flex: 1 }} />
+        )}
 
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #f3f4f9" }}>
           {!collapsed && <div style={{ font: "600 9.5px 'IBM Plex Mono',monospace", letterSpacing: ".14em", color: "#a3a8bd", marginBottom: 8 }}>VIEWING AS</div>}
