@@ -12,7 +12,7 @@
     "dev:web": "npm run dev --workspace=web",
     "dev:api": "npm run start:dev --workspace=api",
     "dev:ai": "cd ai && (test -d .venv && . .venv/bin/activate; uvicorn app.main:app --reload --port 8000)",
-    "build": "npm run build --workspace=packages/shared-types && npm run build --workspace=api && npm run build --workspace=web",
+    "build": "npm run build --workspace=packages/shared-types && npm run build --workspace=web && npm run build --workspace=api",
     "prisma:generate": "npm run generate --workspace=packages/prisma",
     "prisma:migrate": "npm run migrate --workspace=packages/prisma",
     "prisma:seed": "npm run seed --workspace=packages/prisma",
