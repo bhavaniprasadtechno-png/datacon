@@ -21,6 +21,7 @@ export function ChatPage() {
   const feedback = useFeedback();
   const { addToast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [activeIntents, setActiveIntents] = useState<ChatIntent[]>([]);
   const [model, setModel] = useState<string>(() => localStorage.getItem(STORAGE_MODEL) || AVAILABLE_LLM_MODELS[0].id);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -33,6 +34,16 @@ export function ChatPage() {
     // mid-stream, when local streaming placeholders are ahead of the server.
     if (!history || sendingRef.current) return;
     setMessages(history.messages);
+    // Seed the header indicator from the most recent turn's agents (the
+    // agent messages after the last user message), so reopening a chat
+    // still shows which agents handled the last question rather than
+    // resetting to "none yet".
+    const lastUserIdx = history.messages.map((m) => m.role).lastIndexOf("user");
+    const lastTurnIntents = history.messages
+      .slice(lastUserIdx + 1)
+      .filter((m) => m.role === "agent" && m.intent)
+      .map((m) => m.intent as ChatIntent);
+    setActiveIntents(lastTurnIntents);
     if (!activeConversationId) setSearchParams({ c: history.conversationId }, { replace: true });
 
     if (sentPending.current) return;
@@ -73,6 +84,7 @@ export function ChatPage() {
         if (conversationId !== activeConversationId) setSearchParams({ c: conversationId }, { replace: true });
       },
       onAgents: (intents) => {
+        setActiveIntents(intents as ChatIntent[]);
         const placeholders = intents.map((intent) => {
           const id = `local-${localIdSeq++}`;
           agentIds.set(intent, id);
@@ -124,11 +136,29 @@ export function ChatPage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <div style={{ display: "flex", gap: 6 }}>
-              {(Object.keys(INTENT_META) as ChatIntent[]).map((k) => (
-                <span key={k} style={{ font: "600 10px 'IBM Plex Mono',monospace", padding: "4px 9px", borderRadius: 7, color: INTENT_META[k].color, background: INTENT_META[k].bg, textTransform: "capitalize" }}>
-                  {k}
-                </span>
-              ))}
+              {(Object.keys(INTENT_META) as ChatIntent[]).map((k) => {
+                const isStreaming = messages.some((m) => m.streaming && m.intent === k);
+                const isActive = activeIntents.includes(k);
+                return (
+                  <span
+                    key={k}
+                    title={isStreaming ? `${INTENT_META[k].label} is responding…` : isActive ? `${INTENT_META[k].label} handled the last question` : `${INTENT_META[k].label} — not used yet`}
+                    style={{
+                      font: "600 10px 'IBM Plex Mono',monospace",
+                      padding: "4px 9px",
+                      borderRadius: 7,
+                      textTransform: "capitalize",
+                      color: isActive || isStreaming ? INTENT_META[k].color : "#b0b4c6",
+                      background: isActive || isStreaming ? INTENT_META[k].bg : "#f3f4f9",
+                      opacity: isActive || isStreaming ? 1 : 0.6,
+                      animation: isStreaming ? "dvblink 1.1s ease-in-out infinite" : undefined,
+                      transition: "background .25s, color .25s, opacity .25s",
+                    }}
+                  >
+                    {k}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </div>
