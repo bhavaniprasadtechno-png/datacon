@@ -130,26 +130,6 @@ export function ChatPage() {
                 </span>
               ))}
             </div>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              title="LLM model for this chat"
-              style={{
-                font: "600 11px 'IBM Plex Mono',monospace",
-                color: "#5b3fd6",
-                background: "#efeaff",
-                border: "none",
-                borderRadius: 8,
-                padding: "6px 8px",
-                cursor: "pointer",
-              }}
-            >
-              {AVAILABLE_LLM_MODELS.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
@@ -246,10 +226,31 @@ export function ChatPage() {
                 placeholder="Ask about revenue, churn, anomalies, forecasts…"
                 style={{ flex: 1, border: "none", fontSize: 13.5, outline: "none" }}
               />
+              <select
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                title="LLM model for this chat"
+                style={{
+                  font: "600 11px 'IBM Plex Mono',monospace",
+                  color: "#5b3fd6",
+                  background: "#efeaff",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "6px 8px",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                }}
+              >
+                {AVAILABLE_LLM_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
               <button
                 type="submit"
                 disabled={sending || !draft.trim()}
-                style={{ background: "var(--ac-grad)", color: "#fff", fontWeight: 700, fontSize: 13, padding: "9px 16px", borderRadius: 10, opacity: sending || !draft.trim() ? 0.6 : 1 }}
+                style={{ background: "var(--ac-grad)", color: "#fff", fontWeight: 700, fontSize: 13, padding: "9px 16px", borderRadius: 10, opacity: sending || !draft.trim() ? 0.6 : 1, flexShrink: 0 }}
               >
                 Ask ✦
               </button>
