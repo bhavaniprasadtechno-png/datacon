@@ -15,6 +15,7 @@ __pycache__/
 uploads/*
 !uploads/.gitkeep
 ai/data/
+app/venv
 
 # Stray compiled output next to TS sources (should only ever live in dist/)
 api/src/**/*.js
