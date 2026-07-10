@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from app.internal.auth import require_internal_auth
 from app.agents.router import route
-from app.agents import descriptive, diagnostic, predictive, prescriptive
+from app.agents import descriptive, diagnostic, predictive, prescriptive, general
 from app.llm.client import get_llm_client
 
 router = APIRouter(prefix="/internal/chat", tags=["internal-chat"], dependencies=[Depends(require_internal_auth)])
@@ -14,6 +14,7 @@ _AGENTS = {
     "diagnostic": diagnostic.prepare,
     "predictive": predictive.prepare,
     "prescriptive": prescriptive.prepare,
+    "general": general.prepare,
 }
 
 
@@ -40,7 +41,8 @@ async def stream(payload: ChatPayload):
         yield _sse("agents", {"intents": intents})
         results = []
         for intent in intents:
-            prep = _AGENTS[intent](payload.message, payload.context)
+            agent = _AGENTS.get(intent, descriptive.prepare)
+            prep = agent(payload.message, payload.context)
             yield _sse("agent_start", {"intent": intent})
             text_parts: list[str] = []
             async for delta in llm.compose_stream(prep.system, prep.prompt, prep.offline_text):

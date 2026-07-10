@@ -1,29 +1,37 @@
 from app.agents.types import AgentPrep
 
 SYSTEM = (
-    "You are Datacon's prescriptive analytics agent. Given real churn/at-risk-account "
-    "figures, write one tight opening sentence introducing a short action list to reduce "
-    "churn. Do not invent numbers beyond what's provided."
+    "You are Datacon's prescriptive analytics agent.\n"
+    "Based on the provided business context and analysis results, recommend practical, "
+    "prioritized actions.\n"
+    "Only use the information provided. Do not invent metrics, business values, or facts."
 )
 
 
 def prepare(question: str, context: dict) -> AgentPrep:
-    churn = context["churnSnapshot"]  # {churnPct, atRiskAccounts}
-    incident_title = context.get("topIncidentTitle") or "the latest billing incident report"
-    target = max(churn["churnPct"] - 0.7, 0.0)
+    context_text = ""
 
-    actions = [
-        {"title": f"Launch save-offer for {churn['atRiskAccounts']} at-risk enterprise accounts", "impact": "-0.4pp", "effort": "Low", "owner": "Success"},
-        {"title": f"Fix EMEA billing errors from {incident_title}", "impact": "-0.2pp", "effort": "Medium", "owner": "Engineering"},
-        {"title": "Add usage-drop alerts for accounts under 40% active seats", "impact": "-0.1pp", "effort": "Low", "owner": "Product"},
-    ]
+    if context:
+        context_text = f"Analysis Results:\n{context}\n\n"
 
-    offline_text = f"Three actions are projected to bring churn from {churn['churnPct']:.1f}% toward {target:.1f}% this quarter:"
+    prompt = f"""
+User Question:
+{question}
 
-    prompt = (
-        f"Question: {question}\n\nComputed facts:\n- Current churn: {churn['churnPct']:.1f}%\n"
-        f"- At-risk accounts: {churn['atRiskAccounts']}\n- Target churn: {target:.1f}%\n"
-        f"- Planned actions: {[a['title'] for a in actions]}"
+{context_text}
+
+Based on the available information:
+
+1. Recommend practical actions.
+2. Explain why each action is useful.
+3. Prioritize the recommendations.
+4. If there is insufficient information, clearly state what additional data is needed.
+5. Do not invent business metrics or recommendations that are unsupported.
+"""
+
+    return AgentPrep(
+        system=SYSTEM,
+        prompt=prompt,
+        offline_text="",
+        payload=context if context else {},
     )
-
-    return AgentPrep(system=SYSTEM, prompt=prompt, offline_text=offline_text, payload={"actions": actions})

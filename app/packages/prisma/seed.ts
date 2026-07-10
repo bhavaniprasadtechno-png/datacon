@@ -5,7 +5,7 @@
  */
 import * as path from "path";
 import * as dotenv from "dotenv";
-import { PrismaClient, ConnectorEngine, ConnectorStatus, DocType, DocStatus } from "@prisma/client";
+import { PrismaClient, ConnectorEngine, ConnectorStatus, DocType, DocStatus } from "./index";
 import * as bcrypt from "bcryptjs";
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });

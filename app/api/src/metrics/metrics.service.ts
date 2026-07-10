@@ -17,9 +17,10 @@ export class MetricsService {
 
   async regionRevenue(): Promise<{ current: { region: string; revenue: number }[]; previous: { region: string; revenue: number }[] }> {
     const rows = await this.prisma.regionRevenue.findMany();
-    const quarters = [...new Set(rows.map((r) => r.quarter))].sort();
-    const currentQuarter = quarters[quarters.length - 1];
-    const prevQuarter = previousQuarter(currentQuarter);
+    const quarters = Array.from(new Set(rows.map((r) => String(r.quarter)))) as string[];
+    quarters.sort();
+    const currentQuarter: string | null = quarters[quarters.length - 1] ?? null;
+    const prevQuarter = currentQuarter ? previousQuarter(currentQuarter) : null;
     return {
       current: rows.filter((r) => r.quarter === currentQuarter).map((r) => ({ region: r.region, revenue: r.revenue })),
       previous: rows.filter((r) => r.quarter === prevQuarter).map((r) => ({ region: r.region, revenue: r.revenue })),
