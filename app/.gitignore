@@ -10,6 +10,7 @@ build/
 __pycache__/
 *.pyc
 .DS_Store
+venv/
 
 # Runtime data — not source, created at run time
 uploads/*
