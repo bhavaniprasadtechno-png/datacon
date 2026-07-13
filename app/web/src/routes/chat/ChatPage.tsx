@@ -195,9 +195,17 @@ export function ChatPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                     <div style={{ width: 26, height: 26, borderRadius: 8, background: "var(--ac-logo)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>✦</div>
                     <span style={{ fontSize: 12.5, fontWeight: 700 }}>Datacon</span>
-                    {m.intent && (
-                      <span style={{ font: "600 9.5px 'IBM Plex Mono',monospace", color: INTENT_META[m.intent].color, background: INTENT_META[m.intent].bg, padding: "2px 8px", borderRadius: 20 }}>
-                        {INTENT_META[m.intent].label}
+                    {m.intent && INTENT_META[m.intent as ChatIntent] && (
+                      <span
+                        style={{
+                          font: "600 9.5px 'IBM Plex Mono',monospace",
+                          color: INTENT_META[m.intent as ChatIntent].color,
+                          background: INTENT_META[m.intent as ChatIntent].bg,
+                          padding: "2px 8px",
+                          borderRadius: 20,
+                        }}
+                      >
+                        {INTENT_META[m.intent as ChatIntent].label}
                       </span>
                     )}
                   </div>
