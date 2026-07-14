@@ -77,21 +77,26 @@ export class DocumentsService {
   async upload(file: Express.Multer.File, uploadedById: string) {
     if (!file) throw new BadRequestException("No file was uploaded.");
 
+    this.logger.log(`[Upload] Received upload request for file: "${file.originalname}" (${file.size} bytes) from user: ${uploadedById}`);
+
     const ext = path.extname(file.originalname).replace(".", "").toLowerCase();
     const docType = EXT_TO_TYPE[ext];
     if (!docType) {
+      this.logger.warn(`[Upload] Rejected upload of unsupported file type: .${ext} ("${file.originalname}")`);
       throw new BadRequestException(
         `.${ext} files aren't supported yet. Datacon ingests PDF, CSV, TXT and MD — export the sheet as CSV and try again.`,
       );
     }
     if (file.size > MAX_BYTES) {
       const mb = (file.size / (1024 * 1024)).toFixed(1);
+      this.logger.warn(`[Upload] Rejected file "${file.originalname}" because size ${mb} MB exceeds limit of 10 MB`);
       throw new BadRequestException(
         `${file.originalname} is ${mb} MB — that exceeds the 10 MB per-file limit. Split the export or compress it before uploading.`,
       );
     }
 
     const title = path.basename(file.originalname, path.extname(file.originalname));
+    this.logger.log(`[Upload] Creating DataSource record in Postgres: title="${title}", type=${docType}`);
     const row = await this.prisma.dataSource.create({
       data: {
         title,
@@ -102,10 +107,12 @@ export class DocumentsService {
         uploadedById,
       },
     });
+    this.logger.log(`[Upload] DataSource created: ID=${row.id}, initial status=${row.status}`);
 
     try {
       // Sent as bytes, not a local path — api and ai run as separate
       // processes (separate containers in production) with no shared disk.
+      this.logger.log(`[Upload] Sending Base64 ingestion request to AI service for document ID=${row.id}...`);
       const res = await this.ai.client.post(
         "/internal/documents/ingest",
         {
@@ -126,6 +133,10 @@ export class DocumentsService {
         columns?: string[];
         sampleRows?: string[][];
       };
+      
+      this.logger.log(`[Upload] AI service successfully parsed document ID=${row.id}. Rows: ${data.rowCount ?? 0}, Columns: ${data.colCount ?? 0}, Chunks: ${data.chunkCount ?? 0}`);
+
+      this.logger.log(`[Upload] Updating DataSource ID=${row.id} status to INDEXED...`);
       const updated = await this.prisma.dataSource.update({
         where: { id: row.id },
         data: {
@@ -138,6 +149,7 @@ export class DocumentsService {
         },
         include: { uploadedBy: { select: { email: true } } },
       });
+      this.logger.log(`[Upload] DataSource ID=${row.id} is now fully INDEXED`);
       return this.shape(updated);
     } catch (e: any) {
       // A 502/503/504 means the ai service itself is down/unreachable — surface
@@ -149,6 +161,8 @@ export class DocumentsService {
         gatewayStatus >= 502 && gatewayStatus <= 504
           ? "The AI service is temporarily unavailable — please try uploading again in a moment."
           : (e?.response?.data?.detail ?? e?.message ?? "Indexing failed.");
+      
+      this.logger.error(`[Upload] Ingestion failed for document ID=${row.id}: ${failureMsg}`);
       const updated = await this.prisma.dataSource.update({
         where: { id: row.id },
         data: { status: "FAILED", failureMsg },

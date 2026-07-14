@@ -148,7 +148,7 @@ export class ConnectorsService {
 
   private async runSync(id: string, engineId: ConnectorEngineId, config: Record<string, string>, secrets: Record<string, string>) {
     try {
-      const res = await this.ai.client.post("/internal/connectors/sync", { engine: engineId, config, secrets });
+      const res = await this.ai.client.post("/internal/connectors/sync", { engine: engineId, config, secrets, connectorId: id });
       const data = res.data as { ok: boolean; message: string; datasets: { name: string; columns: string[]; rowCount: number; sampleRows: string[][] }[] };
 
       if (!data.ok) {

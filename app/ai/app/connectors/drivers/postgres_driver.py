@@ -1,6 +1,8 @@
 import psycopg2
 from app.connectors.types import TestResult, SyncResult, DatasetResult
 
+ROW_CAP = 20_000
+
 
 def _connect(config: dict, secrets: dict):
     return psycopg2.connect(
@@ -46,9 +48,10 @@ def sync(config: dict, secrets: dict) -> SyncResult:
             columns = [r[0] for r in cur.fetchall()]
             cur.execute(f'SELECT COUNT(*) FROM "{schema}"."{table}"')
             row_count = cur.fetchone()[0]
-            cur.execute(f'SELECT * FROM "{schema}"."{table}" LIMIT 5')
-            sample_rows = [[str(v) for v in row] for row in cur.fetchall()]
-            datasets.append(DatasetResult(name=table, columns=columns, row_count=row_count, sample_rows=sample_rows))
+            cur.execute(f'SELECT * FROM "{schema}"."{table}" LIMIT {ROW_CAP}')
+            rows = cur.fetchall()
+            sample_rows = [[str(v) for v in row] for row in rows[:5]]
+            datasets.append(DatasetResult(name=table, columns=columns, row_count=row_count, sample_rows=sample_rows, rows=rows))
         conn.close()
         return SyncResult(True, f"Discovered {len(datasets)} table(s) in schema {schema}.", datasets)
     except Exception as e:

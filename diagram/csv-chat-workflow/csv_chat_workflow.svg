@@ -1,0 +1,330 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 1080">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap');
+      text {
+        font-family: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace;
+      }
+      .actor-title {
+        fill: #ffffff;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .actor-subtitle {
+        fill: #94a3b8;
+        font-size: 9px;
+      }
+      .msg-text {
+        fill: #e2e8f0;
+        font-size: 9px;
+        font-weight: 500;
+      }
+      .msg-subtext {
+        fill: #64748b;
+        font-size: 8px;
+        font-style: italic;
+      }
+      .note-text {
+        fill: #e2e8f0;
+        font-size: 8px;
+      }
+      .divider-text {
+        fill: #fb923c;
+        font-size: 10px;
+        font-weight: 600;
+      }
+      .legend-title {
+        fill: #ffffff;
+        font-size: 9px;
+        font-weight: 600;
+      }
+      .legend-desc {
+        fill: #94a3b8;
+        font-size: 8px;
+      }
+    </style>
+    
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    
+    <!-- Colored Arrowheads -->
+    <marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee"/>
+    </marker>
+    <marker id="arrow-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/>
+    </marker>
+    <marker id="arrow-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24"/>
+    </marker>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- 1. Background -->
+  <rect width="100%" height="100%" fill="#0f172a"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+
+  <!-- 2. Section Dividing Lines -->
+  <!-- Phase 1 Boundary -->
+  <rect x="20" y="80" width="880" height="360" rx="8" fill="none" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <rect x="35" y="70" width="200" height="20" rx="4" fill="#0f172a" stroke="#1e293b" stroke-width="1.5"/>
+  <text x="135" y="84" fill="#fb923c" font-size="9" font-weight="600" text-anchor="middle">PHASE 1: CSV FILE INGESTION</text>
+
+  <!-- Phase 2 Boundary -->
+  <rect x="20" y="465" width="880" height="535" rx="8" fill="none" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <rect x="35" y="455" width="210" height="20" rx="4" fill="#0f172a" stroke="#1e293b" stroke-width="1.5"/>
+  <text x="140" y="469" fill="#fb923c" font-size="9" font-weight="600" text-anchor="middle">PHASE 2: GROUNDED CHAT QUERY</text>
+
+  <!-- 3. Lifelines -->
+  <!-- Client (CX=90) -->
+  <line x1="90" y1="65" x2="90" y2="1010" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <!-- API (CX=270) -->
+  <line x1="270" y1="65" x2="270" y2="1010" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <!-- AI (CX=450) -->
+  <line x1="450" y1="65" x2="450" y2="1010" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <!-- Prisma DB (CX=630) -->
+  <line x1="630" y1="65" x2="630" y2="1010" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <!-- DuckDB (CX=810) -->
+  <line x1="810" y1="65" x2="810" y2="1010" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,4"/>
+
+  <!-- 4. Activation Bars -->
+  <!-- Phase 1 Ingestion -->
+  <!-- API (Y=100 to Y=425) -->
+  <rect x="265" y="100" width="10" height="325" rx="2" fill="rgba(6, 78, 59, 0.5)" stroke="#34d399" stroke-width="1"/>
+  <!-- Prisma (Y=120 to Y=140) -->
+  <rect x="625" y="120" width="10" height="20" rx="2" fill="rgba(76, 29, 149, 0.5)" stroke="#a78bfa" stroke-width="1"/>
+  <!-- AI (Y=205 to Y=335) -->
+  <rect x="445" y="205" width="10" height="130" rx="2" fill="rgba(59, 130, 246, 0.4)" stroke="#60a5fa" stroke-width="1"/>
+  <!-- DuckDB (Y=275 to Y=295) -->
+  <rect x="805" y="275" width="10" height="20" rx="2" fill="rgba(120, 53, 15, 0.5)" stroke="#fbbf24" stroke-width="1"/>
+  <!-- Prisma (Y=365 to Y=385) -->
+  <rect x="625" y="365" width="10" height="20" rx="2" fill="rgba(76, 29, 149, 0.5)" stroke="#a78bfa" stroke-width="1"/>
+
+  <!-- Phase 2 Grounded Chat -->
+  <!-- API (Y=495 to Y=985) -->
+  <rect x="265" y="495" width="10" height="490" rx="2" fill="rgba(6, 78, 59, 0.5)" stroke="#34d399" stroke-width="1"/>
+  <!-- Prisma (Y=515 to Y=535) -->
+  <rect x="625" y="515" width="10" height="20" rx="2" fill="rgba(76, 29, 149, 0.5)" stroke="#a78bfa" stroke-width="1"/>
+  <!-- AI (Y=585 to Y=865) -->
+  <rect x="445" y="585" width="10" height="280" rx="2" fill="rgba(59, 130, 246, 0.4)" stroke="#60a5fa" stroke-width="1"/>
+  <!-- DuckDB (Y=655 to Y=675) -->
+  <rect x="805" y="655" width="10" height="20" rx="2" fill="rgba(120, 53, 15, 0.5)" stroke="#fbbf24" stroke-width="1"/>
+  <!-- DuckDB (Y=760 to Y=780) -->
+  <rect x="805" y="760" width="10" height="20" rx="2" fill="rgba(120, 53, 15, 0.5)" stroke="#fbbf24" stroke-width="1"/>
+  <!-- Prisma (Y=925 to Y=945) -->
+  <rect x="625" y="925" width="10" height="20" rx="2" fill="rgba(76, 29, 149, 0.5)" stroke="#a78bfa" stroke-width="1"/>
+
+
+  <!-- 5. Messages & Operations -->
+  
+  <!-- PHASE 1: CSV INGESTION -->
+  <!-- Client to API -->
+  <line x1="90" y1="100" x2="265" y2="100" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+  <text x="180" y="92" class="msg-text" text-anchor="middle">POST /documents</text>
+  <text x="180" y="98" class="msg-subtext" text-anchor="middle">Upload CSV file binary</text>
+
+  <!-- API to Prisma DB -->
+  <line x1="275" y1="120" x2="625" y2="120" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <text x="450" y="112" class="msg-text" text-anchor="middle">prisma.dataSource.create()</text>
+  <text x="450" y="118" class="msg-subtext" text-anchor="middle">status: 'INDEXING'</text>
+
+  <!-- Prisma DB to API -->
+  <line x1="625" y1="140" x2="275" y2="140" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="450" y="135" class="msg-subtext" text-anchor="middle">returns rowId</text>
+
+  <!-- API to AI -->
+  <line x1="275" y1="205" x2="445" y2="205" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <text x="360" y="197" class="msg-text" text-anchor="middle">POST /internal/documents/ingest</text>
+  <text x="360" y="203" class="msg-subtext" text-anchor="middle">payload: {contentBase64, docType: 'csv'}</text>
+
+  <!-- AI Self Ingest -->
+  <path d="M 455,220 L 495,220 L 495,250 L 455,250" fill="none" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="502" y="233" class="msg-text">parse_csv(data)</text>
+  <text x="502" y="243" class="msg-subtext">Decode Base64 &amp; parse pandas.DataFrame</text>
+
+  <!-- AI to DuckDB -->
+  <line x1="455" y1="275" x2="805" y2="275" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="630" y="267" class="msg-text" text-anchor="middle">load_dataset(f"csv_{id}", df)</text>
+  <text x="630" y="273" class="msg-subtext" text-anchor="middle">duckdb.connect &amp; create cache table</text>
+
+  <!-- DuckDB to AI -->
+  <line x1="805" y1="295" x2="455" y2="295" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="630" y="290" class="msg-subtext" text-anchor="middle">Cache loaded successfully</text>
+
+  <!-- AI to API -->
+  <line x1="445" y1="335" x2="275" y2="335" stroke="#60a5fa" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="360" y="327" class="msg-text" text-anchor="middle">returns IngestOut</text>
+  <text x="360" y="333" class="msg-subtext" text-anchor="middle">{columns, rowCount, sampleRows}</text>
+
+  <!-- API to Prisma DB -->
+  <line x1="275" y1="365" x2="625" y2="365" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <text x="450" y="357" class="msg-text" text-anchor="middle">prisma.dataSource.update()</text>
+  <text x="450" y="363" class="msg-subtext" text-anchor="middle">status: 'INDEXED', save preview metadata</text>
+
+  <!-- Prisma DB to API -->
+  <line x1="625" y1="385" x2="275" y2="385" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="450" y="380" class="msg-subtext" text-anchor="middle">returns updated row</text>
+
+  <!-- API to Client -->
+  <line x1="265" y1="425" x2="90" y2="425" stroke="#34d399" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="180" y="417" class="msg-text" text-anchor="middle">HTTP 201 Created</text>
+  <text x="180" y="423" class="msg-subtext" text-anchor="middle">returns DataSource details</text>
+
+
+  <!-- PHASE 2: GROUNDED CHAT QUERY -->
+  <!-- Client to API -->
+  <line x1="90" y1="495" x2="265" y2="495" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+  <text x="180" y="487" class="msg-text" text-anchor="middle">POST /chat/stream</text>
+  <text x="180" y="493" class="msg-subtext" text-anchor="middle">{message: "what are total leads"}</text>
+
+  <!-- API to Prisma DB -->
+  <line x1="275" y1="515" x2="625" y2="515" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <text x="450" y="507" class="msg-text" text-anchor="middle">appendUserMessage()</text>
+  <text x="450" y="513" class="msg-subtext" text-anchor="middle">Store user query in DB</text>
+
+  <!-- Prisma DB to API -->
+  <line x1="625" y1="535" x2="275" y2="535" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="450" y="530" class="msg-subtext" text-anchor="middle">saved</text>
+
+  <!-- API to AI -->
+  <line x1="275" y1="585" x2="445" y2="585" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <text x="360" y="577" class="msg-text" text-anchor="middle">POST /internal/chat/stream</text>
+  <text x="360" y="583" class="msg-subtext" text-anchor="middle">{message, model} (no context!)</text>
+
+  <!-- AI Route Intent -->
+  <path d="M 455,600 L 495,600 L 495,630 L 455,630" fill="none" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="502" y="613" class="msg-text">route(message)</text>
+  <text x="502" y="623" class="msg-subtext">Classify intent: "descriptive"</text>
+
+  <!-- AI to DuckDB (Get schema) -->
+  <line x1="455" y1="655" x2="805" y2="655" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="630" y="647" class="msg-text" text-anchor="middle">snapshot_store.schema()</text>
+  <text x="630" y="653" class="msg-subtext" text-anchor="middle">Fetch table structure (inc. csv_*)</text>
+
+  <!-- DuckDB to AI -->
+  <line x1="805" y1="675" x2="455" y2="675" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="630" y="670" class="msg-subtext" text-anchor="middle">returns dict[table_name, columns]</text>
+
+  <!-- AI Generate SQL -->
+  <path d="M 455,695 L 495,695 L 495,735 L 455,735" fill="none" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="502" y="708" class="msg-text">generate_sql(q, schema)</text>
+  <text x="502" y="718" class="msg-subtext">LLM builds SELECT query</text>
+  <text x="502" y="728" class="msg-subtext">e.g. "SELECT COUNT(*) FROM csv_leads"</text>
+
+  <!-- AI to DuckDB (Execute SQL) -->
+  <line x1="455" y1="760" x2="805" y2="760" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="630" y="752" class="msg-text" text-anchor="middle">snapshot_store.execute(sql)</text>
+  <text x="630" y="758" class="msg-subtext" text-anchor="middle">Safe select validation &amp; execution</text>
+
+  <!-- DuckDB to AI -->
+  <line x1="805" y1="780" x2="455" y2="780" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="630" y="775" class="msg-subtext" text-anchor="middle">returns columns, rows (capped 500)</text>
+
+  <!-- AI Generate Response Prose -->
+  <path d="M 455,800 L 495,800 L 495,840 L 455,840" fill="none" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="502" y="813" class="msg-text">LLM synthesis</text>
+  <text x="502" y="823" class="msg-subtext">Generates natural language response</text>
+  <text x="502" y="833" class="msg-subtext">incorporating columns &amp; row data</text>
+
+  <!-- AI to API (SSE stream) -->
+  <line x1="445" y1="855" x2="275" y2="855" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="360" y="847" class="msg-text" text-anchor="middle">Stream SSE events</text>
+  <text x="360" y="853" class="msg-subtext" text-anchor="middle">events: agents, agent_delta, agent_done</text>
+
+  <!-- API to Client (SSE stream) -->
+  <line x1="265" y1="885" x2="90" y2="885" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <text x="180" y="877" class="msg-text" text-anchor="middle">Pass SSE events</text>
+  <text x="180" y="883" class="msg-subtext" text-anchor="middle">Incremental stream to UI</text>
+
+  <!-- API to Prisma DB (Stream End) -->
+  <line x1="275" y1="925" x2="625" y2="925" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <text x="450" y="917" class="msg-text" text-anchor="middle">appendAgentMessage()</text>
+  <text x="450" y="923" class="msg-subtext" text-anchor="middle">Save LLM response text &amp; payload in DB</text>
+
+  <!-- Prisma DB to API -->
+  <line x1="625" y1="945" x2="275" y2="945" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="450" y="940" class="msg-subtext" text-anchor="middle">saved</text>
+
+  <!-- API to Client -->
+  <line x1="265" y1="975" x2="90" y2="975" stroke="#34d399" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-gray)"/>
+  <text x="180" y="970" class="msg-subtext" text-anchor="middle">res.end() closes SSE connection</text>
+
+
+  <!-- 6. Actor/Participant Boxes (Drawn on top of lines for correct z-indexing) -->
+  
+  <!-- Masking Rectangles to hide lines behind actor boxes -->
+  <rect x="25" y="20" width="130" height="45" rx="6" fill="#0f172a"/>
+  <rect x="205" y="20" width="130" height="45" rx="6" fill="#0f172a"/>
+  <rect x="385" y="20" width="130" height="45" rx="6" fill="#0f172a"/>
+  <rect x="565" y="20" width="130" height="45" rx="6" fill="#0f172a"/>
+  <rect x="745" y="20" width="130" height="45" rx="6" fill="#0f172a"/>
+
+  <!-- Client -->
+  <rect x="25" y="20" width="130" height="45" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="90" y="38" class="actor-title" text-anchor="middle">Client</text>
+  <text x="90" y="50" class="actor-subtitle" text-anchor="middle">Browser / React UI</text>
+
+  <!-- API (NestJS) -->
+  <rect x="205" y="20" width="130" height="45" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="270" y="38" class="actor-title" text-anchor="middle">API Backend</text>
+  <text x="270" y="50" class="actor-subtitle" text-anchor="middle">NestJS Service</text>
+
+  <!-- AI (FastAPI) -->
+  <rect x="385" y="20" width="130" height="45" rx="6" fill="rgba(59, 130, 246, 0.3)" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="450" y="38" class="actor-title" text-anchor="middle">AI Service</text>
+  <text x="450" y="50" class="actor-subtitle" text-anchor="middle">FastAPI Engine</text>
+
+  <!-- Prisma DB -->
+  <rect x="565" y="20" width="130" height="45" rx="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="630" y="38" class="actor-title" text-anchor="middle">Database</text>
+  <text x="630" y="50" class="actor-subtitle" text-anchor="middle">PostgreSQL / Prisma</text>
+
+  <!-- DuckDB Cache -->
+  <rect x="745" y="20" width="130" height="45" rx="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="810" y="38" class="actor-title" text-anchor="middle">DuckDB Cache</text>
+  <text x="810" y="50" class="actor-subtitle" text-anchor="middle">Local SQL Snapshot</text>
+
+
+  <!-- 7. Legend -->
+  <g transform="translate(40, 1025)">
+    <!-- Legend Boundary -->
+    <rect width="840" height="30" rx="4" fill="rgba(30, 41, 59, 0.5)" stroke="#1e293b" stroke-width="1"/>
+    
+    <!-- Legend Items -->
+    <g transform="translate(15, 8)">
+      <!-- Client -->
+      <circle cx="10" cy="7" r="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1"/>
+      <text x="22" y="11" class="legend-title">Client</text>
+      <text x="65" y="11" class="legend-desc">(Browser App)</text>
+
+      <!-- API -->
+      <circle cx="170" cy="7" r="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1"/>
+      <text x="182" y="11" class="legend-title">API</text>
+      <text x="210" y="11" class="legend-desc">(NestJS/Prisma)</text>
+
+      <!-- AI -->
+      <circle cx="340" cy="7" r="6" fill="rgba(59, 130, 246, 0.3)" stroke="#60a5fa" stroke-width="1"/>
+      <text x="352" y="11" class="legend-title">AI</text>
+      <text x="375" y="11" class="legend-desc">(FastAPI/Agents)</text>
+
+      <!-- DB -->
+      <circle cx="510" cy="7" r="6" fill="rgba(76, 29, 149, 0.4)" stroke="#a78bfa" stroke-width="1"/>
+      <text x="522" y="11" class="legend-title">Postgres</text>
+      <text x="575" y="11" class="legend-desc">(Prisma DB)</text>
+
+      <!-- DuckDB -->
+      <circle cx="680" cy="7" r="6" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1"/>
+      <text x="692" y="11" class="legend-title">DuckDB</text>
+      <text x="740" y="11" class="legend-desc">(Local Cache)</text>
+    </g>
+  </g>
+</svg>

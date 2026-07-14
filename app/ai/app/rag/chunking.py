@@ -44,7 +44,7 @@ def chunk_words(text: str, size: int = CHUNK_SIZE_WORDS, overlap: int = CHUNK_OV
 PREVIEW_ROWS = 20
 
 
-def parse_csv(data: bytes) -> tuple[list[str], int, list[list[str]]]:
+def parse_csv(data: bytes) -> tuple[list[str], int, list[list[str]], pd.DataFrame]:
     # keep_default_na=False: pandas' default na_values list includes plain
     # business tokens like "NA", "NULL", "N/A" — this app uses "NA" as the
     # North America region code throughout its own seed data, so without
@@ -52,4 +52,4 @@ def parse_csv(data: bytes) -> tuple[list[str], int, list[list[str]]]:
     df = pd.read_csv(io.BytesIO(data), keep_default_na=False)
     columns = [str(c) for c in df.columns]
     sample_rows = df.head(PREVIEW_ROWS).astype(str).values.tolist()
-    return columns, len(df), sample_rows
+    return columns, len(df), sample_rows, df

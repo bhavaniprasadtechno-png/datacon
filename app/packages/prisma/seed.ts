@@ -274,52 +274,6 @@ const DOCUMENTS = [
   },
 ];
 
-// 18 months of total revenue (Jan 2025 - Jun 2026), smooth upward trend + mild
-// seasonality — a real time series for the Predictive agent's OLS/Holt-Winters
-// forecast to run over (last point matches the $4.28M KPI/descriptive total).
-const REVENUE_HISTORY: { month: string; revenue: number }[] = (() => {
-  const start = 3.05; // $M, Jan 2025
-  const end = 4.28; // $M, Jun 2026 — matches the seeded RegionRevenue total below
-  const months = 18;
-  const seasonality = [0, 0.02, -0.01, 0.03, -0.02, 0.04, 0.01, -0.015, 0.02, -0.01, 0.03, -0.02, 0.02, 0, 0.01, -0.01, 0.015, 0];
-  const out: { month: string; revenue: number }[] = [];
-  for (let i = 0; i < months; i++) {
-    const t = i / (months - 1);
-    const base = start + (end - start) * t;
-    const revenue = Math.round((base + seasonality[i]) * 100) / 100;
-    const date = new Date(Date.UTC(2025, 0 + i, 1));
-    out.push({ month: date.toISOString().slice(0, 10), revenue });
-  }
-  out[out.length - 1].revenue = end; // anchor exactly to the KPI total
-  return out;
-})();
-
-// Current quarter matches the prototype's descriptive bars exactly; previous
-// quarter is derived to produce the prototype's +6.4% QoQ growth for real.
-const REGION_REVENUE = [
-  { quarter: "2026-Q2", region: "NA", revenue: 1.94 },
-  { quarter: "2026-Q2", region: "EMEA", revenue: 1.12 },
-  { quarter: "2026-Q2", region: "APAC", revenue: 0.82 },
-  { quarter: "2026-Q2", region: "LATAM", revenue: 0.4 },
-  { quarter: "2026-Q1", region: "NA", revenue: 1.82 },
-  { quarter: "2026-Q1", region: "EMEA", revenue: 1.05 },
-  { quarter: "2026-Q1", region: "APAC", revenue: 0.77 },
-  { quarter: "2026-Q1", region: "LATAM", revenue: 0.38 },
-];
-
-// 7 baseline days + 1 spike day for EMEA — lets the Diagnostic agent compute a
-// real "+142% vs 7-day average" figure instead of a hardcoded string.
-const TICKET_DAILY = [
-  { daysAgo: 8, region: "EMEA", count: 40 },
-  { daysAgo: 7, region: "EMEA", count: 42 },
-  { daysAgo: 6, region: "EMEA", count: 38 },
-  { daysAgo: 5, region: "EMEA", count: 41 },
-  { daysAgo: 4, region: "EMEA", count: 39 },
-  { daysAgo: 3, region: "EMEA", count: 43 },
-  { daysAgo: 2, region: "EMEA", count: 40 },
-  { daysAgo: 1, region: "EMEA", count: 98 }, // the spike (~+142% vs the 7-day avg above)
-];
-
 async function main() {
   console.log("Seeding permissions...");
   for (const p of PERMISSIONS) {
@@ -371,43 +325,6 @@ async function main() {
   console.log("Seeding data sources...");
   for (const d of DOCUMENTS) {
     await prisma.dataSource.upsert({ where: { id: d.id }, update: d, create: d });
-  }
-
-  console.log("Seeding revenue history...");
-  for (const r of REVENUE_HISTORY) {
-    await prisma.revenueMetric.upsert({
-      where: { month: new Date(r.month) },
-      update: { revenue: r.revenue },
-      create: { month: new Date(r.month), revenue: r.revenue },
-    });
-  }
-
-  console.log("Seeding region revenue...");
-  for (const r of REGION_REVENUE) {
-    await prisma.regionRevenue.upsert({
-      where: { quarter_region: { quarter: r.quarter, region: r.region } },
-      update: { revenue: r.revenue },
-      create: r,
-    });
-  }
-
-  console.log("Seeding ticket daily...");
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-  for (const t of TICKET_DAILY) {
-    const date = new Date(today);
-    date.setUTCDate(date.getUTCDate() - t.daysAgo);
-    await prisma.ticketDaily.upsert({
-      where: { date_region: { date, region: t.region } },
-      update: { count: t.count },
-      create: { date, region: t.region, count: t.count },
-    });
-  }
-
-  console.log("Seeding churn snapshot...");
-  const existingChurn = await prisma.churnSnapshot.findFirst();
-  if (!existingChurn) {
-    await prisma.churnSnapshot.create({ data: { churnPct: 3.1, prevChurnPct: 3.5, atRiskAccounts: 12 } });
   }
 
   console.log(`Done. Seed login password for all personas: ${SEED_PASSWORD}`);

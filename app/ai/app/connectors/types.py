@@ -13,6 +13,7 @@ class DatasetResult:
     columns: list[str]
     row_count: int
     sample_rows: list[list[str]] = field(default_factory=list)
+    rows: list[tuple] | None = None
     error: str | None = None
 
 

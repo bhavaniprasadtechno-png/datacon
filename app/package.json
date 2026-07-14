@@ -8,10 +8,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bash scripts/dev.sh",
+    "dev": "concurrently -n api,ai,web -c blue,green,magenta \"npm run start:dev --workspace=api\" \"npm run dev:ai\" \"npm run dev --workspace=web\"",
     "dev:web": "npm run dev --workspace=web",
     "dev:api": "npm run start:dev --workspace=api",
-    "dev:ai": "cd ai && (test -d .venv && . .venv/bin/activate; uvicorn app.main:app --reload --port 8000)",
+    "dev:ai": "node scripts/dev-ai.js",
     "build": "npm run build --workspace=packages/shared-types && npm run build --workspace=api && npm run build --workspace=web",
     "prisma:generate": "npm run generate --workspace=packages/prisma",
     "prisma:migrate": "npm run migrate --workspace=packages/prisma",

@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     database_url: str = ""
     chroma_url: str = "http://localhost:8001"
     chroma_persist_dir: str = "./.chroma"
+    query_engine_db_path: str = "./data/snapshot.duckdb"
     # LiteLLM orchestrates the provider call from a single "provider/model"
     # string (SRS §2.2), so swapping providers is a config change, not a
     # code change — e.g. "anthropic/claude-..." + ANTHROPIC_API_KEY would

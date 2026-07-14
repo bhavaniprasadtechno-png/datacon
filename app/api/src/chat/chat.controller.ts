@@ -6,13 +6,9 @@ import { RequirePermissions } from "../auth/decorators/require-permissions.decor
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { AuthenticatedUser } from "../auth/token.types";
 import { AiClientService } from "../common/ai-client.service";
-import { MetricsService } from "../metrics/metrics.service";
 import { ChatService } from "./chat.service";
 import { SendMessageDto } from "./dto/send-message.dto";
 import { FeedbackDto } from "./dto/feedback.dto";
-
-const DEFAULT_MODEL = "Holt-Winters";
-const DEFAULT_HORIZON = 6;
 
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller("chat")
@@ -21,7 +17,6 @@ export class ChatController {
 
   constructor(
     private readonly chat: ChatService,
-    private readonly metrics: MetricsService,
     private readonly ai: AiClientService,
   ) {}
 
@@ -49,29 +44,34 @@ export class ChatController {
   @RequirePermissions("ask_agents")
   @Post("stream")
   async stream(@Body() dto: SendMessageDto, @CurrentUser() user: AuthenticatedUser, @Res() res: Response) {
+    this.logger.log(`[Chat] Received chat request from user ${user.id} (ConversationId: "${dto.conversationId ?? 'NEW'}")`);
+    
     const conversation = await this.chat.getOrCreateConversation(user.id, dto.conversationId);
+    this.logger.log(`[Chat] Using Conversation ID: ${conversation.id}. Appending user message: "${dto.message}"`);
     await this.chat.appendUserMessage(conversation.id, dto.message);
-    const context = await this.metrics.chatContext(DEFAULT_MODEL, DEFAULT_HORIZON);
 
     let upstream;
     try {
+      this.logger.log(`[Chat] Posting chat stream request to AI Service...`);
       upstream = await this.ai.client.post(
         "/internal/chat/stream",
-        { message: dto.message, context, model: dto.model },
+        { message: dto.message, model: dto.model },
         { responseType: "stream" },
       );
+      this.logger.log(`[Chat] AI Service responded with stream status: ${upstream.status}`);
     } catch (e: unknown) {
       // Respond as a clean JSON error *before* touching any SSE headers —
       // if we set them first and this call throws, Nest's exception filter
       // can't cleanly override an already-started response, and the client
       // gets a generic "Internal server error" with no useful detail.
-      this.logger.error(`AI service call failed for chat stream: ${e instanceof Error ? e.message : e}`);
+      this.logger.error(`[Chat] AI service call failed for chat stream: ${e instanceof Error ? e.message : e}`);
       res.status(502).json({
         message: "The AI service is temporarily unavailable — please try again in a moment.",
       });
       return;
     }
 
+    this.logger.log(`[Chat] Initializing Server-Sent Events (SSE) stream headers...`);
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
@@ -98,25 +98,43 @@ export class ChatController {
         buffer = buffer.slice(idx + 2);
         const eventMatch = frame.match(/^event: (.+)$/m);
         const dataMatch = frame.match(/^data: (.+)$/m);
-        if (eventMatch?.[1] !== "agent_done" || !dataMatch) continue;
-        try {
-          results.push(JSON.parse(dataMatch[1]));
-        } catch {
-          // ignore parse errors — the client already has the raw event either way
+        
+        if (eventMatch) {
+          const eventType = eventMatch[1];
+          if (eventType === "agent_start" && dataMatch) {
+            try {
+              const startData = JSON.parse(dataMatch[1]);
+              this.logger.log(`[Chat] [Conversation ${conversation.id}] Agent '${startData.intent}' has started responding.`);
+            } catch {}
+          } else if (eventType === "agent_done" && dataMatch) {
+            try {
+              const doneData = JSON.parse(dataMatch[1]);
+              this.logger.log(`[Chat] [Conversation ${conversation.id}] Agent '${doneData.intent}' finished response. Text length: ${doneData.text?.length ?? 0}`);
+              results.push(doneData);
+            } catch (err) {
+              this.logger.warn(`[Chat] Failed to parse agent_done event data: ${err}`);
+            }
+          }
         }
       }
     });
 
     upstream.data.on("end", async () => {
+      this.logger.log(`[Chat] [Conversation ${conversation.id}] AI Service stream closed. Persisting ${results.length} agent response(s) to DB...`);
       for (const result of results) {
         if (result.text) {
+          this.logger.log(`[Chat] [Conversation ${conversation.id}] Saving response for agent '${result.intent}' to Postgres...`);
           await this.chat.appendAgentMessage(conversation.id, result.intent, result.text, result.payload);
         }
       }
+      this.logger.log(`[Chat] [Conversation ${conversation.id}] End response stream successfully.`);
       res.end();
     });
 
-    upstream.data.on("error", () => res.end());
+    upstream.data.on("error", (err: any) => {
+      this.logger.error(`[Chat] [Conversation ${conversation.id}] Error in upstream AI stream: ${err?.message ?? err}`);
+      res.end();
+    });
   }
 
   @Patch("messages/:id/feedback")

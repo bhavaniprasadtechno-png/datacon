@@ -24,6 +24,20 @@ export class ForecastsController {
 
     const [series, regionRevenue] = await Promise.all([this.metrics.revenueHistory(), this.metrics.regionRevenue()]);
 
+    if (series.length < 2) {
+      return {
+        model,
+        horizon,
+        projected: "No data",
+        ciLow: "No data",
+        ciHigh: "No data",
+        growth: "No data",
+        mape: "No data",
+        series: [],
+        topDrivers: [],
+      };
+    }
+
     const res = await this.ai.client.post("/internal/forecast", {
       series,
       model,

@@ -10,6 +10,7 @@ class ConnectorPayload(BaseModel):
     engine: str
     config: dict
     secrets: dict
+    connectorId: str | None = None
 
 
 class DatasetOut(BaseModel):
@@ -38,7 +39,7 @@ async def test_connector(payload: ConnectorPayload):
 
 @router.post("/sync", response_model=SyncOut)
 async def sync_connector(payload: ConnectorPayload):
-    result = connectors_service.sync_connector(payload.engine, payload.config, payload.secrets)
+    result = connectors_service.sync_connector(payload.engine, payload.config, payload.secrets, payload.connectorId)
     return SyncOut(
         ok=result.ok,
         message=result.message,

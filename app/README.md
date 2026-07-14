@@ -12,14 +12,21 @@ Full-stack implementation of the Datacon prototype (`../project/Datacon.dc.html`
 
 ## First-time setup
 
+Each app keeps its **own** `.env` (no shared root-level file): `api/.env`, `ai/.env`, and `packages/prisma/.env`. `DATABASE_URL` and `INTERNAL_AUTH_TOKEN` must be kept identical across the files that need them (see the comments in each `.env.example` for which siblings to match) — this is the same tradeoff `render.yaml` makes in production, where `INTERNAL_AUTH_TOKEN` is hardcoded identically into both services' env vars since Render has no cross-service variable-sharing construct.
+
 1. **Database**: either
-   - create a [Supabase](https://supabase.com) project and copy its Postgres connection string into `DATABASE_URL` in `.env`, **or**
+   - create a [Supabase](https://supabase.com) project and copy its Postgres connection string into `DATABASE_URL`, **or**
    - run Postgres locally (`docker compose up -d app_postgres`, or a native `postgresql` install) and point `DATABASE_URL` at it.
-2. `cp .env.example .env` and fill in secrets (`CONNECTOR_ENCRYPTION_KEY` — generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`).
+2. Copy each app's example env file and fill in secrets:
+   - `cp api/.env.example api/.env` (`CONNECTOR_ENCRYPTION_KEY` — generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`; pick an `INTERNAL_AUTH_TOKEN`)
+   - `cp ai/.env.example ai/.env` (same `INTERNAL_AUTH_TOKEN` as above)
+   - `cp packages/prisma/.env.example packages/prisma/.env`
 3. `npm install` (installs all workspaces).
 4. `npm run prisma:migrate` then `npm run prisma:seed` — seeds the exact demo dataset from the prototype (3 personas + 1 extra user, 3 system roles, 7 permissions, 4 connectors, 6 catalog tables, 5 documents). **Seed login password for every persona: `Datacon123!`**
 5. `ai/`: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`, then `python3 seed_chroma.py` once to index the two seed documents the Diagnostic agent cites.
-6. `npm run dev` boots `api` (port 4000), `ai` (port 8000), and `web` (port 5173) together.
+6. `npm run dev` boots `api` (port 4000), `ai` (port 8000 by default — see `AI_DEV_PORT` in `ai/.env` to change it), and `web` (port 5173) together.
+
+For sample external data sources to test the Postgres/MySQL/MongoDB connector engines against `docker-compose.yml`'s containers, use: `postgresql://analyst:analyst@localhost:55432/analytics`, `mysql://analyst:analyst@localhost:53306/analytics`, `mongodb://analyst:analyst@localhost:57017/analytics`.
 
 ## What's implemented
 
@@ -37,7 +44,7 @@ Full-stack implementation of the Datacon prototype (`../project/Datacon.dc.html`
 
 ## LLM configuration
 
-Chat works with **zero API keys** out of the box (deterministic offline responses computed over real retrieved/synced data). Set `GEMINI_API_KEY` to enable real LLM responses; the default model is a single `LLM_MODEL` string in `.env` (default: `gemini/gemma-4-31b-it`). Gemma's `-it` models are reasoning models that spend part of their token budget on internal "thinking" before the visible answer, and have shown occasional transient errors from Google's backend — the client retries once and falls back to the offline template if both attempts fail.
+Chat works with **zero API keys** out of the box (deterministic offline responses computed over real retrieved/synced data). Set `GEMINI_API_KEY` to enable real LLM responses; the default model is a single `LLM_MODEL` string in `ai/.env` (default: `gemini/gemma-4-31b-it`). Gemma's `-it` models are reasoning models that spend part of their token budget on internal "thinking" before the visible answer, and have shown occasional transient errors from Google's backend — the client retries once and falls back to the offline template if both attempts fail.
 
 Chat routes through [LiteLLM](https://docs.litellm.ai/) (per the SRS's "LLM Orchestrator" spec, `app/llm/litellm_client.py`) rather than a provider-specific SDK, so swapping providers/models is a config change, not a code change (e.g. `anthropic/claude-...` + `ANTHROPIC_API_KEY`). The chat UI also has a **per-message model picker** (top-right of the chat header) letting users switch between the curated models in `packages/shared-types/src/chat.ts`'s `AVAILABLE_LLM_MODELS` — kept in sync with `app/ai/app/llm/models.py`'s `AVAILABLE_MODELS`, which the ai service validates a per-request override against (an unrecognized model string is rejected and falls back to `LLM_MODEL` rather than being passed to LiteLLM unchecked).
 

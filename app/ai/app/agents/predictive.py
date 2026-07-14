@@ -1,5 +1,8 @@
 from app.agents.analytics import format_facts, region_stats, revenue_stats, run_forecast
 from app.agents.types import AgentPrep
+from app.forecasting import ols, holt_winters
+from app.query_engine.executor import answer_question
+from app.query_engine.extract import column_index
 
 SYSTEM = (
     "You are Datacon's predictive analytics agent.\n"
@@ -31,38 +34,61 @@ def _offline_forecast(facts: dict) -> str:
     )
     return line
 
+NO_DATA_TEXT = (
+    "No revenue history is connected yet. Connect a data source with a revenue-over-time "
+    "series to enable forecasting."
+)
 
-def prepare(question: str, context: dict) -> AgentPrep:
-    ctx = context or {}
-    forecast_facts = run_forecast(
-        ctx.get("revenueHistory"),
-        ctx.get("model", "Holt-Winters"),
-        ctx.get("horizonMonths", 6),
+_REVENUE_SERIES_QUESTION = "Total revenue for each month, ordered chronologically, with columns for month and revenue."
+
+MODEL = "Holt-Winters"
+HORIZON_MONTHS = 6
+
+
+async def prepare(question: str) -> AgentPrep:
+    result = await answer_question(_REVENUE_SERIES_QUESTION)
+    revenue_idx = column_index(result.columns, "revenue", "amount", "total") if result.ok else -1
+
+    if not result.ok or revenue_idx < 0:
+        return AgentPrep(
+            system=SYSTEM,
+            prompt=f"Question: {question}\n\nNo revenue history is connected.",
+            offline_text=NO_DATA_TEXT,
+            payload={"series": []},
+        )
+
+    series = [float(row[revenue_idx]) for row in result.rows if row[revenue_idx] is not None]
+
+    if len(series) < 2:
+        return AgentPrep(
+            system=SYSTEM,
+            prompt=f"Question: {question}\n\nNo revenue history is connected.",
+            offline_text=NO_DATA_TEXT,
+            payload={"series": []},
+        )
+
+    engine = ols if MODEL == "OLS" else holt_winters
+    forecast = engine.forecast(series, HORIZON_MONTHS)
+
+    offline_text = (
+        f"Using a {MODEL} model on {len(series)} periods of revenue, the next {HORIZON_MONTHS} periods are "
+        f"projected at ${forecast['projected']:.2f}M (95% CI: ${forecast['ci_low']:.2f}M-${forecast['ci_high']:.2f}M), "
+        f"a {forecast['growth_pct']:+.1f}% change. Model fit error (MAPE) is {forecast['mape']:.1f}%."
     )
-    facts = {
-        "revenue": revenue_stats(ctx.get("revenueHistory")),
-        "regions": region_stats(ctx.get("regionRevenue")),
-        "forecast": forecast_facts,
+
+    prompt = (
+        f"Question: {question}\n\nComputed forecast ({MODEL}, {HORIZON_MONTHS}-period horizon):\n"
+        f"- Projected: ${forecast['projected']:.2f}M\n- 95% CI: ${forecast['ci_low']:.2f}M - ${forecast['ci_high']:.2f}M\n"
+        f"- Growth: {forecast['growth_pct']:+.1f}%\n- MAPE: {forecast['mape']:.1f}%"
+    )
+
+    payload = {
+        "model": MODEL,
+        "projected": f"${forecast['projected']:.2f}M",
+        "ciLow": f"${forecast['ci_low']:.2f}M",
+        "ciHigh": f"${forecast['ci_high']:.2f}M",
+        "growth": f"{forecast['growth_pct']:+.1f}%",
+        "mape": f"{forecast['mape']:.1f}%",
+        "series": [{"label": f"p{i}", "value": v} for i, v in enumerate(series)],
     }
-    prompt = f"""User Question:
-{question}
-
-COMPUTED FACTS (authoritative — use these exact numbers):
-{format_facts({k: v for k, v in facts.items() if v})}
-
-Summarise the forecast for the user. Report the projected value, CI, growth %,
-model used, and horizon. If the forecast dict is empty, tell the user the
-series was too short.
-"""
-    return AgentPrep(
-        system=SYSTEM,
-        prompt=prompt,
-        offline_text=_offline_forecast(facts),
-        # Payload the UI forecast card renders — real forecast numbers only.
-        payload={
-            "forecast": forecast_facts,
-            "history": ctx.get("revenueHistory") or [],
-            "model": ctx.get("model"),
-            "horizonMonths": ctx.get("horizonMonths"),
-        },
-    )
+    return AgentPrep(system=SYSTEM, prompt=prompt, offline_text=offline_text, payload=payload)

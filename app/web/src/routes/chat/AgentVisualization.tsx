@@ -172,24 +172,6 @@ function PipelineDetailsPanel({ details }: { details: PipelineDetails }) {
 function renderInlineVisualization(message: ChatMessage) {
   if (!message.payload) return null;
 
-  if (message.intent === "descriptive" && "bars" in message.payload) {
-    const bars = (message.payload as unknown as { bars: { label: string; pct: number; value: string }[] }).bars;
-    return (
-      <div style={{ background: "var(--ac-softer)", border: "1px solid var(--ac-soft)", borderRadius: 12, padding: 14, marginTop: 10 }}>
-        <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "#9489c4", marginBottom: 10 }}>REVENUE BY REGION · LAST QUARTER</div>
-        {bars.map((b) => (
-          <div key={b.label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <span style={{ width: 46, fontSize: 11.5, fontWeight: 700, color: "#5a5f72" }}>{b.label}</span>
-            <div style={{ flex: 1, height: 8, background: "#eceafc", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ width: `${b.pct}%`, height: "100%", background: "var(--ac-grad)", borderRadius: 4 }} />
-            </div>
-            <span style={{ width: 60, fontSize: 11.5, fontWeight: 700, textAlign: "right" }}>{b.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   if (message.intent === "diagnostic" && "citations" in message.payload) {
     const p = message.payload as unknown as { citations: { id: number; documentTitle: string; filename: string; chunkIndex: number; snippet: string }[]; correlation?: string };
     return (

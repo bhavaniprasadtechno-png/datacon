@@ -1,13 +1,8 @@
 export type ChatIntent = "descriptive" | "diagnostic" | "predictive" | "prescriptive";
 
-export interface DescriptiveBar {
-  label: string;
-  value: string;
-  pct: number;
-}
-
 export interface DescriptivePayload {
-  bars: DescriptiveBar[];
+  columns: string[];
+  rows: (string | number | boolean | null)[][];
 }
 
 export interface Citation {
