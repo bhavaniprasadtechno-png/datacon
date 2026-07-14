@@ -15,15 +15,84 @@ happen if we hold prices"). This module now routes in two layers:
 
 Both always return a non-empty list of valid intents.
 """
+import hashlib
 import json
 import logging
 import re
+import time
+from collections import OrderedDict
+from threading import Lock
 
 from app.config import settings
 
 logger = logging.getLogger("app.agents.router")
 
 VALID_INTENTS = ("descriptive", "diagnostic", "predictive", "prescriptive", "general")
+
+# --- Bounded, TTL'd cache for the LLM router call ---------------------------
+# Same (question, data schema, model) inside a short window returns the same
+# routing decision on every hit, so we don't waste a round-trip. Bounded to
+# keep memory flat on a long-lived process; TTL'd so a redeploy with new
+# agents / prompts doesn't get stuck on stale entries.
+_ROUTER_CACHE_MAX = 512
+_ROUTER_CACHE_TTL_SECS = 15 * 60
+_router_cache: "OrderedDict[str, tuple[float, list[str]]]" = OrderedDict()
+_router_cache_lock = Lock()
+_router_cache_stats = {"hits": 0, "misses": 0}
+
+
+def _cache_key(question: str, schema: str, model: str | None) -> str:
+    raw = json.dumps(
+        {"q": (question or "").strip().lower(), "s": schema, "m": model or ""},
+        sort_keys=True,
+    )
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _cache_get(key: str) -> list[str] | None:
+    now = time.monotonic()
+    with _router_cache_lock:
+        entry = _router_cache.get(key)
+        if not entry:
+            _router_cache_stats["misses"] += 1
+            return None
+        expires_at, intents = entry
+        if expires_at < now:
+            _router_cache.pop(key, None)
+            _router_cache_stats["misses"] += 1
+            return None
+        # Refresh recency ordering.
+        _router_cache.move_to_end(key)
+        _router_cache_stats["hits"] += 1
+        return list(intents)
+
+
+def _cache_put(key: str, intents: list[str]) -> None:
+    expires_at = time.monotonic() + _ROUTER_CACHE_TTL_SECS
+    with _router_cache_lock:
+        _router_cache[key] = (expires_at, list(intents))
+        _router_cache.move_to_end(key)
+        while len(_router_cache) > _ROUTER_CACHE_MAX:
+            _router_cache.popitem(last=False)
+
+
+def router_cache_stats() -> dict:
+    """Introspection helper — used by tests and can be exposed on a debug
+    endpoint. Reports current cache size + cumulative hits/misses."""
+    with _router_cache_lock:
+        return {
+            "size": len(_router_cache),
+            "max": _ROUTER_CACHE_MAX,
+            "ttl_secs": _ROUTER_CACHE_TTL_SECS,
+            **_router_cache_stats,
+        }
+
+
+def router_cache_clear() -> None:
+    with _router_cache_lock:
+        _router_cache.clear()
+        _router_cache_stats["hits"] = 0
+        _router_cache_stats["misses"] = 0
 
 # --- Regex fallback (kept from the prototype, slightly broadened) ------------
 _PREDICTIVE = re.compile(
@@ -142,7 +211,8 @@ def _parse_router_response(raw: str) -> list[str] | None:
 async def route_dynamic(question: str, context: dict | None, model: str | None = None) -> list[str]:
     """LLM-driven intent classification with regex fallback.
 
-    Falls back to `route()` when:
+    Results are cached per (question, data-schema, model) for `_ROUTER_CACHE_TTL_SECS`
+    so repeated turns skip the round-trip. Falls back to `route()` when:
       * GEMINI_API_KEY isn't set (offline mode),
       * the LLM call fails,
       * or the reply can't be parsed into a valid intent list.
@@ -151,10 +221,16 @@ async def route_dynamic(question: str, context: dict | None, model: str | None =
     if not settings.gemini_api_key:
         return fallback
 
+    schema = _summarise_context_schema(context)
+    cache_key = _cache_key(question, schema, model or settings.llm_model)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        logger.debug("Router cache hit for %s...", cache_key[:12])
+        return cached
+
     try:
         import litellm
 
-        schema = _summarise_context_schema(context)
         user_prompt = (
             f"User question:\n{question}\n\n"
             f"Data available this turn:\n{schema}\n\n"
@@ -178,4 +254,5 @@ async def route_dynamic(question: str, context: dict | None, model: str | None =
     if not picked:
         logger.info("Dynamic router reply unparseable (%r); using regex fallback.", raw[:120])
         return fallback
+    _cache_put(cache_key, picked)
     return picked
