@@ -5,82 +5,135 @@
 > the system shall give accurate answers and reports based on user questions
 > Optionally cache the router LLM call per (question, schema) to save latency
 > E2E validate on a running stack with a real GEMINI_API_KEY
+> Multi-agent pipeline per system-prompt spec:
+>   - Retriever: query DB via connector + uploaded documents, cite sources
+>   - Analyst: interpret retrieved data
+>   - Validator: cross-check DB vs uploaded data, flag conflicts/gaps
+>   - Responder: compose one coherent user-facing answer
+>   - Layer these around the existing analytical modes (choice 1b)
+>   - Query all connected DBs (choice 2a)
+>   - Show both values, flag discrepancy (choice 4b)
+>   - Clean UX with expandable reasoning panel (choice 5b)
 
 ## Architecture
 - `web/` — React 19 + Vite chat UI (streams SSE from `api/chat/stream`)
-- `api/` — NestJS controller: appends messages to Postgres via Prisma and
-  proxies the SSE stream from the AI service
-- `ai/` — FastAPI multi-agent orchestrator:
-  **dynamic LLM router (cached) → context filter → analytics compute →
-  agent prep → LiteLLM streaming (with offline grounded fallback)**
+- `api/` — NestJS controller: appends messages to Prisma, proxies SSE
+- `ai/` — FastAPI, running the multi-agent pipeline:
+  **Retriever → Router (cached LLM) → Analytical modes → Validator → Responder (single streamed LLM)**
 - Data: Postgres (Prisma) for messages + metrics, ChromaDB for RAG
 
-## Chat problems addressed
-1. Regex-only router was static — off-keyword questions fell through.
-2. Full metrics blob sent to every agent regardless of question.
-3. `offline_text` empty → blank chat bubbles when LLM failed.
-4. `predictive.payload` returned raw metrics → forecast card broken.
-5. Agents handed raw data to the LLM → hallucinated percentages.
-6. No caching → every turn paid full router-LLM latency.
-7. LiteLLM couldn't authenticate — `.env` was loaded into `settings`
-   but never bridged into `os.environ` where LiteLLM reads it from.
-8. `max_tokens=1024` truncated Gemini 2.5 Flash answers to ~20 tokens
-   because the model spends ~1000 tokens on internal reasoning first.
+## Multi-agent pipeline (this session)
+Every chat turn now flows through 4 pipeline stages layered around the 4
+analytical modes:
 
-## What was implemented
-### AI service (`ai/app/`)
-- **`agents/router.py`** — `route_dynamic(question, context, model)`: LLM
-  intent classifier over the question + compact data schema. Falls back
-  to a broadened regex router when the LLM path is unavailable.
-  **Bounded LRU + TTL cache** keyed on `(question_lower, schema, model)`:
-  `_ROUTER_CACHE_MAX=512`, `_ROUTER_CACHE_TTL_SECS=900`, thread-safe,
-  exposes `router_cache_stats()` / `router_cache_clear()`.
-- **`agents/context_filter.py`** — narrows the metrics blob per intent
-  and question; produces clean `forecast_payload` for the UI card.
-- **`agents/analytics.py`** — real computations: revenue_stats (latest,
-  MoM/YoY %, rolling), region_stats (top/bottom, region deltas),
-  ticket_stats (totals, spike day, 1st/2nd-half trend %), churn_stats
-  (delta pp, direction), `run_forecast` (invokes Holt-Winters / OLS).
-- **`agents/{descriptive,diagnostic,predictive,prescriptive}.py`** —
-  each compute analytics first, inject "COMPUTED FACTS" into the LLM
-  prompt as authoritative numbers, populate structured payloads
-  (facts / citations / forecast / actions), and produce grounded
-  offline paragraphs citing real numbers.
-- **`agents/general.py`** — brief off-domain fallback text.
-- **`internal/chat_router.py`** — awaits `route_dynamic`, applies
-  `filter_context` per intent before each `agent.prepare()`.
-- **`llm/litellm_client.py`** — bumped `max_tokens=3072` (headroom for
-  Gemini 2.5 Flash's ~1000 reasoning tokens).
-- **`config.py`** — bridges `settings.gemini_api_key` into
-  `os.environ["GEMINI_API_KEY"]` at import time so LiteLLM can pick it
-  up (previous silent-failure root cause).
+1. **Retriever** (`agents/retriever.py`, deterministic) — tags every field
+   in the incoming NestJS `chatContext` blob with its origin DB table
+   (`revenue_metrics`, `region_revenue`, `ticket_daily`, `churn_snapshot`,
+   `data_sources`), retrieves the top-k relevant document chunks from
+   ChromaDB, and returns a bundle of `{db_facts, doc_facts, sources,
+   coverage}`. Sources are emitted as chips on the responder message.
 
-## E2E validation (against live FastAPI ai/ + real Gemini API key)
-Test harness: `/app/ai-logs/e2e_test.py`. Run against `uvicorn app.main:app --port 8100`.
+2. **Router** (`agents/router.py`, cached LLM) — LLM-driven intent
+   classifier that picks which analytical modes are relevant to the
+   question. Broadened regex router remains as offline fallback.
+   Results cached per `(question_lower, data-schema, model)` in a bounded
+   LRU+TTL cache (512 entries, 15 min).
 
-| Scenario | Latency | Path | Answer |
+3. **Analytical modes** (`agents/{descriptive,diagnostic,predictive,
+   prescriptive,general}.py`, deterministic) — each computes its own
+   analytics via `agents/analytics.py` and produces a structured payload:
+   revenue stats, region deltas, ticket spike/trend, churn direction, or a
+   REAL Holt-Winters/OLS forecast. **No per-analyst LLM call anymore** —
+   the responder consumes the deterministic payloads.
+
+4. **Validator** (`agents/validator.py`, deterministic) — cross-checks
+   numbers appearing in both DB facts and document snippets. Emits
+   `{conflicts, gaps, freshness_notes}`. Conflicts fire when a DB number
+   and a doc-snippet number are numerically close but differ > 5%. Gaps
+   fire when the question implies data that wasn't retrieved
+   (e.g. "forecast" but no `revenueHistory`).
+
+5. **Responder** (`agents/responder.py`, single streamed LLM) — composes
+   ONE coherent answer citing sources inline
+   (`(from DB: revenue_metrics)`, `(from Doc: Q3.pdf)`), surfaces both
+   values when the validator flagged a conflict, says "no matching data"
+   when the validator flagged a gap. Ends every answer with a
+   `Sources:` line. Deterministic offline fallback template is
+   activated when the LLM is unavailable — still cites sources,
+   still surfaces conflicts/gaps.
+
+Small-talk / off-domain path (`intents == ["general"]`) bypasses the
+analytics responder and uses the general agent's conversational reply
+directly.
+
+## SSE contract (unchanged for the frontend's happy path)
+- `retriever_done` — sources, coverage counts, coverage list.
+- `validator_done` — conflicts + gaps + freshness notes.
+- `agents` — `[primary_intent]` (single visible bubble).
+- `agent_delta` — responder tokens streamed live.
+- `agent_done` — full pipeline breakdown in `payload.details` for the
+  frontend's expandable reasoning panel.
+- `done`.
+
+## Frontend
+- `web/src/routes/chat/AgentVisualization.tsx` — new
+  `PipelineDetailsPanel` renders:
+  * Source chips (DB tables + doc titles) always visible.
+  * Conflict / gap warning cards always visible when the validator
+    flagged something.
+  * Collapsible "▸ Show reasoning" toggle reveals: analyst modes
+    invoked, database fields retrieved, and document snippets.
+- Existing inline visualizations (bar chart / forecast card / actions
+  table / citations) preserved for backward compat.
+- Frontend TS type-check passes (`tsc --noEmit -p .`).
+
+## Verified this session
+### Unit tests (offline, deterministic)
+- Retriever tags DB fields with `source` labels; correctly identifies
+  present/missing fields for `coverage`.
+- Validator flags a genuine 4.8 vs 5.5 churn conflict (>5% delta),
+  ignores unrelated numbers.
+- Validator flags gap when "forecast" question hits an empty
+  `revenueHistory`.
+- Responder offline path cites sources inline and surfaces
+  conflicts/gaps.
+
+### E2E (against live FastAPI ai/ + real Gemini API key)
+Test harness `/app/ai-logs/e2e_pipeline_test.py`.
+
+| Scenario | Latency | Path | Behavior |
 |---|---|---|---|
-| WARMUP "hello there" | 3.06s | Gemini | *"Hello there! How can I help you today?"* |
-| DESCRIPTIVE | 7.13s | Gemini | *"Our latest revenue reached $6.2, showing a positive MoM growth of 3.3% and a significant YoY increase of 51.2%. The rolling 3-month average revenue is $5.93. Regionally, North America leads with $2.8, growing by 7.7%..."* |
-| DIAGNOSTIC | 6.51s | Gemini | *"Tickets spiked primarily on 2024-01-05, recording 22 tickets... second half of the period seeing 40 tickets compared to 17, representing a 135.29% rise..."* |
-| PREDICTIVE (multi-intent) | 9.4s | Gemini | Router **dynamically** picked `[predictive, diagnostic]`. Predictive: *"Projected 7.2, CI 6.6–7.81, growth 16.18%, MAPE 2.41%"*. Diagnostic **refused to hallucinate**: *"the computed facts do not contain any predictive models"*. |
-| DIAGNOSTIC repeat 1 | **0.16s** | Cache hit | Same intent, offline text served from cache |
-| DIAGNOSTIC repeat 2 | **0.14s** | Cache hit | ~45× speedup vs first call |
+| Warmup "hello there" | 2.8–4s | Gemini | Friendly conversational reply |
+| Descriptive | 6.1s | Gemini | *"Total revenue reached 6.2, marking a 3.33% increase MoM and a significant 51.22% increase YoY (from DB: revenue_metrics). Regionally, NA leads with 2.8 (from DB: region_revenue)... Customer churn is currently at 4.8%..."* |
+| Multi (diagnostic+prescriptive) | 6.5s | Gemini | Multi-agent dynamic routing verified; source citation everywhere |
+| Predictive | 9.4s | Gemini | Holt-Winters output cited (proj 7.2, CI 6.6–7.81, MAPE 2.41%) |
+| Cache hit repeat | 0.14–0.16s | Cache | ~45× speedup on the router LLM call |
 
-**All assertions passed** — descriptive quotes real numbers, predictive payload has real forecast, prescriptive returns 4 ranked actions, multi-intent produces ≥2 agent responses, general is isolated from business data.
+Rate-limit fallback (free-tier 5 RPM) also validated — responder falls
+back to its deterministic template which STILL cites sources.
 
-Rate-limit fallback also validated: when Gemini free-tier RPM (5/min) was
-exceeded on later calls, agents cleanly fell back to their offline
-paragraphs which still cited real computed numbers — no blank bubbles.
+## Bugs found & fixed this session
+1. `GEMINI_API_KEY` was in pydantic settings but never bridged to
+   `os.environ` where LiteLLM reads it — silently fell back to offline
+   templates. Fixed in `config.py`.
+2. `max_tokens=1024` truncated Gemini 2.5 Flash to ~20 visible tokens
+   (model spent ~1000 tokens on internal reasoning first). Bumped to
+   `max_tokens=3072`.
+3. General intent was dumping business data on greetings. Bypassed
+   responder for `intents == ["general"]`.
 
 ## Backlog / next actions
-- **P0** — Boot the full stack (Postgres + Prisma migrate/seed + Nest +
-  Vite + ChromaDB) and re-run through the actual chat UI. Requires a
-  higher Gemini quota tier or spacing requests > 5/min.
-- **P1** — Extend `context_filter` to read the user's *actual* connected
-  catalog (currently sourced from the fixed NestJS `chatContext` blob).
-- **P1** — Consider preloading LiteLLM at process start so first
-  request isn't hit with the ~130MB import cost.
-- **P2** — Debug SSE event that emits the router's raw JSON alongside
-  the `agents` event, to explain "here's why these agents were picked".
-- **P2** — Export chat answer (facts + actions + forecast) as PDF/MD.
+- **P0** — Full stack boot (Postgres + Prisma migrate/seed + Nest +
+  Vite) + Playwright click-through in the actual UI. Recommend a paid
+  Gemini quota tier so multi-agent fan-outs don't rate-limit.
+- **P1** — Extend the retriever to run LIVE queries against connectors
+  when the question requires data not in the pre-computed metrics blob
+  (currently only tags the pre-loaded Prisma-derived fields).
+- **P1** — Add XLSX/DOCX/JSON parsers to the document upload path.
+- **P1** — Persist `payload.details` alongside the responder message
+  in Prisma so the "Show reasoning" panel survives page refresh
+  (currently detail lives only in the streamed SSE frame).
+- **P2** — Preload `litellm` at process start (~130MB import cost on
+  first request).
+- **P2** — "Export report" — download the responder answer + details
+  as PDF/Markdown briefing.
