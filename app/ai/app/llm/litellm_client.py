@@ -26,13 +26,16 @@ class LiteLLMClient:
                         {"role": "system", "content": system},
                         {"role": "user", "content": prompt},
                     ],
-                    # Reasoning models (e.g. Gemma's "-it" variants) spend a chunk of
-                    # this budget on internal thinking tokens before the visible
-                    # answer, so this needs headroom beyond a plain chat model.
-                    # (Thinking arrives as delta.reasoning_content, a separate field
-                    # — delta.content below is visible answer text only; verified
-                    # against both gemini-2.5-flash and gemma-4-31b-it.)
-                    max_tokens=1024,
+                    # Reasoning models (e.g. Gemma's "-it" variants and
+                    # gemini-2.5-flash) spend a large chunk of this budget on
+                    # internal thinking tokens before the visible answer, so
+                    # this needs significant headroom beyond a plain chat
+                    # model. Measured: gemini-2.5-flash spent 800-1000 reasoning
+                    # tokens on short prompts, so 1024 was truncating visible
+                    # output at ~20 tokens — 3072 leaves room for both.
+                    # (Thinking arrives as delta.reasoning_content, a separate
+                    # field — delta.content below is visible answer text only.)
+                    max_tokens=3072,
                     stream=True,
                 )
                 async for chunk in stream:
