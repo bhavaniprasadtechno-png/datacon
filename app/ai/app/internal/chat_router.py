@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from app.internal.auth import require_internal_auth
-from app.agents.router import route
+from app.agents.router import route_dynamic
+from app.agents.context_filter import filter_context
 from app.agents import descriptive, diagnostic, predictive, prescriptive, general
 from app.llm.client import get_llm_client
 
@@ -30,19 +31,22 @@ def _sse(event: str, data: dict) -> str:
 
 @router.post("/stream")
 async def stream(payload: ChatPayload):
-    intents = route(payload.message)
+    # Dynamic, LLM-driven routing keyed on both the question AND the shape
+    # of data attached to this turn — falls back to a broadened regex router
+    # when GEMINI_API_KEY isn't set or the LLM router fails.
+    intents = await route_dynamic(payload.message, payload.context, payload.model)
     llm = get_llm_client(payload.model)
 
     async def event_gen():
-        # Upfront agent assignment (SRS Fig. 2 step 3), then one sequential
-        # pass per assigned agent (Fig. 2's "For Each Assigned Agent Type"
-        # loop), each streaming true LLM deltas as they're generated rather
-        # than replaying a completed answer.
         yield _sse("agents", {"intents": intents})
         results = []
         for intent in intents:
             agent = _AGENTS.get(intent, descriptive.prepare)
-            prep = agent(payload.message, payload.context)
+            # Narrow the context to what THIS intent + question actually
+            # need, instead of dumping the full metrics blob into every
+            # agent's prompt.
+            scoped_context = filter_context(payload.context, payload.message, intent)
+            prep = agent(payload.message, scoped_context)
             yield _sse("agent_start", {"intent": intent})
             text_parts: list[str] = []
             async for delta in llm.compose_stream(prep.system, prep.prompt, prep.offline_text):
