@@ -62,11 +62,12 @@ def _primary_intent(intents: list[str]) -> str:
 @router.post("/stream")
 async def stream(payload: ChatPayload):
     async def event_gen():
-        # --- Stage 1: Retriever (deterministic) --------------------------
-        retrieved = retriever.retrieve(payload.message, payload.context)
+        # --- Stage 1: Retriever (deterministic + optional LIVE query) ----
+        retrieved = await retriever.retrieve_async(payload.message, payload.context, model=payload.model)
         yield _sse("retriever_done", {
             "sources": retrieved["sources"],
             "db_field_count": len(retrieved["db_facts"]),
+            "live_query_count": len(retrieved.get("live_facts", [])),
             "doc_chunk_count": len(retrieved["doc_facts"]),
             "coverage": retrieved["coverage"],
         })
@@ -118,6 +119,7 @@ async def stream(payload: ChatPayload):
             "details": {
                 "retriever": {
                     "db_facts": retrieved["db_facts"],
+                    "live_facts": retrieved.get("live_facts", []),
                     "doc_facts": retrieved["doc_facts"],
                     "sources": retrieved["sources"],
                     "coverage": retrieved["coverage"],

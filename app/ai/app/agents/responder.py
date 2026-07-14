@@ -51,6 +51,11 @@ def _facts_snippet(retrieved: dict) -> str:
     lines: list[str] = []
     for f in retrieved.get("db_facts", []):
         lines.append(f"  - DB[{f['source']}].{f['field']} ({f['shape']}) = {json.dumps(f['value'], default=str)[:400]}")
+    for lf in retrieved.get("live_facts", []):
+        preview_rows = json.dumps(lf.get("rows", [])[:5], default=str)[:400]
+        lines.append(
+            f"  - Live[{lf['engine']}].{lf['table']} ({lf['row_count']} rows, cols={lf.get('columns')}): {preview_rows}"
+        )
     for d in retrieved.get("doc_facts", []):
         lines.append(f"  - Doc[{d['id']}] {d['documentTitle']} ({d['filename']}, chunk {d['chunkIndex']}): "
                      f"\"{d['snippet'][:220]}\"")
@@ -149,6 +154,14 @@ def _offline_answer(question: str, retrieved: dict, analyst_results: list[dict],
             break
     if lead:
         parts.append(lead)
+
+    # Live-query surfacing — first N rows from the live table if we got any.
+    for lf in (retrieved.get("live_facts") or [])[:2]:
+        preview = lf.get("rows", [])[:3]
+        parts.append(
+            f"Live query on {lf['table']} ({lf['engine']}) returned "
+            f"{lf['row_count']} rows; first: {preview[:1]} (from Live: {lf['table']})."
+        )
 
     # Follow-up numbers from any other analysts.
     for r in analyst_results:
