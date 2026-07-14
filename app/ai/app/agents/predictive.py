@@ -1,56 +1,68 @@
-from app.agents.context_filter import forecast_payload
+from app.agents.analytics import format_facts, region_stats, revenue_stats, run_forecast
 from app.agents.types import AgentPrep
 
 SYSTEM = (
     "You are Datacon's predictive analytics agent.\n"
-    "Present forecast results clearly and professionally.\n"
-    "Use only the provided historical data and model settings.\n"
-    "Do not invent numbers or predictions."
+    "You are given the output of a REAL forecast run (Holt-Winters or OLS) "
+    "over the user's actual revenue history, plus region breakdowns.\n"
+    "Rules:\n"
+    "  * Report ONLY the projected value, confidence interval, growth %, and "
+    "MAPE that appear in COMPUTED FACTS below.\n"
+    "  * Never fabricate a projection or CI — if the facts are empty, say the "
+    "series was too short for a forecast.\n"
+    "  * Note the model used (Holt-Winters vs OLS) and the horizon."
 )
 
 
-def _offline_forecast(question: str, context: dict) -> str:
-    history = context.get("revenueHistory") if context else None
-    horizon = (context or {}).get("horizonMonths", 6)
-    model = (context or {}).get("model", "Holt-Winters")
-    if not isinstance(history, list) or len(history) < 3:
+def _offline_forecast(facts: dict) -> str:
+    fc = facts.get("forecast") or {}
+    if not fc:
         return (
-            "I don't have enough history to project a forecast yet — "
-            "attach a longer time-series and try again."
+            "I need at least three points of history to run a forecast, and "
+            "the attached series is shorter than that. Attach a longer time "
+            "series and try again."
         )
-    latest = history[-1]
-    # Simple average-of-recent-deltas projection as a deterministic
-    # placeholder; the real forecast is computed by the /forecast endpoint.
-    recent = history[-6:] if len(history) >= 6 else history
-    deltas = [recent[i] - recent[i - 1] for i in range(1, len(recent))]
-    avg_delta = sum(deltas) / len(deltas) if deltas else 0
-    projection = latest + avg_delta * horizon
-    direction = "up" if avg_delta >= 0 else "down"
-    return (
-        f"Using {model} on {len(history)} historical points, the trend is "
-        f"{direction} by ~{avg_delta:,.0f} per period on average. Projecting "
-        f"{horizon} periods ahead lands near {projection:,.0f} "
-        f"(from a latest observed value of {latest:,.0f})."
+    line = (
+        f"Using {fc['model']} on the attached revenue series, the {fc['horizon_months']}-month "
+        f"projection is {fc['projected']:,.2f} "
+        f"(95% CI {fc['ci_low']:,.2f}–{fc['ci_high']:,.2f}), "
+        f"a {fc['growth_pct']:+.1f}% change from the latest actual of "
+        f"{fc['latest_actual']:,.2f}. Model in-sample MAPE: {fc['mape_pct']:.1f}%."
     )
+    return line
 
 
 def prepare(question: str, context: dict) -> AgentPrep:
-    context_text = f"Prediction Context:\n{context}\n\n" if context else ""
-    prompt = f"""
-User Question:
+    ctx = context or {}
+    forecast_facts = run_forecast(
+        ctx.get("revenueHistory"),
+        ctx.get("model", "Holt-Winters"),
+        ctx.get("horizonMonths", 6),
+    )
+    facts = {
+        "revenue": revenue_stats(ctx.get("revenueHistory")),
+        "regions": region_stats(ctx.get("regionRevenue")),
+        "forecast": forecast_facts,
+    }
+    prompt = f"""User Question:
 {question}
 
-{context_text}
-Summarize the prediction. Explain what the forecast means. Mention
-confidence intervals, trends, or accuracy metrics only if they are
-present in the provided context. Do not invent missing information.
+COMPUTED FACTS (authoritative — use these exact numbers):
+{format_facts({k: v for k, v in facts.items() if v})}
+
+Summarise the forecast for the user. Report the projected value, CI, growth %,
+model used, and horizon. If the forecast dict is empty, tell the user the
+series was too short.
 """
     return AgentPrep(
         system=SYSTEM,
         prompt=prompt,
-        offline_text=_offline_forecast(question, context or {}),
-        # Payload for the UI's forecast card — only forecast-shaped fields,
-        # never the raw metrics blob (that made the visualization render
-        # nonsense in the previous version).
-        payload=forecast_payload(context),
+        offline_text=_offline_forecast(facts),
+        # Payload the UI forecast card renders — real forecast numbers only.
+        payload={
+            "forecast": forecast_facts,
+            "history": ctx.get("revenueHistory") or [],
+            "model": ctx.get("model"),
+            "horizonMonths": ctx.get("horizonMonths"),
+        },
     )

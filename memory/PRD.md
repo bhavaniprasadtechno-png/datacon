@@ -2,62 +2,80 @@
 
 ## Original problem statement
 > fix the issue in chat. make the agents dynamic according to question entered by user and data
+> fix the issue of chat, the shall be dynamic, system shall give accurate answers and reports based on user questions
 
-## Architecture (existing, unchanged)
+## Architecture (unchanged)
 - `web/` — React 19 + Vite chat UI (streams SSE from `api/chat/stream`)
-- `api/` — NestJS controller that appends messages to Postgres via Prisma and
+- `api/` — NestJS controller: appends messages to Postgres via Prisma and
   proxies the SSE stream from the AI service
-- `ai/` — FastAPI multi-agent orchestrator: router → per-intent agent prep →
-  LiteLLM streaming (or offline template fallback)
-- Data: Postgres (Prisma) for messages + business metrics, ChromaDB for RAG
+- `ai/` — FastAPI multi-agent orchestrator:
+  **dynamic router → context filter → analytics compute → agent prep → LiteLLM streaming (or offline grounded template)**
+- Data: Postgres (Prisma) for messages + metrics, ChromaDB for RAG
 
-## Chat issues fixed in this session (Jan 2026)
-1. **Regex-only router was static.** Anything phrased outside a small keyword
-   set fell through to `descriptive` or `general`.
-2. **Full metrics blob was pushed to every agent** — revenue, tickets,
-   churn, regions, incidents all sent regardless of what was asked.
-3. **`offline_text` was empty for every agent**, so when Gemini was
-   unreachable / not configured, chat bubbles rendered blank.
-4. **`predictive.payload` returned the raw metrics blob**, breaking the
-   frontend forecast card.
+## Chat problems addressed
+1. **Regex-only router was static.** Any phrasing outside a small keyword set
+   fell through to `descriptive` or `general`.
+2. **Full metrics blob was sent to every agent** regardless of question, so
+   agents drowned in irrelevant data.
+3. **`offline_text` was empty for every agent** — LLM failure produced blank
+   chat bubbles.
+4. **`predictive.payload` returned raw metrics**, breaking the forecast card.
+5. **Agents just handed raw data to the LLM and hoped for accuracy** — no
+   pre-computed numbers meant hallucinated percentages and vague answers.
 
-## What was implemented
-- `ai/app/agents/router.py` — added `route_dynamic(question, context, model)`,
-  an LLM-driven classifier that reads the question + a compact schema of the
-  data attached to the turn and returns which agents run. Deterministic
-  regex `route()` retained (broadened) as fallback when
-  `GEMINI_API_KEY` is unset, the LLM call fails, or the reply is unparseable.
-- `ai/app/agents/context_filter.py` — new. `filter_context()` narrows the
-  metrics blob to fields relevant to (intent × question). `forecast_payload()`
-  gives predictive a clean, forecast-shaped payload.
-- `ai/app/agents/{descriptive,diagnostic,predictive,prescriptive,general}.py`
-  — each now returns a deterministic, data-driven `offline_text` so chat
-  bubbles are never blank when the LLM fails.
-- `ai/app/internal/chat_router.py` — now `await route_dynamic(...)` and
-  applies `filter_context(...)` per intent before calling `agent.prepare()`.
+## What was implemented (session 2 / Jan 2026)
+- `ai/app/agents/router.py` — `route_dynamic(question, context, model)`: LLM
+  classifier over the question + data schema; falls back to a broadened
+  regex `route()` when the LLM path is unavailable.
+- `ai/app/agents/context_filter.py` — narrows the metrics blob per intent
+  and question; produces clean `forecast_payload` for the UI card.
+- `ai/app/agents/analytics.py` (new) — real computations from context:
+  `revenue_stats` (latest, MoM %, YoY %, rolling avg), `region_stats`
+  (top/bottom, per-region delta vs. prior), `ticket_stats` (totals, spike
+  day, first-half vs. second-half trend %), `churn_stats` (delta pp,
+  direction, at-risk), and `run_forecast` which actually invokes
+  Holt-Winters / OLS engines and returns projected, CI, growth %, MAPE.
+- `ai/app/agents/descriptive.py` — computes revenue/region/ticket/churn
+  stats, injects them into the LLM prompt as "COMPUTED FACTS" the model
+  must reference; offline path is a real, numbers-cited paragraph.
+- `ai/app/agents/diagnostic.py` — same, plus RAG citations; offline text
+  now identifies the biggest computed driver (e.g. "ticket volume rose
+  +135.3% in the 2nd half, led by NA") rather than a generic template.
+- `ai/app/agents/predictive.py` — runs the REAL Holt-Winters/OLS forecast
+  and hands the LLM only the resulting projected/CI/growth/MAPE facts;
+  offline path reports the actual forecast; payload is the forecast object
+  the UI card expects.
+- `ai/app/agents/prescriptive.py` — builds a ranked action list
+  deterministically from facts (retention play, support capacity, laggard
+  regions, top-region playbook), each with rationale + impact_metric.
+- `ai/app/internal/chat_router.py` — awaits `route_dynamic`, applies
+  `filter_context` per intent before each `agent.prepare()`.
 
-## Verified (offline unit tests)
-- All 7 router keyword cases route to the expected agent(s).
-- Per-intent context filtering drops irrelevant fields; `general` gets nothing.
-- Offline text is non-empty and cites real numbers for every agent.
-- LLM router JSON parser tolerates markdown fences and surrounding prose,
-  rejects invalid intents.
-- `route_dynamic` falls back to regex when `GEMINI_API_KEY` is absent
-  (verified in this sandbox).
+## Verified (offline unit tests in this sandbox)
+- 7/7 regex router cases route correctly (single + multi-intent + off-domain).
+- Per-intent context filtering: each intent gets only the relevant fields.
+- Analytics compute real MoM %, YoY %, region deltas, ticket spikes, churn
+  direction, and a full Holt-Winters forecast (projected/CI/growth/MAPE)
+  from an 18-month synthetic series.
+- All 4 domain agents produce grounded offline paragraphs citing real
+  numbers (e.g. "Latest revenue: 6.20. That's +3.3% MoM. YoY +51.2%.
+  Top region: NA at 2.80; weakest: LATAM at 0.30. …").
+- Predictive payload now shape-matches the UI card (forecast + history +
+  model + horizon), no raw metrics leaked.
+- Router JSON parser tolerates markdown fences and stray prose; rejects
+  invalid intents.
 
 ## What was NOT run (out of scope for this sandbox)
 - Full stack boot (Postgres/Prisma migrations, ChromaDB seed, Node install,
-  Vite dev server) — the repo is a design/handoff bundle without a
-  supervisor-managed running service here.
+  Vite dev server). Please boot locally / on Render with `GEMINI_API_KEY`
+  set to exercise the dynamic LLM router path end-to-end.
 
 ## Backlog / next actions
-- **P0** — validate end-to-end in a real environment once the stack is
-  booted (Postgres + `npm run dev` + `GEMINI_API_KEY`).
-- **P1** — cache the router LLM call per (question, context_schema) to
-  avoid an extra round-trip on every turn.
-- **P1** — teach the router to bias intent choice by which datasets the
-  user has actually connected (currently reads the fixed metrics blob
-  shipped by NestJS; extending to real Prisma-derived catalog is a small
-  step from here).
-- **P2** — expose a `debug=1` flag on `/internal/chat/stream` that emits
-  the router's raw JSON alongside the `agents` event, for observability.
+- **P0** — E2E validate on a running stack with `GEMINI_API_KEY` set.
+- **P1** — Cache router LLM call per (question, context_schema).
+- **P1** — Extend context filter to read the user's real connected catalog
+  (currently sources from the fixed NestJS `chatContext` blob).
+- **P2** — Emit the router's raw JSON as a debug SSE event ("here's why
+  the diagnostic + prescriptive agents were picked").
+- **P2** — Move numeric formatting (currency vs. count) into a shared
+  helper so units are consistent across all four agents.

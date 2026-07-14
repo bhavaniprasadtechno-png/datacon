@@ -1,60 +1,84 @@
+from app.agents.analytics import (
+    format_facts,
+    region_stats,
+    revenue_stats,
+    churn_stats,
+    ticket_stats,
+)
 from app.agents.types import AgentPrep
 
 SYSTEM = (
     "You are Datacon's descriptive analytics agent.\n"
-    "Answer the user's question clearly and concisely, using ONLY the "
-    "structured data provided in the context.\n"
-    "Quote actual numbers from the context. Never invent facts."
+    "You are given a set of PRE-COMPUTED facts extracted from the user's real data. "
+    "Your job is to describe the state of the business in clear, natural prose, "
+    "citing the exact numbers from the computed facts.\n"
+    "Rules:\n"
+    "  * Never invent numbers — only use the values in COMPUTED FACTS below.\n"
+    "  * If a fact isn't in the list, say you don't have that data rather than guessing.\n"
+    "  * Round percentages to one decimal place and currency to the nearest unit.\n"
+    "  * Keep the answer under ~120 words unless the user asked for a full report."
 )
 
 
-def _offline_summary(question: str, context: dict) -> str:
-    """Deterministic paragraph built from real context data — displayed
-    verbatim when no LLM is configured, and used as a safety net when the
-    LLM call fails before producing any tokens."""
-    if not context:
-        return (
-            "I don't have any structured data attached to this turn, "
-            "so I can't produce a descriptive summary yet. Try connecting "
-            "a data source or asking about a specific metric."
+def _compute(context: dict) -> dict:
+    return {
+        "revenue": revenue_stats(context.get("revenueHistory")),
+        "regions": region_stats(context.get("regionRevenue")),
+        "tickets": ticket_stats(context.get("ticketDaily")),
+        "churn": churn_stats(context.get("churnSnapshot")),
+    }
+
+
+def _offline_summary(facts: dict) -> str:
+    parts: list[str] = []
+    rev = facts.get("revenue") or {}
+    if "latest" in rev:
+        line = f"Latest revenue: {rev['latest']:,.2f}."
+        if "mom_delta_pct" in rev:
+            line += f" That's {rev['mom_delta_pct']:+.1f}% MoM."
+        if "yoy_delta_pct" in rev:
+            line += f" YoY {rev['yoy_delta_pct']:+.1f}%."
+        parts.append(line)
+    reg = facts.get("regions") or {}
+    if reg.get("top"):
+        parts.append(
+            f"Top region: {reg['top']['region']} at {reg['top']['revenue']:,.2f}; "
+            f"weakest: {reg['bottom']['region']} at {reg['bottom']['revenue']:,.2f}."
         )
-    lines: list[str] = []
-    rev = context.get("revenueHistory")
-    if isinstance(rev, list) and rev:
-        latest = rev[-1]
-        prior = rev[-2] if len(rev) > 1 else None
-        line = f"Latest revenue point: {latest:,.0f}."
-        if prior is not None and prior:
-            delta = (latest - prior) / prior * 100
-            line += f" That's {delta:+.1f}% vs the prior period."
-        lines.append(line)
-    region = context.get("regionRevenue")
-    if isinstance(region, dict) and region.get("current"):
-        top = max(region["current"], key=lambda r: r.get("revenue", 0))
-        lines.append(f"Top region this quarter: {top['region']} at {top['revenue']:,.0f}.")
-    churn = context.get("churnSnapshot")
-    if isinstance(churn, dict) and churn.get("churnPct") is not None:
-        lines.append(
-            f"Churn is running at {churn['churnPct']:.1f}% "
-            f"(prior period {churn.get('prevChurnPct', 0):.1f}%, "
-            f"{churn.get('atRiskAccounts', 0)} accounts at risk)."
+    tick = facts.get("tickets") or {}
+    if tick.get("top_region"):
+        parts.append(
+            f"Support tickets total {tick['total']} in the window, "
+            f"led by {tick['top_region']['region']} ({tick['top_region']['count']})."
         )
-    if not lines:
-        return "The available data doesn't clearly cover your question — try rephrasing or attaching a more specific dataset."
-    return " ".join(lines)
+    ch = facts.get("churn") or {}
+    if ch.get("churn_pct") is not None:
+        line = f"Churn is {ch['churn_pct']:.1f}%"
+        if "delta_pp" in ch:
+            line += f" ({ch['delta_pp']:+.1f}pp vs prior)"
+        if ch.get("at_risk_accounts"):
+            line += f", {ch['at_risk_accounts']} accounts at risk"
+        parts.append(line + ".")
+    return " ".join(parts) or (
+        "I don't have enough structured data attached to this turn to describe "
+        "the current state. Connect a data source or narrow the question."
+    )
 
 
 def prepare(question: str, context: dict) -> AgentPrep:
-    context_text = f"Available Context:\n{context}\n\n" if context else ""
-    prompt = (
-        f"{context_text}"
-        f"User Question:\n{question}\n\n"
-        "Provide a descriptive analysis based only on the available information. "
-        "Cite specific numbers from the context."
-    )
+    facts = _compute(context or {})
+    prompt = f"""User Question:
+{question}
+
+COMPUTED FACTS (authoritative — use these exact numbers):
+{format_facts({k: v for k, v in facts.items() if v})}
+
+Answer the question by describing what these facts show. Only cite numbers
+that appear above. If the facts don't cover what was asked, say so plainly.
+"""
     return AgentPrep(
         system=SYSTEM,
         prompt=prompt,
-        offline_text=_offline_summary(question, context),
-        payload={},
+        offline_text=_offline_summary(facts),
+        payload={"facts": facts},
     )
