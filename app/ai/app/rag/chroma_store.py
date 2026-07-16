@@ -1,12 +1,21 @@
 """ChromaDB wrapper for document chunk storage/retrieval. Uses Chroma's
 built-in local ONNX MiniLM embedding function so ingestion and retrieval work
 fully offline, with zero API keys — per the SRS's embedding choice."""
+from pathlib import Path
+
 import chromadb
 from chromadb.utils import embedding_functions
 from functools import lru_cache
 from app.config import settings
 
 _COLLECTION_NAME = "documents"
+# chroma_persist_dir is configured as a relative path ("./.chroma"); resolving
+# it against the process's cwd means it silently points at a different,
+# empty directory depending on how uvicorn happens to be launched (e.g.
+# `uvicorn app.main:app --app-dir ai` from the repo root vs. `cd ai && uvicorn
+# app.main:app`). Anchor relative paths to this package's location instead so
+# retrieval always finds documents indexed by any previous run.
+_AI_ROOT = Path(__file__).resolve().parents[2]
 # Embedding a large single batch spikes RSS far more than the same chunks
 # embedded in small groups (measured: one batch of 48 added +236MB vs. +8MB
 # for a second batch of 4, after the model's own ~170MB fixed load cost) —
@@ -18,7 +27,10 @@ _EMBED_BATCH_SIZE = 8
 
 @lru_cache(maxsize=1)
 def _client():
-    return chromadb.PersistentClient(path=settings.chroma_persist_dir)
+    path = Path(settings.chroma_persist_dir)
+    if not path.is_absolute():
+        path = _AI_ROOT / path
+    return chromadb.PersistentClient(path=str(path))
 
 
 @lru_cache(maxsize=1)

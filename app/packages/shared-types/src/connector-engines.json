@@ -13,6 +13,26 @@
     },
     "secondary": []
   },
+  "supabase": {
+    "id": "supabase",
+    "name": "Supabase",
+    "description": "Supabase-hosted PostgreSQL database, connected directly over the PG protocol.",
+    "typeLetter": "U",
+    "primary": {
+      "key": "host",
+      "label": "Host",
+      "placeholder": "db.abcdefghijklmno.supabase.co",
+      "help": "Project Settings → Database → Connection string, host portion. Use the pooler host (aws-0-<region>.pooler.supabase.com) if connecting through Supavisor."
+    },
+    "secondary": [
+      { "key": "port", "label": "Port", "placeholder": "5432", "default": "5432", "help": "5432 for a direct or session-mode connection, 6543 for the transaction pooler." },
+      { "key": "database", "label": "Database", "placeholder": "postgres", "default": "postgres", "required": true },
+      { "key": "username", "label": "Username", "placeholder": "postgres", "default": "postgres", "required": true, "help": "Use postgres.<project-ref> instead of postgres when connecting through the pooler." },
+      { "key": "password", "label": "Database password", "placeholder": "••••••••", "type": "password", "required": true, "secret": true, "help": "Project Settings → Database → Database password — not the anon/service-role API key." },
+      { "key": "schema", "label": "Schema", "placeholder": "public", "help": "PG schema to read (default: public). Leave blank to scan all non-system schemas." },
+      { "key": "sslMode", "label": "SSL mode", "kind": "select", "options": ["require", "verify-ca", "verify-full"], "default": "require", "help": "Supabase requires SSL for all external connections." }
+    ]
+  },
   "postgres": {
     "id": "postgres",
     "name": "PostgreSQL / Redshift",

@@ -24,7 +24,7 @@ export interface EngineDef {
   secondary: EngineField[];
 }
 
-export type ConnectorEngineId = "sqlite" | "postgres" | "mysql" | "mongodb" | "http" | "bigquery" | "snowflake";
+export type ConnectorEngineId = "sqlite" | "postgres" | "mysql" | "mongodb" | "http" | "bigquery" | "snowflake" | "supabase";
 
 interface ConnectorEnginesFile {
   syncScheduleOptions: string[];
@@ -38,6 +38,7 @@ export const SYNC_SCHEDULE_OPTIONS: string[] = file.syncScheduleOptions;
 export const ENGINE_FIELDS: Record<ConnectorEngineId, EngineDef> = {
   sqlite: file.sqlite as EngineDef,
   postgres: file.postgres as EngineDef,
+  supabase: file.supabase as EngineDef,
   mysql: file.mysql as EngineDef,
   mongodb: file.mongodb as EngineDef,
   http: file.http as EngineDef,
@@ -48,6 +49,7 @@ export const ENGINE_FIELDS: Record<ConnectorEngineId, EngineDef> = {
 export const ENGINE_LIST: EngineDef[] = [
   ENGINE_FIELDS.sqlite,
   ENGINE_FIELDS.postgres,
+  ENGINE_FIELDS.supabase,
   ENGINE_FIELDS.mysql,
   ENGINE_FIELDS.mongodb,
   ENGINE_FIELDS.http,

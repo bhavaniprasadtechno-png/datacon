@@ -36,7 +36,7 @@ class LiteLLMClient:
                     # (Thinking arrives as delta.reasoning_content, a separate field
                     # — delta.content below is visible answer text only; verified
                     # against both gemini-2.5-flash and gemma-4-31b-it.)
-                    max_tokens=1024,
+                    max_tokens=3072,
                     stream=True,
                     # Bounded so a slow/hanging provider call fails over to the
                     # retry loop (and ultimately the offline_text fallback) below

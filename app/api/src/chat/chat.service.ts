@@ -36,16 +36,20 @@ export class ChatService {
     const term = search?.trim();
     // Claude-style search: match the title OR any message's text (both
     // case-insensitive), so a query finds conversations by what was said in
-    // them, not just what they were auto-titled.
+    // them, not just what they were auto-titled. "messages: { some: {} }"
+    // hides conversations nothing has been sent in yet (e.g. a freshly
+    // created "New chat" the user hasn't typed into), so the list only
+    // ever shows chats that actually happened.
     const where = term
       ? {
           userId,
+          messages: { some: {} },
           OR: [
             { title: { contains: term, mode: "insensitive" as const } },
             { messages: { some: { text: { contains: term, mode: "insensitive" as const } } } },
           ],
         }
-      : { userId };
+      : { userId, messages: { some: {} } };
     const conversations = await this.prisma.conversation.findMany({
       where,
       orderBy: { updatedAt: "desc" },

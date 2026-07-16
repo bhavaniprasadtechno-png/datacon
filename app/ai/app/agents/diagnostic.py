@@ -1,3 +1,10 @@
+from app.agents.analytics import (
+    churn_stats,
+    format_facts,
+    region_stats,
+    revenue_stats,
+    ticket_stats,
+)
 from app.agents.types import AgentPrep
 from app.query_engine.executor import answer_question
 from app.query_engine.extract import column_index
@@ -49,15 +56,14 @@ async def prepare(question: str, model: str | None = None) -> AgentPrep:
             "documentTitle": h["metadata"].get("title", h["metadata"].get("filename", "Untitled")),
             "filename": h["metadata"].get("filename", ""),
             "chunkIndex": h["metadata"].get("chunk_index", 0),
-            "snippet": h["snippet"][:220],
+            "snippet": h["snippet"][:300],
         }
         for i, h in enumerate(hits)
     ]
-
-    citation_desc = (
-        f" the spike aligns with findings in {citations[0]['documentTitle']}, which notes: \"{citations[0]['snippet'][:120]}...\""
-        if citations
-        else " no indexed documents currently correlate with this spike — upload an incident report to enable root-cause citation."
+    facts = _compute(context or {})
+    citation_text = (
+        "\n".join(f"[{c['id']}] {c['documentTitle']}: {c['snippet']}" for c in citations)
+        if citations else "No relevant supporting documents were found."
     )
 
     offline_text = (

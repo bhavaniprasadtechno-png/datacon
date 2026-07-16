@@ -1,13 +1,38 @@
+from app.agents.analytics import format_facts, region_stats, revenue_stats, run_forecast
 from app.agents.types import AgentPrep
 from app.forecasting import ols, holt_winters
 from app.query_engine.executor import answer_question
 from app.query_engine.extract import column_index
 
 SYSTEM = (
-    "You are Datacon's predictive analytics agent. Given a real computed revenue forecast "
-    "(point estimate, 95% confidence interval, growth rate), write one tight paragraph "
-    "(2-3 sentences) presenting it. Do not invent numbers beyond what's provided."
+    "You are Datacon's predictive analytics agent.\n"
+    "You are given the output of a REAL forecast run (Holt-Winters or OLS) "
+    "over the user's actual revenue history, plus region breakdowns.\n"
+    "Rules:\n"
+    "  * Report ONLY the projected value, confidence interval, growth %, and "
+    "MAPE that appear in COMPUTED FACTS below.\n"
+    "  * Never fabricate a projection or CI — if the facts are empty, say the "
+    "series was too short for a forecast.\n"
+    "  * Note the model used (Holt-Winters vs OLS) and the horizon."
 )
+
+
+def _offline_forecast(facts: dict) -> str:
+    fc = facts.get("forecast") or {}
+    if not fc:
+        return (
+            "I need at least three points of history to run a forecast, and "
+            "the attached series is shorter than that. Attach a longer time "
+            "series and try again."
+        )
+    line = (
+        f"Using {fc['model']} on the attached revenue series, the {fc['horizon_months']}-month "
+        f"projection is {fc['projected']:,.2f} "
+        f"(95% CI {fc['ci_low']:,.2f}–{fc['ci_high']:,.2f}), "
+        f"a {fc['growth_pct']:+.1f}% change from the latest actual of "
+        f"{fc['latest_actual']:,.2f}. Model in-sample MAPE: {fc['mape_pct']:.1f}%."
+    )
+    return line
 
 NO_DATA_TEXT = (
     "No revenue history is connected yet. Connect a data source with a revenue-over-time "

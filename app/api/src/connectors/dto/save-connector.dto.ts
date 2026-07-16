@@ -1,7 +1,7 @@
 import { IsIn, IsObject, IsOptional, IsString, MinLength } from "class-validator";
 import type { ConnectorEngineId } from "@datacon/shared-types";
 
-const ENGINE_IDS: ConnectorEngineId[] = ["sqlite", "postgres", "mysql", "mongodb", "http", "bigquery", "snowflake"];
+const ENGINE_IDS: ConnectorEngineId[] = ["sqlite", "postgres", "supabase", "mysql", "mongodb", "http", "bigquery", "snowflake"];
 
 export class SaveConnectorDto {
   @IsOptional()

@@ -84,6 +84,7 @@ model RolePermission {
 enum ConnectorEngine {
   SQLITE
   POSTGRES
+  SUPABASE
   MYSQL
   MONGODB
   HTTP

@@ -3,6 +3,7 @@ import type { ConnectorStatus } from "./types";
 
 export const TYPE_STYLE: Record<ConnectorEngineId, { letter: string; bg: string; color: string }> = {
   postgres: { letter: "P", bg: "#e9eefc", color: "#3b6fd4" },
+  supabase: { letter: "U", bg: "#e6f9f0", color: "#1a9c6b" },
   mysql: { letter: "M", bg: "#fdf0e6", color: "#d9822b" },
   snowflake: { letter: "S", bg: "#e3f6fb", color: "#2ba6c4" },
   bigquery: { letter: "B", bg: "#eef0f4", color: "#5a6b86" },

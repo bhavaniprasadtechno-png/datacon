@@ -19,3 +19,13 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# LiteLLM reads provider API keys straight from the process environment
+# (see litellm.llms.*.get_api_key), NOT from anything we pass to
+# acompletion(). Populating our own Settings from .env is not enough —
+# without this bridge, chat silently falls back to the offline templates
+# with "Missing GEMINI_API_KEY" spam in the logs.
+import os
+
+if settings.gemini_api_key and not os.environ.get("GEMINI_API_KEY"):
+    os.environ["GEMINI_API_KEY"] = settings.gemini_api_key
