@@ -94,7 +94,7 @@ def _clean(text: str) -> str:
     return text.strip()
 
 
-async def generate_sql(question: str, schema: dict[str, list[str]], error_context: str | None = None) -> str | None:
+async def generate_sql(question: str, schema: dict[str, list[str]], error_context: str | None = None, model: str | None = None) -> str | None:
     """Returns a single SQL string, or None if no LLM is configured, the
     schema is empty, the provider call fails, or the model declined."""
     if not settings.gemini_api_key or not schema:
@@ -117,18 +117,29 @@ async def generate_sql(question: str, schema: dict[str, list[str]], error_contex
 
     import litellm
 
+    resolved_model = model or settings.llm_model
+
     for attempt in range(2):
         try:
-            logger.info("[Generator] Calling LiteLLM (attempt %d/2) for model=%s...", attempt + 1, settings.llm_model)
+            logger.info("[Generator] Calling LiteLLM (attempt %d/2) for model=%s...", attempt + 1, resolved_model)
             response = await litellm.acompletion(
-                model=settings.llm_model,
+                model=resolved_model,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": prompt},
                 ],
+                # Low temperature so the same question maps to the same SQL
+                # (and thus the same downstream numbers) run over run.
+                temperature=0.2,
                 # Reasoning models spend tokens on internal thinking before visible answers.
                 max_tokens=1024,
                 stream=False,
+                # No timeout here: a real schema-heavy prompt on this model takes
+                # ~20s to fully generate in non-streaming mode (measured), so a
+                # 20s timeout was clipping legitimate-but-slow responses right
+                # before they finished. The API gateway's own 120s timeout
+                # (ai-client.service.ts) is the outer backstop for a truly dead
+                # call.
             )
             text = _clean(response.choices[0].message.content or "")
             logger.info("[Generator] LLM raw response text (attempt %d/2): '%s'", attempt + 1, text)

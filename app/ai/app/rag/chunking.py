@@ -49,7 +49,20 @@ def parse_csv(data: bytes) -> tuple[list[str], int, list[list[str]], pd.DataFram
     # business tokens like "NA", "NULL", "N/A" — this app uses "NA" as the
     # North America region code throughout its own seed data, so without
     # this a region column full of "NA" silently becomes NaN.
-    df = pd.read_csv(io.BytesIO(data), keep_default_na=False)
+    encodings = ["utf-8", "utf-8-sig", "cp1252", "latin-1"]
+    df = None
+    last_err = None
+    for enc in encodings:
+        try:
+            df = pd.read_csv(io.BytesIO(data), keep_default_na=False, encoding=enc)
+            break
+        except (UnicodeDecodeError, ValueError) as e:
+            last_err = e
+            continue
+            
+    if df is None:
+        raise last_err or ValueError("Failed to parse CSV due to encoding issues")
+
     columns = [str(c) for c in df.columns]
     sample_rows = df.head(PREVIEW_ROWS).astype(str).values.tolist()
     return columns, len(df), sample_rows, df

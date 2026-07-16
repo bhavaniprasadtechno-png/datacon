@@ -11,31 +11,30 @@ const base: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   gap: 6,
-  fontSize: 13,
-  fontWeight: 700,
-  borderRadius: 10,
-  padding: "9px 16px",
+  fontSize: 13.5,
+  fontWeight: 500,
+  borderRadius: "var(--radius-md)",
+  padding: "8px 16px",
   transition: "filter .12s, background .12s, border-color .12s",
 };
 
 const variants: Record<Variant, React.CSSProperties> = {
   primary: {
-    background: "var(--ac-grad)",
+    background: "var(--ac)",
     color: "#fff",
-    boxShadow: "0 8px 20px -8px rgba(109,77,255,.55)",
   },
   danger: {
-    background: "linear-gradient(135deg,#e2603f,#c0392b)",
+    background: "#cf202f",
     color: "#fff",
   },
   secondary: {
-    background: "#fff",
-    color: "#3a3f52",
-    border: "1px solid #e2e4ee",
+    background: "var(--ac-bg-muted)",
+    color: "var(--ac-fg)",
+    border: "1px solid var(--ac-border)",
   },
   ghost: {
     background: "transparent",
-    color: "#71768a",
+    color: "var(--ac-muted)",
   },
 };
 

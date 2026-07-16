@@ -20,8 +20,8 @@ _DAILY_COUNT_QUESTION = (
 )
 
 
-async def prepare(question: str) -> AgentPrep:
-    result = await answer_question(_DAILY_COUNT_QUESTION)
+async def prepare(question: str, model: str | None = None) -> AgentPrep:
+    result = await answer_question(_DAILY_COUNT_QUESTION, model)
     region_idx = column_index(result.columns, "region", "category", "group") if result.ok else -1
     count_idx = column_index(result.columns, "count", "total") if result.ok else -1
 
@@ -30,7 +30,7 @@ async def prepare(question: str) -> AgentPrep:
             system=SYSTEM,
             prompt=f"Question: {question}\n\nNo day-by-day event data is connected.",
             offline_text=NO_DATA_TEXT,
-            payload={"citations": [], "correlation": None},
+            payload={"confidence": "low"},
         )
 
     daily = [
@@ -72,9 +72,12 @@ async def prepare(question: str) -> AgentPrep:
         f"- Cited excerpts: {[c['snippet'] for c in citations]}"
     )
 
-    return AgentPrep(
-        system=SYSTEM,
-        prompt=prompt,
-        offline_text=offline_text,
-        payload={"citations": citations, "correlation": f"spike ↔ {citations[0]['documentTitle']}" if citations else None},
-    )
+    payload = {
+        "confidence": "high" if citations else "medium",
+        "table": {"columns": ["region", "count"], "rows": [[d["region"], d["count"]] for d in daily]},
+    }
+    if citations:
+        payload["citations"] = citations
+        payload["correlation"] = f"spike ↔ {citations[0]['documentTitle']}"
+
+    return AgentPrep(system=SYSTEM, prompt=prompt, offline_text=offline_text, payload=payload)

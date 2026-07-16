@@ -1,8 +1,23 @@
 export type ChatIntent = "descriptive" | "diagnostic" | "predictive" | "prescriptive";
 
-export interface DescriptivePayload {
+export type Confidence = "high" | "medium" | "low";
+
+export interface AgentTable {
   columns: string[];
   rows: (string | number | boolean | null)[][];
+}
+
+export interface ChartPoint {
+  label: string;
+  value: number;
+  lower?: number;
+  upper?: number;
+}
+
+export interface AgentChart {
+  type: "bar" | "line";
+  title: string;
+  data: ChartPoint[];
 }
 
 export interface Citation {
@@ -13,44 +28,24 @@ export interface Citation {
   snippet: string;
 }
 
-export interface DiagnosticPayload {
-  correlation?: string;
-  citations: Citation[];
-}
-
-export interface ForecastPoint {
-  label: string;
-  value: number;
-  lower?: number;
-  upper?: number;
-}
-
-export interface PredictivePayload {
-  model: "OLS" | "Holt-Winters";
-  projected: string;
-  ciLow: string;
-  ciHigh: string;
-  growth: string;
-  mape: string;
-  series: ForecastPoint[];
-}
-
 export interface PrescriptiveAction {
   title: string;
   impact: string;
   effort: "Low" | "Medium" | "High";
   owner: string;
+  rationale: string;
+  expectedImpact: string;
+  citationIds?: number[];
 }
 
-export interface PrescriptivePayload {
-  actions: PrescriptiveAction[];
+export interface AgentPayload {
+  confidence: Confidence;
+  table?: AgentTable;
+  chart?: AgentChart;
+  citations?: Citation[];
+  actions?: PrescriptiveAction[];
+  correlation?: string;
 }
-
-export type AgentPayload =
-  | ({ intent: "descriptive" } & DescriptivePayload)
-  | ({ intent: "diagnostic" } & DiagnosticPayload)
-  | ({ intent: "predictive" } & PredictivePayload)
-  | ({ intent: "prescriptive" } & PrescriptivePayload);
 
 export const CHAT_SUGGESTIONS: { intent: ChatIntent; question: string }[] = [
   { intent: "descriptive", question: "Summarize revenue by region last quarter" },

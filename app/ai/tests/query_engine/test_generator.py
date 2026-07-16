@@ -50,6 +50,38 @@ async def test_returns_none_when_the_provider_call_raises():
 
 
 @pytest.mark.asyncio
+async def test_uses_the_overridden_model_when_provided():
+    captured = {}
+
+    async def fake_acompletion(**kwargs):
+        captured["model"] = kwargs["model"]
+        return _fake_response("SELECT 1")
+
+    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
+         patch.object(generator.settings, "llm_model", "gemini/gemma-4-31b-it"), \
+         patch.object(litellm, "acompletion", new=fake_acompletion):
+        await generator.generate_sql("total revenue", {"orders": ["id"]}, model="gemini/gemini-3-flash-preview")
+
+    assert captured["model"] == "gemini/gemini-3-flash-preview"
+
+
+@pytest.mark.asyncio
+async def test_falls_back_to_the_default_model_when_no_override_given():
+    captured = {}
+
+    async def fake_acompletion(**kwargs):
+        captured["model"] = kwargs["model"]
+        return _fake_response("SELECT 1")
+
+    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
+         patch.object(generator.settings, "llm_model", "gemini/gemma-4-31b-it"), \
+         patch.object(litellm, "acompletion", new=fake_acompletion):
+        await generator.generate_sql("total revenue", {"orders": ["id"]})
+
+    assert captured["model"] == "gemini/gemma-4-31b-it"
+
+
+@pytest.mark.asyncio
 async def test_error_context_is_included_in_the_retry_prompt():
     captured = {}
 

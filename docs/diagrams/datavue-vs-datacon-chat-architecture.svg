@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1170" font-family="'JetBrains Mono','SF Mono','Cascadia Code',monospace">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap');
+    text { font-family: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace; }
+    .b-title { font-size: 12px; font-weight: 700; fill: #ffffff; }
+    .b-line  { font-size: 9px; font-weight: 400; fill: #cbd5e1; }
+    .b-flag  { font-size: 9px; font-weight: 600; fill: #fbbf24; }
+    .region-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+  </style>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee"/>
+    </marker>
+    <marker id="arrow-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/>
+    </marker>
+  </defs>
+
+  <!-- 1. background -->
+  <rect width="100%" height="100%" fill="#0f172a"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+
+  <!-- 8. title block -->
+  <text x="30" y="34" font-size="17" font-weight="700" fill="#ffffff">Chat / Multi-Agent Response Architecture — Datavue vs Datacon</text>
+  <text x="30" y="52" font-size="9.5" fill="#94a3b8">C:\Users\pc\Desktop\datavue (reference) compared to C:\Users\pc\Desktop\datacon (current implementation) — frontend, backend, and data layers</text>
+
+  <!-- 2. region boundaries -->
+  <rect x="30" y="66" width="760" height="700" rx="12" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
+  <text x="46" y="82" class="region-label" fill="#fbbf24">DATAVUE — REFERENCE ARCHITECTURE</text>
+
+  <rect x="810" y="66" width="760" height="700" rx="12" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="8,4"/>
+  <text x="826" y="82" class="region-label" fill="#fbbf24">DATACON — CURRENT IMPLEMENTATION</text>
+
+  <!-- 3. connection arrows -->
+  <!-- left column -->
+  <line x1="410" y1="291" x2="410" y2="308" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+  <line x1="410" y1="571" x2="410" y2="588" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <!-- right column -->
+  <line x1="1190" y1="291" x2="1190" y2="308" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+  <line x1="1190" y1="421" x2="1190" y2="434" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <line x1="1190" y1="591" x2="1190" y2="608" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+
+  <!-- ================= LEFT: DATAVUE ================= -->
+
+  <!-- Frontend -->
+  <rect x="50" y="100" width="720" height="190" rx="8" fill="#0f172a"/>
+  <rect x="50" y="100" width="720" height="190" rx="8" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="64" y="124" class="b-title">Chat.jsx — single-file React (CRA) page</text>
+  <text x="64" y="146" class="b-line">• AgentBadge · ChartBlock — recharts bar/line; ComposedChart shades lower→upper as a translucent CI Area band</text>
+  <text x="64" y="161" class="b-line">• TableBlock · CitationChip → citation drawer (document title, filename, chunk_index, snippet)</text>
+  <text x="64" y="176" class="b-line">• RecommendationsBlock — numbered cards: rationale, expected_impact, effort badge, owner, per-item citations</text>
+  <text x="64" y="191" class="b-line">• ResultCard (one per agent) → AssistantMessage; single "Was this helpful?" vote per whole turn</text>
+  <text x="64" y="206" class="b-line">• fetch() opens SSE directly against FastAPI — no intermediate API gateway</text>
+  <text x="64" y="225" class="b-line" fill="#67e8f9">↓ POST /api/chat/stream (fetch + ReadableStream, SSE)</text>
+
+  <!-- Backend -->
+  <rect x="50" y="310" width="720" height="260" rx="8" fill="#0f172a"/>
+  <rect x="50" y="310" width="720" height="260" rx="8" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="64" y="334" class="b-title">FastAPI server.py — POST /api/chat/stream (SSE)</text>
+  <text x="64" y="356" class="b-line">• classify_intent() keyword-scores the question → 1+ of descriptive/diagnostic/predictive/prescriptive (agents.py)</text>
+  <text x="64" y="371" class="b-line">• _prepare_chat_context(): Mongo sales/churn/tickets/renewals + keyword/vector RAG over uploaded PDFs + forecast.py (Holt-Winters)</text>
+  <text x="64" y="386" class="b-line">• stream_agent(): litellm.acompletion(stream=True) — LLM asked to emit ONE JSON blob (insight+chart+table+recs+confidence)</text>
+  <text x="64" y="401" class="b-line">• Frontend renders the raw partial JSON text while "drafting"; _extract_json() brace-balances it once the stream ends</text>
+  <text x="64" y="416" class="b-line">• SSE events: start · routed · agent_start · agent_delta (raw JSON text) · agent_done (parsed) · done · error</text>
+  <text x="64" y="438" class="b-flag">⚠ Trade-off: chart / table / recommendations come FROM the LLM's own JSON, not from a real query engine</text>
+  <text x="64" y="460" class="b-line">• JWT (cookie-based) auth; role check (viewer cannot manage connectors/uploads)</text>
+  <text x="64" y="475" class="b-line">• Same FastAPI process also serves connectors, data-source upload + chunking, and forecast endpoints</text>
+  <text x="64" y="497" class="b-line" fill="#6ee7b7">↓ persists to MongoDB directly (single process, single hop)</text>
+
+  <!-- Data -->
+  <rect x="50" y="590" width="720" height="120" rx="8" fill="#0f172a"/>
+  <rect x="50" y="590" width="720" height="120" rx="8" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="64" y="614" class="b-title">MongoDB</text>
+  <text x="64" y="636" class="b-line">• conversations · messages · feedback (per-message up/down vote)</text>
+  <text x="64" y="651" class="b-line">• data_sources + chunks (uploaded PDFs/CSV, chunked + vector-indexed for RAG citations)</text>
+  <text x="64" y="666" class="b-line">• sales_by_quarter / monthly_churn / support_tickets / renewals_pipeline (seeded structured layer)</text>
+  <text x="64" y="686" class="b-line">• connectors (BigQuery/MySQL/Postgres/Snowflake/SQLite/Mongo/HTTP-CSV) synced into a warehouse table</text>
+
+  <!-- ================= RIGHT: DATACON ================= -->
+
+  <!-- Frontend -->
+  <rect x="830" y="100" width="720" height="190" rx="8" fill="#0f172a"/>
+  <rect x="830" y="100" width="720" height="190" rx="8" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="844" y="124" class="b-title">ChatPage.tsx + AgentVisualization.tsx + AgentChart.tsx (React + Vite)</text>
+  <text x="844" y="146" class="b-line">• Per-intent bubbles — one turn can fan out to several agents; live LLM model picker (Gemini 2.5/3, Gemma 4)</text>
+  <text x="844" y="161" class="b-line">• CorrelationTag · DataTable · Citations/CitationChip → citation drawer (same shape as Datavue)</text>
+  <text x="844" y="176" class="b-line" fill="#fda4af">• ① ActionsTable — plain grid: title / impact / effort / owner only. No rationale, no expected_impact, no per-item citations</text>
+  <text x="844" y="191" class="b-line" fill="#fda4af">• ② AgentChart line — CI shown only as PROJECTED / 95% CI / GROWTH stat tiles; no shaded band on the chart itself</text>
+  <text x="844" y="206" class="b-line">• Per-agent-message vote (finer-grained than Datavue's once-per-turn "Was this helpful?")</text>
+  <text x="844" y="225" class="b-line" fill="#67e8f9">↓ POST /api/chat/stream (fetch + ReadableStream, SSE) — to NestJS, not the AI service directly</text>
+
+  <!-- Backend hop 1: NestJS -->
+  <rect x="830" y="310" width="720" height="110" rx="8" fill="#0f172a"/>
+  <rect x="830" y="310" width="720" height="110" rx="8" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="844" y="334" class="b-title">NestJS ChatController (app/api/src/chat) — hop 1 of 2</text>
+  <text x="844" y="356" class="b-line">• JWT auth + RBAC guard — @RequirePermissions("ask_agents")</text>
+  <text x="844" y="371" class="b-line">• Prisma/Postgres: conversations, messages, feedback; proxies POST → AI service /internal/chat/stream</text>
+  <text x="844" y="386" class="b-line">• Re-streams SSE frames live to the browser; parses agent_done frames on the side, persists Message rows after "end"</text>
+  <text x="844" y="405" class="b-line" fill="#6ee7b7">↓ axios stream proxy to Python AI service (separate process)</text>
+
+  <!-- Backend hop 2: Python AI service -->
+  <rect x="830" y="435" width="720" height="155" rx="8" fill="#0f172a"/>
+  <rect x="830" y="435" width="720" height="155" rx="8" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="844" y="459" class="b-title">Python AI service — chat_router.py (app/ai) — hop 2 of 2</text>
+  <text x="844" y="481" class="b-line">• route() keyword-classifies the question → one or more intents (app/agents/router.py)</text>
+  <text x="844" y="496" class="b-line" fill="#6ee7b7">• Per intent, prepare() runs REAL generated+executed SQL via query_engine/executor.answer_question — deterministic, not LLM-invented</text>
+  <text x="844" y="511" class="b-line" fill="#fda4af">• ③ descriptive.prepare(): auto-charts ONLY when the whole result is exactly 2 columns, 2–20 rows — can't derive a</text>
+  <text x="844" y="524" class="b-line" fill="#fda4af">   status-distribution chart alongside a wider raw-records table (the leads-table + status-chart pattern)</text>
+  <text x="844" y="546" class="b-line" fill="#6ee7b7">• llm.compose_stream() streams ONLY the clean prose insight — text deltas are display-ready, nothing to parse</text>
+  <text x="844" y="561" class="b-line">• SSE: agents · agent_start · agent_delta (clean text) · agent_done (deterministic payload) · done</text>
+  <text x="844" y="580" class="b-line" fill="#6ee7b7">↓ persists via NestJS (hop 1) to Postgres; reads connected sources + Chroma directly</text>
+
+  <!-- Data -->
+  <rect x="830" y="610" width="720" height="120" rx="8" fill="#0f172a"/>
+  <rect x="830" y="610" width="720" height="120" rx="8" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="844" y="634" class="b-title">PostgreSQL (Prisma) + connected sources + Chroma</text>
+  <text x="844" y="656" class="b-line">• conversations / messages / feedback (Postgres via Prisma)</text>
+  <text x="844" y="671" class="b-line">• query_engine executes generated SQL against connected SQL/Mongo/BigQuery sources (real data, e.g. a Leads table)</text>
+  <text x="844" y="686" class="b-line">• Chroma vector store for document RAG citations (app/ai/app/rag)</text>
+  <text x="844" y="706" class="b-line">• Two-hop persistence: NestJS owns chat rows; the AI service owns query execution + retrieval</text>
+
+  <!-- ================= GAPS PANEL ================= -->
+  <rect x="30" y="782" width="1540" height="20" fill="none"/>
+  <rect x="30" y="790" width="1540" height="320" rx="12" fill="#0f172a"/>
+  <rect x="30" y="790" width="1540" height="320" rx="12" fill="rgba(136,19,55,0.18)" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="52" y="816" font-size="14" font-weight="700" fill="#fb7185">Gaps in Datacon's Chat UI vs Datavue</text>
+
+  <circle cx="66" cy="848" r="13" fill="rgba(136,19,55,0.5)" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="66" y="852" font-size="11" font-weight="700" fill="#fecdd3" text-anchor="middle">①</text>
+  <text x="92" y="845" font-size="11" font-weight="700" fill="#ffffff">Prescriptive recommendations render as a bare data grid</text>
+  <text x="92" y="862" font-size="9.5" fill="#cbd5e1">ActionsTable only shows title / impact / effort / owner — no rationale, no expected_impact narrative, and no per-recommendation</text>
+  <text x="92" y="876" font-size="9.5" fill="#cbd5e1">citation chips like Datavue's numbered RecommendationsBlock cards (each linking back to the sources that justify it).</text>
+
+  <circle cx="66" cy="914" r="13" fill="rgba(136,19,55,0.5)" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="66" y="918" font-size="11" font-weight="700" fill="#fecdd3" text-anchor="middle">②</text>
+  <text x="92" y="911" font-size="11" font-weight="700" fill="#ffffff">Predictive chart has no visual confidence-interval band</text>
+  <text x="92" y="928" font-size="9.5" fill="#cbd5e1">AgentChart's line chart shows the CI only as text stat tiles (PROJECTED / 95% CI / GROWTH) below the chart; Datavue shades the</text>
+  <text x="92" y="942" font-size="9.5" fill="#cbd5e1">lower→upper range directly on the chart itself as a translucent recharts Area layer — the uncertainty is visible, not just numeric.</text>
+
+  <circle cx="66" cy="980" r="13" fill="rgba(136,19,55,0.5)" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="66" y="984" font-size="11" font-weight="700" fill="#fecdd3" text-anchor="middle">③</text>
+  <text x="92" y="977" font-size="11" font-weight="700" fill="#ffffff">Descriptive auto-chart is limited to exactly-2-column results</text>
+  <text x="92" y="994" font-size="9.5" fill="#cbd5e1">_looks_categorical() only fires when the whole query result is 2 columns and 2–20 rows, so it can't add a secondary "count by</text>
+  <text x="92" y="1008" font-size="9.5" fill="#cbd5e1">status" distribution chart next to a wider raw-records table — the exact leads-table + status-chart pattern shown in the reference.</text>
+
+  <rect x="52" y="1030" width="1496" height="58" rx="8" fill="#0f172a"/>
+  <rect x="52" y="1030" width="1496" height="58" rx="8" fill="rgba(6,78,59,0.35)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="70" y="1052" font-size="10.5" font-weight="700" fill="#6ee7b7">✓ Not a gap — a Datacon advantage:</text>
+  <text x="70" y="1068" font-size="9.5" fill="#cbd5e1">Agents stream clean, display-ready prose (compose_stream) instead of Datavue's raw partial-JSON-while-drafting text, and every payload comes from a real</text>
+  <text x="70" y="1081" font-size="9.5" fill="#cbd5e1">executed SQL query (query_engine) rather than an LLM inventing table/chart data inside its own JSON response — keep this design, don't regress it.</text>
+
+  <!-- 7. legend -->
+  <g transform="translate(30,1128)">
+    <rect x="0" y="-9" width="14" height="14" rx="3" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+    <text x="20" y="2" font-size="9" fill="#94a3b8">Frontend</text>
+    <rect x="95" y="-9" width="14" height="14" rx="3" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+    <text x="115" y="2" font-size="9" fill="#94a3b8">Backend / agent service</text>
+    <rect x="270" y="-9" width="14" height="14" rx="3" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="290" y="2" font-size="9" fill="#94a3b8">Data store</text>
+    <rect x="370" y="-9" width="14" height="14" rx="3" fill="rgba(136,19,55,0.4)" stroke="#fb7185" stroke-width="1.5"/>
+    <text x="390" y="2" font-size="9" fill="#94a3b8">Gap vs Datavue</text>
+    <rect x="520" y="-9" width="14" height="14" rx="3" fill="rgba(6,78,59,0.35)" stroke="#34d399" stroke-width="1.5"/>
+    <text x="540" y="2" font-size="9" fill="#94a3b8">Datacon strength — keep as-is</text>
+  </g>
+</svg>

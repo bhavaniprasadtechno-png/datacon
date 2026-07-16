@@ -20,8 +20,16 @@ MODEL = "Holt-Winters"
 HORIZON_MONTHS = 6
 
 
-async def prepare(question: str) -> AgentPrep:
-    result = await answer_question(_REVENUE_SERIES_QUESTION)
+def _confidence(mape: float) -> str:
+    if mape < 15:
+        return "high"
+    if mape < 30:
+        return "medium"
+    return "low"
+
+
+async def prepare(question: str, model: str | None = None) -> AgentPrep:
+    result = await answer_question(_REVENUE_SERIES_QUESTION, model)
     revenue_idx = column_index(result.columns, "revenue", "amount", "total") if result.ok else -1
 
     if not result.ok or revenue_idx < 0:
@@ -29,7 +37,7 @@ async def prepare(question: str) -> AgentPrep:
             system=SYSTEM,
             prompt=f"Question: {question}\n\nNo revenue history is connected.",
             offline_text=NO_DATA_TEXT,
-            payload={"series": []},
+            payload={"confidence": "low"},
         )
 
     series = [float(row[revenue_idx]) for row in result.rows if row[revenue_idx] is not None]
@@ -39,7 +47,7 @@ async def prepare(question: str) -> AgentPrep:
             system=SYSTEM,
             prompt=f"Question: {question}\n\nNo revenue history is connected.",
             offline_text=NO_DATA_TEXT,
-            payload={"series": []},
+            payload={"confidence": "low"},
         )
 
     engine = ols if MODEL == "OLS" else holt_winters
@@ -57,13 +65,35 @@ async def prepare(question: str) -> AgentPrep:
         f"- Growth: {forecast['growth_pct']:+.1f}%\n- MAPE: {forecast['mape']:.1f}%"
     )
 
-    payload = {
-        "model": MODEL,
-        "projected": f"${forecast['projected']:.2f}M",
-        "ciLow": f"${forecast['ci_low']:.2f}M",
-        "ciHigh": f"${forecast['ci_high']:.2f}M",
-        "growth": f"{forecast['growth_pct']:+.1f}%",
-        "mape": f"{forecast['mape']:.1f}%",
-        "series": [{"label": f"p{i}", "value": v} for i, v in enumerate(series)],
+    history_points = [{"label": f"p{i}", "value": v} for i, v in enumerate(series)]
+    # Anchor the band's start at the last historical point (zero-width bound at
+    # its own value) so recharts has two adjacent bound-bearing points -
+    # last actual and forecast - to span, instead of a single point that
+    # collapses the shaded confidence-interval area to zero width.
+    history_points[-1] = {
+        **history_points[-1],
+        "lower": history_points[-1]["value"],
+        "upper": history_points[-1]["value"],
     }
+
+    payload = {
+        "confidence": _confidence(forecast["mape"]),
+        "table": {
+            "columns": ["period", "revenue"],
+            "rows": [[f"p{i}", v] for i, v in enumerate(series)] + [["forecast", forecast["projected"]]],
+        },
+        "chart": {
+            "type": "line",
+            "title": f"{MODEL} revenue forecast",
+            "data": history_points + [
+                {
+                    "label": "forecast",
+                    "value": forecast["projected"],
+                    "lower": forecast["ci_low"],
+                    "upper": forecast["ci_high"],
+                }
+            ],
+        },
+    }
+
     return AgentPrep(system=SYSTEM, prompt=prompt, offline_text=offline_text, payload=payload)

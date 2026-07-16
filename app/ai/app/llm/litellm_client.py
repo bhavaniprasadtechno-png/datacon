@@ -26,6 +26,10 @@ class LiteLLMClient:
                         {"role": "system", "content": system},
                         {"role": "user", "content": prompt},
                     ],
+                    # Low temperature so the same computed facts produce the same
+                    # written answer run over run, instead of a different wording
+                    # (or a different emphasis of the numbers) each time.
+                    temperature=0.3,
                     # Reasoning models (e.g. Gemma's "-it" variants) spend a chunk of
                     # this budget on internal thinking tokens before the visible
                     # answer, so this needs headroom beyond a plain chat model.
@@ -34,6 +38,11 @@ class LiteLLMClient:
                     # against both gemini-2.5-flash and gemma-4-31b-it.)
                     max_tokens=1024,
                     stream=True,
+                    # Bounded so a slow/hanging provider call fails over to the
+                    # retry loop (and ultimately the offline_text fallback) below
+                    # instead of hanging until the API gateway's own timeout kills
+                    # the connection with no answer at all.
+                    timeout=20,
                 )
                 async for chunk in stream:
                     delta = chunk.choices[0].delta.content

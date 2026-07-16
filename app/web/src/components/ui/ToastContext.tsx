@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 
 export interface ToastSpec {
-  icon: string;
+  icon: ReactNode;
   accent: string;
   title: string;
   desc: string;

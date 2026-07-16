@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { UploadModal } from "./UploadModal";
 import { DataSourceTableModal } from "./DataSourceTableModal";
 import type { DataSourceRecord, DocStatus, DocType } from "../../lib/types";
+import { RefreshCw, Upload, Lock, Eye, Trash2, Check, Loader2, XCircle } from "lucide-react";
 
 const TYPE_CHIP: Record<DocType, { bg: string; color: string }> = {
   PDF: { bg: "#fdeee9", color: "#c0392b" },
@@ -13,12 +14,12 @@ const TYPE_CHIP: Record<DocType, { bg: string; color: string }> = {
   TXT: { bg: "#f0f1f6", color: "#5a5f72" },
 };
 
-const STATUS_META: Record<DocStatus, { label: string; color: string; icon: string; blink?: boolean }> = {
-  INDEXED: { label: "Processed", color: "#0f8a5c", icon: "✓" },
-  INDEXING: { label: "Processing", color: "#b9743a", icon: "◷", blink: true },
-  CHUNKING: { label: "Processing", color: "#b9743a", icon: "◷", blink: true },
-  UPLOADING: { label: "Processing", color: "#b9743a", icon: "◷", blink: true },
-  FAILED: { label: "Failed", color: "#c0392b", icon: "✕" },
+const STATUS_META: Record<DocStatus, { label: string; color: string; icon: React.ReactNode; blink?: boolean }> = {
+  INDEXED: { label: "Processed", color: "#0f8a5c", icon: <Check size={14} /> },
+  INDEXING: { label: "Processing", color: "#b9743a", icon: <Loader2 size={14} style={{ animation: "dvspin 1s linear infinite" }} />, blink: true },
+  CHUNKING: { label: "Processing", color: "#b9743a", icon: <Loader2 size={14} style={{ animation: "dvspin 1s linear infinite" }} />, blink: true },
+  UPLOADING: { label: "Processing", color: "#b9743a", icon: <Loader2 size={14} style={{ animation: "dvspin 1s linear infinite" }} />, blink: true },
+  FAILED: { label: "Failed", color: "#c0392b", icon: <XCircle size={14} /> },
 };
 
 function formatSize(row: DataSourceRecord): string {
@@ -40,36 +41,36 @@ export function DataSourcesPage() {
 
   return (
     <div style={{ padding: 32, maxWidth: 1080, margin: "0 auto" }}>
-      <div style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: ".2em", color: "#9489c4", marginBottom: 8 }}>DATA SOURCES</div>
+      <div style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: ".2em", color: "var(--ac-muted)", marginBottom: 8 }}>DATA SOURCES</div>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
         <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-.03em", margin: 0 }}>Your governed data inventory.</h1>
         <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
           <Button variant="secondary" onClick={() => refetch()} disabled={isFetching}>
-            ↻ Refresh
+            <RefreshCw size={14} /> Refresh
           </Button>
           {caps.uploadDocs && (
             <Button variant="primary" onClick={() => setShowUpload(true)}>
-              ↑ New source
+              <Upload size={14} /> New source
             </Button>
           )}
         </div>
       </div>
-      <p style={{ fontSize: 14, color: "#71768a", maxWidth: 680, marginBottom: 24 }}>
+      <p style={{ fontSize: 14, color: "var(--ac-muted)", maxWidth: 680, marginBottom: 24 }}>
         CSV datasets feed the Descriptive agent's structured queries. PDF, TXT &amp; MD files feed the RAG pipeline that the Diagnostic agent cites in its answers.
       </p>
 
       {!caps.uploadDocs && (
-        <div style={{ background: "#f5f6fb", borderRadius: 14, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-          <span style={{ fontSize: 20 }}>🔒</span>
+        <div style={{ background: "var(--ac-bg-muted)", borderRadius: "var(--radius-md)", border: "1px solid var(--ac-border)", padding: "14px 18px", display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+          <Lock size={18} style={{ color: "var(--ac-muted)", flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: 13, fontWeight: 700 }}>Uploading is restricted to analysts and admins</div>
-            <div style={{ fontSize: 12, color: "#9499ad" }}>You're viewing as {user?.roleName} — switch to Sarah or Tom to add data sources.</div>
+            <div style={{ fontSize: 12, color: "var(--ac-muted)" }}>You're viewing as {user?.roleName} — switch to Sarah or Tom to add data sources.</div>
           </div>
         </div>
       )}
 
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.7fr) 66px 150px 120px 170px 100px", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "#9499ad", borderBottom: "1px solid #f0f1f6" }}>
+      <div style={{ background: "#fff", borderRadius: "var(--radius-lg)", border: "1px solid var(--ac-border)", overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.7fr) 66px 150px 120px 170px 100px", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "var(--ac-muted)", borderBottom: "1px solid var(--ac-border)" }}>
           <span>NAME</span>
           <span>TYPE</span>
           <span>SIZE</span>
@@ -114,15 +115,14 @@ export function DataSourcesPage() {
                       justifyContent: "center",
                       width: 30,
                       height: 30,
-                      color: "#5b3fd6",
-                      background: "#efeaff",
+                      color: "var(--ac)",
+                      background: "var(--ac-soft)",
                       border: "none",
-                      borderRadius: 8,
+                      borderRadius: "var(--radius-sm)",
                       cursor: "pointer",
-                      fontSize: 14,
                     }}
                   >
-                    👁
+                    <Eye size={14} />
                   </button>
                 )}
                 {caps.uploadDocs && (
@@ -139,12 +139,11 @@ export function DataSourcesPage() {
                       color: "#c0392b",
                       background: "#fdeee9",
                       border: "none",
-                      borderRadius: 8,
+                      borderRadius: "var(--radius-sm)",
                       cursor: "pointer",
-                      fontSize: 13,
                     }}
                   >
-                    🗑
+                    <Trash2 size={14} />
                   </button>
                 )}
               </div>

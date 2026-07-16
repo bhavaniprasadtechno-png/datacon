@@ -1,92 +1,179 @@
 import type { ChatMessage } from "../../lib/types";
+import type { AgentTable, Citation, PrescriptiveAction } from "@datacon/shared-types";
+import { AgentChart } from "./AgentChart";
 
-export function AgentVisualization({ message }: { message: ChatMessage }) {
-  if (!message.payload) return null;
-
-  if (message.intent === "diagnostic" && "citations" in message.payload) {
-    const { citations, correlation } = message.payload;
-    return (
-      <div style={{ marginTop: 10 }}>
-        {correlation && (
-          <div style={{ display: "inline-block", background: "#e3f6f9", color: "#1d8e9c", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, marginBottom: 10 }}>
-            {correlation}
-          </div>
-        )}
-        <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "#9499ad", marginBottom: 8 }}>
-          SOURCES · {citations.length} DOCUMENT CHUNK{citations.length === 1 ? "" : "S"}
-        </div>
-        {citations.map((c) => (
-          <div key={c.id} style={{ borderLeft: "2px solid #2bb8c4", paddingLeft: 10, marginBottom: 10 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700 }}>{c.documentTitle}</div>
-            <div style={{ font: "500 10.5px 'IBM Plex Mono',monospace", color: "#9499ad", margin: "2px 0" }}>
-              chunk {c.chunkIndex} · {c.filename}
-            </div>
-            <div style={{ fontSize: 12, color: "#5a5f72", fontStyle: "italic" }}>"{c.snippet}"</div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (message.intent === "predictive" && "series" in message.payload) {
-    const p = message.payload;
-    const values = p.series.map((s) => s.value);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const w = 320;
-    const h = 90;
-    const points = values.map((v, i) => {
-      const x = (i / (values.length - 1)) * w;
-      const y = h - ((v - min) / (max - min || 1)) * h;
-      return `${x},${y}`;
-    });
-    return (
-      <div style={{ background: "#f7faff", border: "1px solid #e6eefc", borderRadius: 12, padding: 14, marginTop: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "#3f6fd6" }}>FORECAST · {p.model.toUpperCase()}</span>
-          <span style={{ font: "600 10px 'IBM Plex Mono',monospace", color: "#9499ad" }}>95% CI</span>
-        </div>
-        <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: "block", marginBottom: 10 }}>
-          <polyline points={points.join(" ")} fill="none" stroke="#6d4dff" strokeWidth={2} />
-        </svg>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, textAlign: "center" }}>
-          <Stat label="PROJECTED" value={p.projected} />
-          <Stat label="95% CI" value={`${p.ciLow}–${p.ciHigh}`} />
-          <Stat label="GROWTH" value={p.growth} color="#0f8a5c" />
-        </div>
-      </div>
-    );
-  }
-
-  if (message.intent === "prescriptive" && "actions" in message.payload) {
-    return (
-      <div style={{ border: "1px solid #e4f6ee", borderRadius: 12, overflow: "hidden", marginTop: 10 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 82px 64px 82px", background: "#eef9f3", padding: "8px 12px", fontSize: 10, fontWeight: 700, color: "#0f8a5c" }}>
-          <span>RECOMMENDED ACTION</span>
-          <span>IMPACT</span>
-          <span>EFFORT</span>
-          <span>OWNER</span>
-        </div>
-        {message.payload.actions.map((a, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 82px 64px 82px", padding: "9px 12px", fontSize: 12, borderTop: "1px solid #f0f1f6", alignItems: "center" }}>
-            <span>{a.title}</span>
-            <span style={{ color: "#0f8a5c", fontWeight: 700 }}>{a.impact}</span>
-            <span style={{ color: a.effort === "Low" ? "#0f8a5c" : "#b9743a", fontWeight: 600 }}>{a.effort}</span>
-            <span style={{ color: "#71768a" }}>{a.owner}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return null;
+function CorrelationTag({ text }: { text: string }) {
+  return (
+    <div
+      style={{
+        display: "inline-block",
+        marginTop: 8,
+        background: "var(--ac-soft)",
+        color: "var(--ac-deep)",
+        fontSize: 11,
+        fontWeight: 600,
+        padding: "4px 10px",
+        borderRadius: "var(--radius-sm)",
+      }}
+    >
+      {text}
+    </div>
+  );
 }
 
-function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
+function DataTable({ table }: { table: AgentTable }) {
+  if (!table.columns.length || !table.rows.length) return null;
   return (
-    <div>
-      <div style={{ font: "600 9px 'IBM Plex Mono',monospace", color: "#9499ad", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 13, fontWeight: 800, color: color ?? "#1a1d29" }}>{value}</div>
+    <div style={{ border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", overflow: "auto", marginTop: 10 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+        <thead>
+          <tr style={{ background: "var(--ac-bg-muted)" }}>
+            {table.columns.map((col) => (
+              <th
+                key={col}
+                style={{
+                  textAlign: "left",
+                  padding: "8px 12px",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "var(--ac-muted)",
+                  fontFamily: "'IBM Plex Mono',monospace",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, i) => (
+            <tr key={i} style={{ borderTop: "1px solid var(--ac-border)" }}>
+              {row.map((cell, j) => (
+                <td key={j} style={{ padding: "8px 12px", color: "var(--ac-fg)", whiteSpace: "nowrap" }}>
+                  {cell === null ? "—" : String(cell)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function CitationChip({ citation, onOpen }: { citation: Citation; onOpen: (c: Citation) => void }) {
+  const label = citation.documentTitle.length > 28 ? `${citation.documentTitle.slice(0, 28)}…` : citation.documentTitle;
+  return (
+    <button
+      onClick={() => onOpen(citation)}
+      title={citation.documentTitle}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+        fontSize: 11,
+        fontWeight: 600,
+        color: "var(--ac-deep)",
+        background: "var(--ac-soft)",
+        border: "1px solid var(--ac-border)",
+        borderRadius: "var(--radius-sm)",
+        padding: "3px 8px",
+        cursor: "pointer",
+      }}
+    >
+      [{citation.id}] {label}
+    </button>
+  );
+}
+
+function Citations({ items, onOpen }: { items: Citation[]; onOpen: (c: Citation) => void }) {
+  return (
+    <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac-muted)", marginBottom: 2 }}>
+        SOURCES · {items.length} DOCUMENT CHUNK{items.length === 1 ? "" : "S"}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {items.map((c) => (
+          <CitationChip key={c.id} citation={c} onOpen={onOpen} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const EFFORT_COLOR: Record<PrescriptiveAction["effort"], string> = {
+  Low: "#0f8a5c",
+  Medium: "#a3730c",
+  High: "#cf202f",
+};
+
+function RecommendationCards({ items, citations, onOpen }: { items: PrescriptiveAction[]; citations: Citation[]; onOpen: (c: Citation) => void }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
+      {items.map((a, i) => {
+        const usedCitations = (a.citationIds ?? [])
+          .map((id) => citations.find((c) => c.id === id))
+          .filter((c): c is Citation => Boolean(c));
+        return (
+          <div key={i} style={{ border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <div
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  background: "var(--ac)",
+                  color: "#fff",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                {i + 1}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontWeight: 600, color: "var(--ac-fg)" }}>{a.title}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color: EFFORT_COLOR[a.effort] }}>
+                    Effort: {a.effort}
+                  </span>
+                  <span style={{ fontSize: 10, color: "var(--ac-muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Owner: {a.owner}</span>
+                </div>
+                <div style={{ fontSize: 12.5, color: "var(--ac-fg)", marginTop: 6 }}>{a.rationale}</div>
+                <div style={{ fontSize: 12, color: "var(--ac-muted)", marginTop: 4 }}>
+                  <span style={{ fontWeight: 600 }}>Expected impact:</span> {a.expectedImpact}
+                </div>
+                {usedCitations.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                    {usedCitations.map((c) => (
+                      <CitationChip key={c.id} citation={c} onOpen={onOpen} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function AgentVisualization({ message, onOpenCitation }: { message: ChatMessage; onOpenCitation: (citation: Citation) => void }) {
+  if (!message.payload) return null;
+  const payload = message.payload;
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      {payload.correlation && <CorrelationTag text={payload.correlation} />}
+      {payload.chart && <AgentChart chart={payload.chart} />}
+      {payload.table && <DataTable table={payload.table} />}
+      {payload.citations && <Citations items={payload.citations} onOpen={onOpenCitation} />}
+      {payload.actions && <RecommendationCards items={payload.actions} citations={payload.citations ?? []} onOpen={onOpenCitation} />}
     </div>
   );
 }

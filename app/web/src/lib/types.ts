@@ -1,14 +1,11 @@
 import type {
+  AgentPayload,
   ChatIntent,
   ConnectorEngineId,
-  DescriptivePayload,
-  DiagnosticPayload,
   PermissionKey,
-  PredictivePayload,
-  PrescriptivePayload,
 } from "@datacon/shared-types";
 
-export type ChatPayload = DescriptivePayload | DiagnosticPayload | PredictivePayload | PrescriptivePayload;
+export type ChatPayload = AgentPayload;
 
 export interface Persona {
   id: string;

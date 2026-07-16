@@ -1,4 +1,5 @@
 import logging
+from datetime import date, datetime
 from pymongo import MongoClient
 from app.connectors.types import TestResult, SyncResult, DatasetResult
 
@@ -34,6 +35,10 @@ def test(config: dict, secrets: dict) -> TestResult:
 def _to_cell(value):
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, (list, dict)):
+        return None
     return str(value)
 
 

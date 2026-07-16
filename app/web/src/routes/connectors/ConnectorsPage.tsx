@@ -10,6 +10,7 @@ import { apiErrorMessage } from "../../api/client";
 import { AddConnectorModal } from "./AddConnectorModal";
 import { TablePreviewModal } from "./TablePreviewModal";
 import type { Connector } from "../../lib/types";
+import { Lock, Trash2, Plus, AlertTriangle } from "lucide-react";
 
 export function ConnectorsPage() {
   const { caps } = useAuth();
@@ -24,7 +25,7 @@ export function ConnectorsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
 
-  const blocked = () => addToast({ icon: "🔒", accent: "#b9743a", title: "View-only access", desc: "Ask an admin (Tom) to change data connections." });
+  const blocked = () => addToast({ icon: <Lock size={16} />, accent: "#b9743a", title: "View-only access", desc: "Ask an admin (Tom) to change data connections." });
 
   const askAboutTable = (question: string) => {
     sessionStorage.setItem("datacon:pendingQuestion", question);
@@ -37,7 +38,7 @@ export function ConnectorsPage() {
     try {
       await syncConnector.mutateAsync(c.id);
     } catch (err) {
-      addToast({ icon: "⚠️", accent: "#e2603f", title: "Sync failed", desc: apiErrorMessage(err) });
+      addToast({ icon: <AlertTriangle size={16} />, accent: "#e2603f", title: "Sync failed", desc: apiErrorMessage(err) });
     }
   };
 
@@ -47,9 +48,9 @@ export function ConnectorsPage() {
     if (!ok) return;
     try {
       await deleteConnector.mutateAsync(c.id);
-      addToast({ icon: "🗑️", accent: "#e2603f", title: "Connector removed", desc: "Encrypted secrets were purged" });
+      addToast({ icon: <Trash2 size={16} />, accent: "#e2603f", title: "Connector removed", desc: "Encrypted secrets were purged" });
     } catch (err) {
-      addToast({ icon: "⚠️", accent: "#e2603f", title: "Couldn't remove connector", desc: apiErrorMessage(err) });
+      addToast({ icon: <AlertTriangle size={16} />, accent: "#e2603f", title: "Couldn't remove connector", desc: apiErrorMessage(err) });
     }
   };
 
@@ -58,14 +59,16 @@ export function ConnectorsPage() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 22 }}>
         <div>
           <h1 style={{ fontSize: 21, fontWeight: 800, margin: 0 }}>Data connectors</h1>
-          <div style={{ fontSize: 12.5, color: "#9499ad", marginTop: 4 }}>Seven engines supported · secrets encrypted with Fernet-equivalent AES-256-GCM at rest</div>
+          <div style={{ fontSize: 12.5, color: "var(--ac-muted)", marginTop: 4 }}>Seven engines supported · secrets encrypted with Fernet-equivalent AES-256-GCM at rest</div>
         </div>
         {caps.manageConnectors ? (
           <Button variant="primary" onClick={() => setShowAdd(true)}>
-            + Add connector
+            <Plus size={14} /> Add connector
           </Button>
         ) : (
-          <span style={{ fontSize: 11.5, color: "#71768a", background: "#f0f1f6", padding: "7px 12px", borderRadius: 20 }}>🔒 View-only · ask an admin to change connections</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--ac-muted)", background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", padding: "7px 12px", borderRadius: "var(--radius-pill)" }}>
+            <Lock size={12} /> View-only · ask an admin to change connections
+          </span>
         )}
       </div>
 
@@ -92,9 +95,9 @@ export function ConnectorsPage() {
                   {status.label}
                 </span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: "1px solid #f3f4f9", fontSize: 11.5, color: "#9499ad" }}>
-                <span>
-                  🔒 secrets *** · last sync {timeAgo(c.lastSyncedAt)}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--ac-border)", fontSize: 11.5, color: "var(--ac-muted)" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <Lock size={12} /> secrets *** · last sync {timeAgo(c.lastSyncedAt)}
                 </span>
                 {caps.manageConnectors ? (
                   <div style={{ display: "flex", gap: 12 }}>
@@ -106,7 +109,7 @@ export function ConnectorsPage() {
                     </button>
                   </div>
                 ) : (
-                  <span>🔒 Locked</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
                 )}
               </div>
             </div>
@@ -115,13 +118,13 @@ export function ConnectorsPage() {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-        <span style={{ font: "600 10.5px 'IBM Plex Mono',monospace", letterSpacing: ".16em", color: "#a3a8bd" }}>UNIFIED DATA STORE · CATALOG</span>
-        <div style={{ flex: 1, height: 1, background: "#e9eaf2" }} />
-        <span style={{ fontSize: 11.5, color: "#9499ad" }}>{catalog?.length ?? 0} tables imported</span>
+        <span style={{ font: "600 10.5px 'IBM Plex Mono',monospace", letterSpacing: ".16em", color: "var(--ac-muted)" }}>UNIFIED DATA STORE · CATALOG</span>
+        <div style={{ flex: 1, height: 1, background: "var(--ac-border)" }} />
+        <span style={{ fontSize: 11.5, color: "var(--ac-muted)" }}>{catalog?.length ?? 0} tables imported</span>
       </div>
 
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1.2fr 160px 120px 92px", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "#9499ad", borderBottom: "1px solid #f0f1f6" }}>
+      <div style={{ background: "#fff", borderRadius: "var(--radius-lg)", border: "1px solid var(--ac-border)", overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1.2fr 160px 120px 92px", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "var(--ac-muted)", borderBottom: "1px solid var(--ac-border)" }}>
           <span>TABLE</span>
           <span>SOURCE</span>
           <span>SHAPE</span>
@@ -132,15 +135,15 @@ export function ConnectorsPage() {
           const style = TYPE_STYLE[row.connectorEngine];
           const status = STATUS_META[row.status === "syncing" ? "SYNCING" : row.status === "error" ? "ERROR" : "SYNCED"];
           return (
-            <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1.2fr 160px 120px 92px", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #f5f6fb" }}>
+            <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1.2fr 160px 120px 92px", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid var(--ac-border)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                 <div style={{ width: 26, height: 26, borderRadius: 7, background: style.bg, color: style.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, flexShrink: 0 }}>
                   {style.letter}
                 </div>
                 <span style={{ font: "600 12.5px 'IBM Plex Mono',monospace" }}>{row.name}</span>
               </div>
-              <div style={{ fontSize: 12, color: "#71768a" }}>{row.connectorName}</div>
-              <div style={{ fontSize: 12, color: "#71768a" }}>
+              <div style={{ fontSize: 12, color: "var(--ac-muted)" }}>{row.connectorName}</div>
+              <div style={{ fontSize: 12, color: "var(--ac-muted)" }}>
                 {row.columns.length} cols · {row.rowCount.toLocaleString()} rows
               </div>
               <div>

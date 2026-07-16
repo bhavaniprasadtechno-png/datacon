@@ -74,3 +74,84 @@ async def test_execution_error_twice_gives_up_with_a_message():
         result = await executor.answer_question("total revenue")
     assert result.ok is False
     assert generate_mock.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_forwards_the_model_override_to_the_generator():
+    snapshot_store.load_dataset("orders", pd.DataFrame({"revenue": [10, 20]}))
+    generate_mock = AsyncMock(return_value="SELECT SUM(revenue) AS total FROM orders")
+    with patch.object(executor.generator, "generate_sql", new=generate_mock):
+        await executor.answer_question("total revenue", model="gemini/gemini-3-flash-preview")
+    assert generate_mock.call_args.kwargs["model"] == "gemini/gemini-3-flash-preview"
+
+
+@pytest.mark.asyncio
+async def test_drops_the_mongo_style_id_column():
+    snapshot_store.load_dataset("leads", pd.DataFrame({"_id": ["abc123"], "name": ["Jane"]}))
+    with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT _id, name FROM leads")):
+        result = await executor.answer_question("give leads")
+    assert result.columns == ["name"]
+    assert result.rows == [["Jane"]]
+
+
+@pytest.mark.asyncio
+async def test_drops_snake_case_camel_case_and_allcaps_id_columns():
+    snapshot_store.load_dataset(
+        "leads",
+        pd.DataFrame({"user_id": [1], "adminId": [2], "ConnectorID": [3], "id": [4], "name": ["Jane"]}),
+    )
+    with patch.object(
+        executor.generator,
+        "generate_sql",
+        new=AsyncMock(return_value="SELECT user_id, adminId, ConnectorID, id, name FROM leads"),
+    ):
+        result = await executor.answer_question("give leads")
+    assert result.columns == ["name"]
+    assert result.rows == [["Jane"]]
+
+
+@pytest.mark.asyncio
+async def test_keeps_ordinary_columns_that_merely_end_in_lowercase_id():
+    snapshot_store.load_dataset("leads", pd.DataFrame({"Paid": [True], "Grid": ["A1"]}))
+    with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT Paid, Grid FROM leads")):
+        result = await executor.answer_question("give leads")
+    assert result.columns == ["Paid", "Grid"]
+    assert result.rows == [[True, "A1"]]
+
+
+@pytest.mark.asyncio
+async def test_drops_a_column_where_every_row_is_null():
+    snapshot_store.load_dataset(
+        "leads",
+        pd.DataFrame({"engagementLog": [None, None], "name": ["Jane", "Ashwarya"]}),
+    )
+    with patch.object(
+        executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT engagementLog, name FROM leads")
+    ):
+        result = await executor.answer_question("give leads")
+    assert result.columns == ["name"]
+    assert result.rows == [["Jane"], ["Ashwarya"]]
+
+
+@pytest.mark.asyncio
+async def test_grouped_count_wraps_and_executes_the_given_sql():
+    snapshot_store.load_dataset("leads", pd.DataFrame({"status": ["Won", "Won", "New"]}))
+    result = await executor.grouped_count("SELECT status FROM leads", "status")
+    assert result.ok is True
+    assert result.columns == ["label", "value"]
+    assert sorted(result.rows) == sorted([["Won", 2], ["New", 1]])
+
+
+@pytest.mark.asyncio
+async def test_grouped_count_strips_a_trailing_semicolon_before_wrapping():
+    snapshot_store.load_dataset("leads", pd.DataFrame({"status": ["Won"]}))
+    result = await executor.grouped_count("SELECT status FROM leads;", "status")
+    assert result.ok is True
+    assert result.rows == [["Won", 1]]
+
+
+@pytest.mark.asyncio
+async def test_grouped_count_returns_not_ok_on_a_column_the_inner_query_does_not_have():
+    snapshot_store.load_dataset("leads", pd.DataFrame({"status": ["Won"]}))
+    result = await executor.grouped_count("SELECT status FROM leads", "does_not_exist")
+    assert result.ok is False
