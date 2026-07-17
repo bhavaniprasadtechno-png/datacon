@@ -7,10 +7,8 @@ SYSTEM = (
 )
 
 
-def prepare(question: str, context: dict) -> AgentPrep:
-    context_text = f"Context:\n{context}\n\n" if context else ""
+async def prepare(question: str, model: str | None = None) -> AgentPrep:
     prompt = f"""
-{context_text}
 User Question:
 {question}
 

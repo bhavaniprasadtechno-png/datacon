@@ -65,13 +65,13 @@ def _primary_intent(intents: list[str]) -> str:
 @router.post("/stream")
 async def stream(payload: ChatPayload):
     logger.info("[ChatRouter] Streaming chat request received: message='%s', model=%s", payload.message, payload.model)
-    intents = route(payload.message)
-    logger.info("[ChatRouter] Router routed message to intents: %s", intents)
     # Validated once here so both the prose-composition client (compose_stream)
     # and each agent's SQL-generation call (generate_sql) see the same
     # resolved model — previously only compose_stream received the override,
     # so switching models in the UI silently never affected SQL generation.
     model = payload.model if payload.model in AVAILABLE_MODELS else None
+    intents = await route_dynamic(payload.message, None, model)
+    logger.info("[ChatRouter] Router routed message to intents: %s", intents)
     llm = get_llm_client(model)
 
     async def event_gen():
@@ -84,7 +84,7 @@ async def stream(payload: ChatPayload):
         results = []
         for intent in intents:
             logger.info("[ChatRouter] Running agent for intent '%s'...", intent)
-            prep = await _AGENTS[intent](payload.message, model)
+            prep = await _ANALYSTS[intent](payload.message, model)
             logger.info("[ChatRouter] Agent '%s' prepared. Emitting 'agent_start' event.", intent)
             yield _sse("agent_start", {"intent": intent})
             

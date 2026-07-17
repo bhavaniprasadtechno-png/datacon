@@ -118,7 +118,7 @@ _DESCRIPTIVE = re.compile(
 _BUSINESS_CONTEXT = re.compile(
     r"revenue|sales|region|quarter|forecast|growth|churn|customer|account|ticket|support|billing|incident|"
     r"dashboard|metric|kpi|connector|dataset|table|document|upload|insight|trend|anomal|role|permission|user|"
-    r"data|report|chart|analysis|analytics",
+    r"data|report|chart|analysis|analytics|lead",
     re.I,
 )
 
