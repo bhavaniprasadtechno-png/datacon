@@ -22,3 +22,7 @@ ai/data/
 api/src/**/*.js
 api/src/**/*.js.map
 api/src/**/*.d.ts
+agent.md
+claude.md
+CLAUDE.md
+AGENT.md
