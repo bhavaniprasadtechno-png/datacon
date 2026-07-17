@@ -1,5 +1,6 @@
-import { useTheme, THEME_PRESETS } from "../../theme/ThemeContext";
-import { useToast } from "../../components/ui/ToastContext";
+import { useTheme } from "../../stores/useThemeStore";
+import { useToast } from "../../stores/useToastStore";
+import { THEME_PRESETS } from "@datacon/shared-types";
 import { Button } from "../../components/ui/Button";
 
 export function ThemesPage() {

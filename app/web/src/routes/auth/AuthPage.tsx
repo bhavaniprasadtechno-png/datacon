@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "../../stores/useAuthStore";
 import { usePersonas } from "../../api/auth";
 import { apiErrorMessage } from "../../api/client";
 import { Avatar } from "../../components/shell/Sidebar";

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "../../stores/useAuthStore";
 import { useCatalog, useConnectors, useDeleteConnector, useSyncConnector } from "../../api/connectors";
-import { useToast } from "../../components/ui/ToastContext";
-import { useConfirm } from "../../components/ui/ConfirmContext";
+import { useToast } from "../../stores/useToastStore";
+import { useConfirm } from "../../stores/useConfirmStore";
 import { Button } from "../../components/ui/Button";
 import { STATUS_META, TYPE_STYLE, timeAgo } from "../../lib/connectorMeta";
 import { apiErrorMessage } from "../../api/client";

@@ -1,9 +1,7 @@
+import { useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider, useAuth } from "./auth/AuthContext";
-import { ThemeProvider } from "./theme/ThemeContext";
-import { ToastProvider } from "./components/ui/ToastContext";
-import { ConfirmProvider } from "./components/ui/ConfirmContext";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { useAuth } from "./stores/useAuthStore";
 import { AppShell } from "./components/shell/AppShell";
 import { RequireAdmin } from "./components/shell/RequireAdmin";
 import { AuthPage } from "./routes/auth/AuthPage";
@@ -18,8 +16,9 @@ import { ChatHistoryPage } from "./routes/chat/ChatHistoryPage";
 import { ForecastsPage } from "./routes/forecasts/ForecastsPage";
 import { InsightsPage } from "./routes/insights/InsightsPage";
 import { ThemesPage } from "./routes/themes/ThemesPage";
-
-const queryClient = new QueryClient();
+import { queryClient } from "./lib/queryClient";
+import { useAuthStore } from "./stores/useAuthStore";
+import { useThemeStore } from "./stores/useThemeStore";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -85,19 +84,16 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    useAuthStore.getState().fetchUser();
+    useThemeStore.getState().initialize();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <ToastProvider>
-            <ConfirmProvider>
-              <BrowserRouter>
-                <AppRoutes />
-              </BrowserRouter>
-            </ConfirmProvider>
-          </ToastProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }

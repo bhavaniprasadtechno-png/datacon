@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AVAILABLE_LLM_MODELS, CHAT_SUGGESTIONS, INTENT_META, type ChatIntent, type Citation } from "@datacon/shared-types";
 import { useChatMessages, useFeedback, streamChat } from "../../api/chat";
-import { useToast } from "../../components/ui/ToastContext";
+import { useToast } from "../../stores/useToastStore";
 import { AgentVisualization } from "./AgentVisualization";
 import type { ChatMessage, ChatPayload } from "../../lib/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";

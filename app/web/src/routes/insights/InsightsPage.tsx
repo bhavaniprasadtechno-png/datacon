@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "../../stores/useAuthStore";
 import { useInsights } from "../../api/insights";
 import { useConnectors } from "../../api/connectors";
 

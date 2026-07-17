@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Modal } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
 import { useUploadDataSource } from "../../api/documents";
-import { useToast } from "../../components/ui/ToastContext";
+import { useToast } from "../../stores/useToastStore";
 import { apiErrorMessage } from "../../api/client";
 
 type State = "idle" | "uploading" | "error";

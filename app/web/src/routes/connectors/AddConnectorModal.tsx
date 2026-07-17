@@ -4,7 +4,7 @@ import { Modal, ModalHeader } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
 import { TYPE_STYLE } from "../../lib/connectorMeta";
 import { useCreateConnector, useTestDraftConnector } from "../../api/connectors";
-import { useToast } from "../../components/ui/ToastContext";
+import { useToast } from "../../stores/useToastStore";
 import { apiErrorMessage } from "../../api/client";
 
 type Step = "pick" | "config";

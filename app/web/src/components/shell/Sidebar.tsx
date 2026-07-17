@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "../../stores/useAuthStore";
 import { useConversations, useCreateConversation, useDeleteConversation } from "../../api/chat";
 import {
   MessageSquare,

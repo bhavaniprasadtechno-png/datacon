@@ -1,7 +1,9 @@
-import { useToast } from "./ToastContext";
+import { useToastStore } from "../../stores/useToastStore";
 
 export function ToastHost() {
-  const { toasts, dismiss } = useToast();
+  const toasts = useToastStore((state) => state.toasts);
+  const dismiss = useToastStore((state) => state.dismiss);
+
   if (toasts.length === 0) return null;
   return (
     <div style={{ position: "fixed", right: 22, bottom: 22, width: 320, display: "flex", flexDirection: "column", gap: 11, zIndex: 90 }}>

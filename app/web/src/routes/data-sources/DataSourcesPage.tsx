@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "../../stores/useAuthStore";
 import { useDataSources, useDeleteDataSource } from "../../api/documents";
 import { Button } from "../../components/ui/Button";
 import { UploadModal } from "./UploadModal";

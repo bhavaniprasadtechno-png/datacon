@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { PermissionKey } from "@datacon/shared-types";
 import { useApplyPermissionsMatrix, usePermissionCatalog, useRoles } from "../../api/rbac";
-import { useToast } from "../../components/ui/ToastContext";
-import { useConfirm } from "../../components/ui/ConfirmContext";
+import { useToast } from "../../stores/useToastStore";
+import { useConfirm } from "../../stores/useConfirmStore";
 import { Button } from "../../components/ui/Button";
 import { apiErrorMessage } from "../../api/client";
 import { PageHeader } from "./UsersPage";

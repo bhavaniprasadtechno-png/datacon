@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { ToastHost } from "../ui/ToastHost";
+import { ConfirmHost } from "../ui/ConfirmHost";
 
 export function AppShell() {
   return (
@@ -10,6 +11,7 @@ export function AppShell() {
         <Outlet />
       </main>
       <ToastHost />
+      <ConfirmHost />
     </div>
   );
 }

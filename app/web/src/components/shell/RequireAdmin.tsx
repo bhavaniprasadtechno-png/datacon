@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "../../stores/useAuthStore";
 
 export function RequireAdmin({ children }: { children: ReactNode }) {
   const { caps } = useAuth();
