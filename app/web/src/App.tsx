@@ -13,7 +13,7 @@ import { ConnectorsPage } from "./routes/connectors/ConnectorsPage";
 import { DataSourcesPage } from "./routes/data-sources/DataSourcesPage";
 import { ChatPage } from "./routes/chat/ChatPage";
 import { ChatHistoryPage } from "./routes/chat/ChatHistoryPage";
-import { ForecastsPage } from "./routes/forecasts/ForecastsPage";
+// import { ForecastsPage } from "./routes/forecasts/ForecastsPage";
 import { InsightsPage } from "./routes/insights/InsightsPage";
 import { ThemesPage } from "./routes/themes/ThemesPage";
 import { queryClient } from "./lib/queryClient";
@@ -43,7 +43,7 @@ function AppRoutes() {
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="/connectors" element={<ConnectorsPage />} />
         <Route path="/data-sources" element={<DataSourcesPage />} />
-        <Route path="/forecasts" element={<ForecastsPage />} />
+        {/* <Route path="/forecasts" element={<ForecastsPage />} /> */}
         <Route path="/themes" element={<ThemesPage />} />
         <Route
           path="/settings/users"

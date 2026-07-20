@@ -8,7 +8,7 @@ import {
   TrendingUp,
   Plug,
   Database,
-  LineChart,
+  // LineChart,
   Settings,
   Palette,
   User,
@@ -36,7 +36,7 @@ const NAV: NavDef[] = [
   { id: "insights", icon: <TrendingUp size={16} />, label: "Insights", to: "/insights" },
   { id: "connectors", icon: <Plug size={16} />, label: "Connectors", to: "/connectors" },
   { id: "documents", icon: <Database size={16} />, label: "Data Sources", to: "/data-sources" },
-  { id: "forecasts", icon: <LineChart size={16} />, label: "Forecasts", to: "/forecasts" },
+  // { id: "forecasts", icon: <LineChart size={16} />, label: "Forecasts", to: "/forecasts" },
   { id: "settings", icon: <Settings size={16} />, label: "User management", to: "/settings/users" },
   { id: "themes", icon: <Palette size={16} />, label: "Themes", to: "/themes", divider: true },
 ];
