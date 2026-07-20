@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useConversations, useCreateConversation, useDeleteConversation } from "../../api/chat";
+import { useConfirm } from "../../stores/useConfirmStore";
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -20,6 +21,7 @@ export function ChatHistoryPage() {
   const { data: conversations, isLoading } = useConversations(search);
   const createConversation = useCreateConversation();
   const deleteConversation = useDeleteConversation();
+  const confirm = useConfirm();
 
   const startNewChat = async () => {
     const conversation = await createConversation.mutateAsync();
@@ -28,7 +30,13 @@ export function ChatHistoryPage() {
 
   const removeConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm("Delete this conversation? This can't be undone.")) return;
+    const ok = await confirm({
+      title: "Delete conversation",
+      body: "Delete this conversation? This can't be undone.",
+      label: "Delete",
+      tone: "danger",
+    });
+    if (!ok) return;
     await deleteConversation.mutateAsync(id);
   };
 

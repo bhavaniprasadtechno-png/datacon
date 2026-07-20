@@ -1,27 +1,40 @@
 import { useConfirmStore } from "../../stores/useConfirmStore";
-import { Modal } from "./Modal";
-import { Button } from "./Button";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "./AlertDialog";
 
 export function ConfirmHost() {
   const pending = useConfirmStore((state) => state.pending);
   const resolve = useConfirmStore((state) => state.resolve);
 
   return (
-    <Modal open={!!pending} onClose={() => resolve(false)} width={400} z={60}>
+    <AlertDialog open={!!pending} onOpenChange={(open) => { if (!open) resolve(false); }}>
       {pending && (
-        <>
-          <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>{pending.title}</div>
-          <div style={{ fontSize: 13, color: "#71768a", marginBottom: 20, lineHeight: 1.5 }}>{pending.body}</div>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-            <Button variant="secondary" onClick={() => resolve(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pending.title}</AlertDialogTitle>
+            <AlertDialogDescription>{pending.body}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => resolve(false)}>
               Cancel
-            </Button>
-            <Button variant={pending.tone === "danger" ? "danger" : "primary"} onClick={() => resolve(true)}>
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant={pending.tone === "danger" ? "danger" : "primary"}
+              onClick={() => resolve(true)}
+            >
               {pending.label}
-            </Button>
-          </div>
-        </>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
       )}
-    </Modal>
+    </AlertDialog>
   );
 }

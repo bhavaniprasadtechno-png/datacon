@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../stores/useAuthStore";
 import { useConversations, useCreateConversation, useDeleteConversation } from "../../api/chat";
+import { useConfirm } from "../../stores/useConfirmStore";
 import {
   MessageSquare,
   TrendingUp,
@@ -57,8 +58,15 @@ export function Sidebar() {
   const { data: conversations } = useConversations();
   const createConversation = useCreateConversation();
   const deleteConversation = useDeleteConversation();
+  const confirm = useConfirm();
 
   const onUserMgmtPage = location.pathname.startsWith("/settings");
+  const [userMgmtOpen, setUserMgmtOpen] = useState(onUserMgmtPage);
+
+  useEffect(() => {
+    setUserMgmtOpen(onUserMgmtPage);
+  }, [onUserMgmtPage]);
+
   // Keep "Chat" highlighted both on the history list (/chat/history) and inside
   // an actual conversation (/chat?c=…), since the nav item now opens history.
   const onChatArea = location.pathname === "/chat" || location.pathname.startsWith("/chat/");
@@ -71,7 +79,13 @@ export function Sidebar() {
 
   const removeConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm("Delete this conversation? This can't be undone.")) return;
+    const ok = await confirm({
+      title: "Delete conversation",
+      body: "Delete this conversation? This can't be undone.",
+      label: "Delete",
+      tone: "danger",
+    });
+    if (!ok) return;
     await deleteConversation.mutateAsync(id);
     // If the open conversation was just deleted, fall back to the default
     // (most recent / freshly created) one by dropping the URL param.
@@ -161,6 +175,14 @@ export function Sidebar() {
                 <NavLink
                   to={item.to}
                   title={item.label}
+                  onClick={(e) => {
+                    if (item.id === "settings") {
+                      if (onUserMgmtPage) {
+                        e.preventDefault();
+                        setUserMgmtOpen(!userMgmtOpen);
+                      }
+                    }
+                  }}
                   className="dv-navitem"
                   style={{
                     display: "flex",
@@ -179,7 +201,7 @@ export function Sidebar() {
                   {!collapsed && <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</span>}
                   {collapsed && <span className="dv-tip">{item.label}</span>}
                 </NavLink>
-                {item.id === "settings" && caps.admin && onUserMgmtPage && (
+                {item.id === "settings" && caps.admin && userMgmtOpen && (
                   <div className="dv-sub" style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, marginBottom: 3 }}>
                     {SUB_NAV.map((s) => (
                       <NavLink

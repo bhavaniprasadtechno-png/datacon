@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../../stores/useAuthStore";
 import { useDataSources, useDeleteDataSource } from "../../api/documents";
 import { Button } from "../../components/ui/Button";
+import { useConfirm } from "../../stores/useConfirmStore";
 import { UploadModal } from "./UploadModal";
 import { DataSourceTableModal } from "./DataSourceTableModal";
 import type { DataSourceRecord, DocStatus, DocType } from "../../lib/types";
@@ -33,9 +34,16 @@ export function DataSourcesPage() {
   const deleteDataSource = useDeleteDataSource();
   const [showUpload, setShowUpload] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const confirm = useConfirm();
 
-  const removeRow = (row: DataSourceRecord) => {
-    if (!window.confirm(`Delete "${row.title}"? This can't be undone.`)) return;
+  const removeRow = async (row: DataSourceRecord) => {
+    const ok = await confirm({
+      title: "Delete data source",
+      body: `Delete "${row.title}"? This can't be undone.`,
+      label: "Delete",
+      tone: "danger",
+    });
+    if (!ok) return;
     deleteDataSource.mutate(row.id);
   };
 
