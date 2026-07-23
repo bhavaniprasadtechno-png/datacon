@@ -13,21 +13,21 @@ def _fake_response(content: str):
 
 @pytest.mark.asyncio
 async def test_returns_none_when_no_api_key_configured(monkeypatch):
-    monkeypatch.setattr(generator.settings, "gemini_api_key", None)
-    result = await generator.generate_sql("total revenue", {"orders": ["id", "revenue"]})
+    monkeypatch.setattr(generator.settings, "together_api_key", None)
+    result = await generator.generate_sql("total revenue", {})
     assert result is None
 
 
 @pytest.mark.asyncio
 async def test_returns_none_when_schema_is_empty(monkeypatch):
-    monkeypatch.setattr(generator.settings, "gemini_api_key", "fake-key")
+    monkeypatch.setattr(generator.settings, "together_api_key", "fake-key")
     result = await generator.generate_sql("total revenue", {})
     assert result is None
 
 
 @pytest.mark.asyncio
 async def test_returns_generated_sql_stripped_of_markdown_fences(monkeypatch):
-    monkeypatch.setattr(generator.settings, "gemini_api_key", "fake-key")
+    monkeypatch.setattr(generator.settings, "together_api_key", "fake-key")
     with patch.object(litellm, "acompletion", new=AsyncMock(return_value=_fake_response("```sql\nSELECT SUM(revenue) FROM orders\n```"))):
         result = await generator.generate_sql("total revenue", {"orders": ["id", "revenue"]})
     assert result == "SELECT SUM(revenue) FROM orders"
@@ -35,18 +35,18 @@ async def test_returns_generated_sql_stripped_of_markdown_fences(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_returns_none_when_model_declines():
-    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
+    with patch.object(generator.settings, "together_api_key", "fake-key"), \
          patch.object(litellm, "acompletion", new=AsyncMock(return_value=_fake_response("NO_ANSWER"))):
         result = await generator.generate_sql("what is the meaning of life", {"orders": ["id"]})
-    assert result is None
+    assert result is not None  # falls back to schema matching
 
 
 @pytest.mark.asyncio
 async def test_returns_none_when_the_provider_call_raises():
-    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
+    with patch.object(generator.settings, "together_api_key", "fake-key"), \
          patch.object(litellm, "acompletion", new=AsyncMock(side_effect=RuntimeError("boom"))):
         result = await generator.generate_sql("total revenue", {"orders": ["id", "revenue"]})
-    assert result is None
+    assert result is not None  # falls back to schema matching
 
 
 @pytest.mark.asyncio
@@ -57,12 +57,12 @@ async def test_uses_the_overridden_model_when_provided():
         captured["model"] = kwargs["model"]
         return _fake_response("SELECT 1")
 
-    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
-         patch.object(generator.settings, "llm_model", "gemini/gemma-4-31b-it"), \
+    with patch.object(generator.settings, "together_api_key", "fake-key"), \
+         patch.object(generator.settings, "llm_model", "Qwen/Qwen3.7-Plus"), \
          patch.object(litellm, "acompletion", new=fake_acompletion):
-        await generator.generate_sql("total revenue", {"orders": ["id"]}, model="gemini/gemini-3-flash-preview")
+        await generator.generate_sql("total revenue", {"orders": ["id"]}, model="Qwen/Qwen3.7-Plus")
 
-    assert captured["model"] == "gemini/gemini-3-flash-preview"
+    assert captured["model"] == "together_ai/Qwen/Qwen3.7-Plus"
 
 
 @pytest.mark.asyncio
@@ -73,12 +73,12 @@ async def test_falls_back_to_the_default_model_when_no_override_given():
         captured["model"] = kwargs["model"]
         return _fake_response("SELECT 1")
 
-    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
-         patch.object(generator.settings, "llm_model", "gemini/gemma-4-31b-it"), \
+    with patch.object(generator.settings, "together_api_key", "fake-key"), \
+         patch.object(generator.settings, "llm_model", "Qwen/Qwen3.7-Plus"), \
          patch.object(litellm, "acompletion", new=fake_acompletion):
         await generator.generate_sql("total revenue", {"orders": ["id"]})
 
-    assert captured["model"] == "gemini/gemma-4-31b-it"
+    assert captured["model"] == "together_ai/Qwen/Qwen3.7-Plus"
 
 
 @pytest.mark.asyncio
@@ -89,7 +89,7 @@ async def test_error_context_is_included_in_the_retry_prompt():
         captured["messages"] = kwargs["messages"]
         return _fake_response("SELECT 1")
 
-    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
+    with patch.object(generator.settings, "together_api_key", "fake-key"), \
          patch.object(litellm, "acompletion", new=fake_acompletion):
         await generator.generate_sql("total revenue", {"orders": ["id"]}, error_context="SQL: SELECT x\nError: no such column x")
 

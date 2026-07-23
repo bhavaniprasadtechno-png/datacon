@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""E2E test for the LIVE query pipeline: real Gemini plans a query
+"""E2E test for the LIVE query pipeline: real Qwen/Qwen3.7-Plus plans a query
 against a real SQLite database, retriever executes it, responder cites
 the live result."""
 import json
@@ -35,7 +35,7 @@ def build_db():
 
 def stream_chat(message, ctx, timeout=90):
     body = json.dumps({"message": message, "context": ctx,
-                       "model": "gemini/gemini-2.5-flash"}).encode()
+                       "model": "Qwen/Qwen3.7-Plus"}).encode()
     req = urllib.request.Request(f"{BASE}/internal/chat/stream", data=body,
                                  headers=HEADERS, method="POST")
     events = []

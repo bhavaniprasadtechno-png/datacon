@@ -30,7 +30,7 @@ def test_query_with_no_data_connected_returns_not_ok(client):
 
 
 def test_query_with_data_and_no_llm_configured_still_returns_a_clean_response(client, monkeypatch):
-    monkeypatch.setattr(settings, "gemini_api_key", None)
+    monkeypatch.setattr(settings, "together_api_key", None)
     snapshot_store.load_dataset("orders", pd.DataFrame({"revenue": [10.0]}))
     res = client.post("/internal/metrics/query", json={"question": "total revenue"}, headers=_auth_headers())
     assert res.status_code == 200

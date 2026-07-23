@@ -587,7 +587,7 @@ from app.query_engine import snapshot_store
 @pytest.fixture(autouse=True)
 def isolated_db(tmp_path, monkeypatch):
     monkeypatch.setattr(snapshot_store.settings, "query_engine_db_path", str(tmp_path / "test.duckdb"))
-    monkeypatch.setattr(settings, "gemini_api_key", None)
+    monkeypatch.setattr(settings, "together_api_key", None)
     yield
 
 

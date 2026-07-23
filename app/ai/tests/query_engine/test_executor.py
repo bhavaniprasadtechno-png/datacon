@@ -81,8 +81,8 @@ async def test_forwards_the_model_override_to_the_generator():
     snapshot_store.load_dataset("orders", pd.DataFrame({"revenue": [10, 20]}))
     generate_mock = AsyncMock(return_value="SELECT SUM(revenue) AS total FROM orders")
     with patch.object(executor.generator, "generate_sql", new=generate_mock):
-        await executor.answer_question("total revenue", model="gemini/gemini-3-flash-preview")
-    assert generate_mock.call_args.kwargs["model"] == "gemini/gemini-3-flash-preview"
+        await executor.answer_question("total revenue", model="Qwen/Qwen3.7-Plus")
+    assert generate_mock.call_args.kwargs["model"] == "Qwen/Qwen3.7-Plus"
 
 
 @pytest.mark.asyncio

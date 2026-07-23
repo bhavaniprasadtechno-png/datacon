@@ -4,7 +4,7 @@
 - Fix chat, make agents dynamic to question + data.
 - System shall give accurate answers and reports based on user questions.
 - Cache the router LLM call per (question, schema).
-- E2E validate on running stack with real GEMINI_API_KEY.
+- E2E validate on running stack with real TOGETHER_API_KEY.
 - Multi-agent Retriever → Analyst → Validator → Responder pipeline.
 - **Extend retriever to run LIVE queries via connectors when a question needs data outside the pre-computed metrics blob.**
 
@@ -67,10 +67,10 @@ LLM planner decides per turn whether a live query is warranted.
 - No catalog → live query skipped gracefully.
 - Planner returning `needed=false` → live query skipped.
 
-### E2E with real Gemini + real SQLite
+### E2E with real Qwen/Qwen3.7-Plus + real SQLite
 Test harness: `/app/ai-logs/e2e_live_query_test.py`.
 - Q: *"Which paid customers have the highest order amounts?"*
-- Gemini planner correctly picked `SELECT customer, amount FROM orders WHERE status='paid' ORDER BY amount DESC LIMIT 5`.
+- Qwen/Qwen3.7-Plus planner correctly picked `SELECT customer, amount FROM orders WHERE status='paid' ORDER BY amount DESC LIMIT 5`.
 - SQLite driver returned 5 real rows via the safe executor (Theta $12,000 top).
 - Responder cited every value inline: *"Theta: $12,000.00 (from DB: sqlite.orders)… Zeta: $3,300.00…"*
 - Retriever `live_query_run=true`, `live_query_count=1`.

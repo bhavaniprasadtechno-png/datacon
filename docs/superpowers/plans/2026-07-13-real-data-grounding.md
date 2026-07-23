@@ -279,21 +279,21 @@ def _fake_response(content: str):
 
 @pytest.mark.asyncio
 async def test_returns_none_when_no_api_key_configured(monkeypatch):
-    monkeypatch.setattr(generator.settings, "gemini_api_key", None)
+    monkeypatch.setattr(generator.settings, "together_api_key", None)
     result = await generator.generate_sql("total revenue", {"orders": ["id", "revenue"]})
     assert result is None
 
 
 @pytest.mark.asyncio
 async def test_returns_none_when_schema_is_empty(monkeypatch):
-    monkeypatch.setattr(generator.settings, "gemini_api_key", "fake-key")
+    monkeypatch.setattr(generator.settings, "together_api_key", "fake-key")
     result = await generator.generate_sql("total revenue", {})
     assert result is None
 
 
 @pytest.mark.asyncio
 async def test_returns_generated_sql_stripped_of_markdown_fences(monkeypatch):
-    monkeypatch.setattr(generator.settings, "gemini_api_key", "fake-key")
+    monkeypatch.setattr(generator.settings, "together_api_key", "fake-key")
     with patch.object(generator.litellm, "acompletion", new=AsyncMock(return_value=_fake_response("```sql\nSELECT SUM(revenue) FROM orders\n```"))):
         result = await generator.generate_sql("total revenue", {"orders": ["id", "revenue"]})
     assert result == "SELECT SUM(revenue) FROM orders"
@@ -301,7 +301,7 @@ async def test_returns_generated_sql_stripped_of_markdown_fences(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_returns_none_when_model_declines():
-    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
+    with patch.object(generator.settings, "together_api_key", "fake-key"), \
          patch.object(generator.litellm, "acompletion", new=AsyncMock(return_value=_fake_response("NO_ANSWER"))):
         result = await generator.generate_sql("what is the meaning of life", {"orders": ["id"]})
     assert result is None
@@ -309,7 +309,7 @@ async def test_returns_none_when_model_declines():
 
 @pytest.mark.asyncio
 async def test_returns_none_when_the_provider_call_raises():
-    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
+    with patch.object(generator.settings, "together_api_key", "fake-key"), \
          patch.object(generator.litellm, "acompletion", new=AsyncMock(side_effect=RuntimeError("boom"))):
         result = await generator.generate_sql("total revenue", {"orders": ["id", "revenue"]})
     assert result is None
@@ -323,7 +323,7 @@ async def test_error_context_is_included_in_the_retry_prompt():
         captured["messages"] = kwargs["messages"]
         return _fake_response("SELECT 1")
 
-    with patch.object(generator.settings, "gemini_api_key", "fake-key"), \
+    with patch.object(generator.settings, "together_api_key", "fake-key"), \
          patch.object(generator.litellm, "acompletion", new=fake_acompletion):
         await generator.generate_sql("total revenue", {"orders": ["id"]}, error_context="SQL: SELECT x\nError: no such column x")
 
@@ -372,7 +372,7 @@ def _clean(text: str) -> str:
 async def generate_sql(question: str, schema: dict[str, list[str]], error_context: str | None = None) -> str | None:
     """Returns a single SQL string, or None if no LLM is configured, the
     schema is empty, the provider call fails, or the model declined."""
-    if not settings.gemini_api_key or not schema:
+    if not settings.together_api_key or not schema:
         return None
 
     prompt = f"Schema:\n{_format_schema(schema)}\n\nQuestion: {question}"
@@ -1228,7 +1228,7 @@ def test_query_with_no_data_connected_returns_not_ok(client):
 
 
 def test_query_with_data_and_no_llm_configured_still_returns_a_clean_response(client, monkeypatch):
-    monkeypatch.setattr(settings, "gemini_api_key", None)
+    monkeypatch.setattr(settings, "together_api_key", None)
     snapshot_store.load_dataset("orders", pd.DataFrame({"revenue": [10.0]}))
     res = client.post("/internal/metrics/query", json={"question": "total revenue"}, headers=_auth_headers())
     assert res.status_code == 200
@@ -1309,7 +1309,7 @@ app.include_router(metrics_router)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "ai", "llm_configured": bool(settings.gemini_api_key)}
+    return {"status": "ok", "service": "ai", "llm_configured": bool(settings.together_api_key)}
 ```
 
 - [ ] **Step 5: Add `httpx` test client dependency if missing, then run tests**

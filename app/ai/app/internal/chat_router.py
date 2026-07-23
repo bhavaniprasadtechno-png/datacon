@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from app.config import settings
+
 from app.agents import (
     descriptive,
     diagnostic,
@@ -62,19 +64,35 @@ def _primary_intent(intents: list[str]) -> str:
     return "descriptive"
 
 
+@router.get("/models")
+async def get_models():
+    options = []
+    for m in sorted(list(AVAILABLE_MODELS)):
+        clean = m.split("/")[-1].replace("-", " ")
+        options.append({
+            "id": m,
+            "label": clean,
+            "description": f"Model: {m}"
+        })
+    return {"models": options}
+
+
 @router.post("/stream")
 async def stream(payload: ChatPayload):
+    import os
     logger.info("[ChatRouter] Streaming chat request received: message='%s', model=%s", payload.message, payload.model)
-    # Validated once here so both the prose-composition client (compose_stream)
-    # and each agent's SQL-generation call (generate_sql) see the same
-    # resolved model — previously only compose_stream received the override,
-    # so switching models in the UI silently never affected SQL generation.
-    model = payload.model if payload.model in AVAILABLE_MODELS else None
-    intents = await route_dynamic(payload.message, None, model)
-    logger.info("[ChatRouter] Router routed message to intents: %s", intents)
-    llm = get_llm_client(model)
+
+    req_model = payload.model
+    if not req_model or req_model not in AVAILABLE_MODELS:
+        req_model = settings.llm_model
+
+    model = req_model if req_model in AVAILABLE_MODELS else settings.llm_model
 
     async def event_gen():
+        intents = await route_dynamic(payload.message, None, model)
+        logger.info("[ChatRouter] Router routed message to intents: %s", intents)
+        llm = get_llm_client(model)
+
         # Upfront agent assignment (SRS Fig. 2 step 3), then one sequential
         # pass per assigned agent (Fig. 2's "For Each Assigned Agent Type"
         # loop), each streaming true LLM deltas as they're generated rather

@@ -19,15 +19,23 @@ class LLMClient(Protocol):
 
 
 def get_llm_client(model: str | None = None) -> LLMClient:
+    import os
+
     if model and model not in AVAILABLE_MODELS:
         logger.warning("Rejected unknown model override %r, falling back to default.", model)
         model = None
-    if settings.gemini_api_key:
+    if settings.is_llm_configured:
+        active_model = model or settings.llm_model
+        if settings.together_api_key or os.environ.get("TOGETHER_API_KEY") or "qwen" in active_model.lower():
+            from app.llm.together_client import TogetherClient
+
+            logger.info("Using TogetherClient (model=%s)", active_model)
+            return TogetherClient(model)
         from app.llm.litellm_client import LiteLLMClient
 
-        logger.info("Using LiteLLMClient (model=%s) — GEMINI_API_KEY is set.", model or settings.llm_model)
+        logger.info("Using LiteLLMClient (model=%s)", active_model)
         return LiteLLMClient(model)
     from app.llm.offline_client import OfflineLLMClient
 
-    logger.warning("Using OfflineLLMClient — GEMINI_API_KEY is not set, chat will use static templates.")
+    logger.warning("Using OfflineLLMClient — no LLM API key set, chat will use static templates.")
     return OfflineLLMClient()

@@ -30,12 +30,12 @@ class LiteLLMClient:
                     # written answer run over run, instead of a different wording
                     # (or a different emphasis of the numbers) each time.
                     temperature=0.3,
-                    # Reasoning models (e.g. Gemma's "-it" variants) spend a chunk of
+                    # Reasoning models spend a chunk of
                     # this budget on internal thinking tokens before the visible
                     # answer, so this needs headroom beyond a plain chat model.
                     # (Thinking arrives as delta.reasoning_content, a separate field
                     # — delta.content below is visible answer text only; verified
-                    # against both gemini-2.5-flash and gemma-4-31b-it.)
+                    # against Qwen/Qwen3.7-Plus.)
                     max_tokens=3072,
                     stream=True,
                     # Bounded so a slow/hanging provider call fails over to the
@@ -45,7 +45,9 @@ class LiteLLMClient:
                     timeout=20,
                 )
                 async for chunk in stream:
-                    delta = chunk.choices[0].delta.content
+                    if not chunk.choices:
+                        continue
+                    delta = getattr(chunk.choices[0].delta, "content", None)
                     if delta:
                         emitted = True
                         yield delta

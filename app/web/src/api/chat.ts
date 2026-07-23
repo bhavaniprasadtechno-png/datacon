@@ -1,6 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
+import { AVAILABLE_LLM_MODELS, type LlmModelOption } from "@datacon/shared-types";
 import type { ChatMessage, Conversation } from "../lib/types";
+
+export function useLlmModels() {
+  return useQuery({
+    queryKey: ["llm-models"],
+    queryFn: async () => (await api.get<LlmModelOption[]>("/chat/models")).data,
+    initialData: AVAILABLE_LLM_MODELS,
+    staleTime: 60_000,
+  });
+}
 
 export function useConversations(search?: string) {
   // The search term is part of the key, so the sidebar's recents (no search)
@@ -79,12 +89,26 @@ interface StreamHandlers {
 }
 
 export async function streamChat(message: string, conversationId: string | null, model: string | null, handlers: StreamHandlers): Promise<void> {
-  const res = await fetch("/api/chat/stream", {
+  let res = await fetch("/api/chat/stream", {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, conversationId: conversationId ?? undefined, model: model ?? undefined }),
   });
+
+  if (res.status === 401) {
+    try {
+      const refreshRes = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
+      if (refreshRes.ok) {
+        res = await fetch("/api/chat/stream", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, conversationId: conversationId ?? undefined, model: model ?? undefined }),
+        });
+      }
+    } catch {}
+  }
 
   if (!res.ok || !res.body) {
     const data = await res.json().catch(() => ({}));

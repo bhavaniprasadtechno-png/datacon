@@ -22,15 +22,15 @@ function CorrelationTag({ text }: { text: string }) {
 }
 
 function DataTable({ table }: { table: AgentTable }) {
-  if (!table.columns.length || !table.rows.length) return null;
+  if (!table || !Array.isArray(table.columns) || !Array.isArray(table.rows) || !table.columns.length || !table.rows.length) return null;
   return (
     <div style={{ border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", overflow: "auto", marginTop: 10 }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
         <thead>
           <tr style={{ background: "var(--ac-bg-muted)" }}>
-            {table.columns.map((col) => (
+            {table.columns.map((col, idx) => (
               <th
-                key={col}
+                key={col || idx}
                 style={{
                   textAlign: "left",
                   padding: "8px 12px",
@@ -49,9 +49,9 @@ function DataTable({ table }: { table: AgentTable }) {
         <tbody>
           {table.rows.map((row, i) => (
             <tr key={i} style={{ borderTop: "1px solid var(--ac-border)" }}>
-              {row.map((cell, j) => (
+              {Array.isArray(row) && row.map((cell, j) => (
                 <td key={j} style={{ padding: "8px 12px", color: "var(--ac-fg)", whiteSpace: "nowrap" }}>
-                  {cell === null ? "—" : String(cell)}
+                  {cell === null || cell === undefined ? "—" : String(cell)}
                 </td>
               ))}
             </tr>
@@ -63,11 +63,13 @@ function DataTable({ table }: { table: AgentTable }) {
 }
 
 function CitationChip({ citation, onOpen }: { citation: Citation; onOpen: (c: Citation) => void }) {
-  const label = citation.documentTitle.length > 28 ? `${citation.documentTitle.slice(0, 28)}…` : citation.documentTitle;
+  if (!citation) return null;
+  const docTitle = citation.documentTitle || "Document";
+  const label = docTitle.length > 28 ? `${docTitle.slice(0, 28)}…` : docTitle;
   return (
     <button
       onClick={() => onOpen(citation)}
-      title={citation.documentTitle}
+      title={docTitle}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -82,12 +84,13 @@ function CitationChip({ citation, onOpen }: { citation: Citation; onOpen: (c: Ci
         cursor: "pointer",
       }}
     >
-      [{citation.id}] {label}
+      [{citation.id || "?"}] {label}
     </button>
   );
 }
 
 function Citations({ items, onOpen }: { items: Citation[]; onOpen: (c: Citation) => void }) {
+  if (!Array.isArray(items) || !items.length) return null;
   return (
     <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac-muted)", marginBottom: 2 }}>
@@ -95,7 +98,7 @@ function Citations({ items, onOpen }: { items: Citation[]; onOpen: (c: Citation)
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         {items.map((c) => (
-          <CitationChip key={c.id} citation={c} onOpen={onOpen} />
+          <CitationChip key={c.id || Math.random()} citation={c} onOpen={onOpen} />
         ))}
       </div>
     </div>
@@ -109,12 +112,16 @@ const EFFORT_COLOR: Record<PrescriptiveAction["effort"], string> = {
 };
 
 function RecommendationCards({ items, citations, onOpen }: { items: PrescriptiveAction[]; citations: Citation[]; onOpen: (c: Citation) => void }) {
+  if (!Array.isArray(items) || !items.length) return null;
+  const safeCitations = Array.isArray(citations) ? citations : [];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 10 }}>
       {items.map((a, i) => {
+        if (!a) return null;
         const usedCitations = (a.citationIds ?? [])
-          .map((id) => citations.find((c) => c.id === id))
+          .map((id) => safeCitations.find((c) => c && c.id === id))
           .filter((c): c is Citation => Boolean(c));
+        const color = (a.effort && EFFORT_COLOR[a.effort]) ? EFFORT_COLOR[a.effort] : "#a3730c";
         return (
           <div key={i} style={{ border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14 }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -137,20 +144,26 @@ function RecommendationCards({ items, citations, onOpen }: { items: Prescriptive
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontWeight: 600, color: "var(--ac-fg)" }}>{a.title}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color: EFFORT_COLOR[a.effort] }}>
-                    Effort: {a.effort}
-                  </span>
-                  <span style={{ fontSize: 10, color: "var(--ac-muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Owner: {a.owner}</span>
+                  <span style={{ fontWeight: 600, color: "var(--ac-fg)" }}>{a.title || (a as any).action || "Action"}</span>
+                  {a.effort && (
+                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color }}>
+                      Effort: {a.effort}
+                    </span>
+                  )}
+                  {a.owner && (
+                    <span style={{ fontSize: 10, color: "var(--ac-muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Owner: {a.owner}</span>
+                  )}
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--ac-fg)", marginTop: 6 }}>{a.rationale}</div>
-                <div style={{ fontSize: 12, color: "var(--ac-muted)", marginTop: 4 }}>
-                  <span style={{ fontWeight: 600 }}>Expected impact:</span> {a.expectedImpact}
-                </div>
+                {a.expectedImpact && (
+                  <div style={{ fontSize: 12, color: "var(--ac-muted)", marginTop: 4 }}>
+                    <span style={{ fontWeight: 600 }}>Expected impact:</span> {a.expectedImpact}
+                  </div>
+                )}
                 {usedCitations.length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
                     {usedCitations.map((c) => (
-                      <CitationChip key={c.id} citation={c} onOpen={onOpen} />
+                      <CitationChip key={c.id || Math.random()} citation={c} onOpen={onOpen} />
                     ))}
                   </div>
                 )}
@@ -164,12 +177,12 @@ function RecommendationCards({ items, citations, onOpen }: { items: Prescriptive
 }
 
 export function AgentVisualization({ message, onOpenCitation }: { message: ChatMessage; onOpenCitation: (citation: Citation) => void }) {
-  if (!message.payload) return null;
-  const payload = message.payload;
+  if (!message || !message.payload || typeof message.payload !== "object") return null;
+  const payload = message.payload as Record<string, any>;
 
   return (
     <div style={{ marginTop: 8 }}>
-      {payload.correlation && <CorrelationTag text={payload.correlation} />}
+      {payload.correlation && <CorrelationTag text={String(payload.correlation)} />}
       {payload.chart && <AgentChart chart={payload.chart} />}
       {payload.table && <DataTable table={payload.table} />}
       {payload.citations && <Citations items={payload.citations} onOpen={onOpenCitation} />}

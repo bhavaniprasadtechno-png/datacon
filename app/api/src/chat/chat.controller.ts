@@ -7,6 +7,7 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { AuthenticatedUser } from "../auth/token.types";
 import { AiClientService } from "../common/ai-client.service";
 import { ChatService } from "./chat.service";
+import { AVAILABLE_LLM_MODELS } from "@datacon/shared-types";
 import { SendMessageDto } from "./dto/send-message.dto";
 import { FeedbackDto } from "./dto/feedback.dto";
 
@@ -19,6 +20,16 @@ export class ChatController {
     private readonly chat: ChatService,
     private readonly ai: AiClientService,
   ) {}
+
+  @Get("models")
+  async getModels() {
+    try {
+      const res = await this.ai.client.get<{ models: Array<{ id: string; label: string; description: string }> }>("/internal/chat/models");
+      return res.data.models;
+    } catch {
+      return AVAILABLE_LLM_MODELS;
+    }
+  }
 
   @Get("conversations")
   async conversations(@Query("search") search: string | undefined, @CurrentUser() user: AuthenticatedUser) {
@@ -56,7 +67,7 @@ export class ChatController {
       upstream = await this.ai.client.post(
         "/internal/chat/stream",
         { message: dto.message, model: dto.model },
-        { responseType: "stream" },
+        { responseType: "stream", timeout: 0 },
       );
       this.logger.log(`[Chat] AI Service responded with stream status: ${upstream.status}`);
     } catch (e: unknown) {

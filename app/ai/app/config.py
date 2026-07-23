@@ -10,22 +10,23 @@ class Settings(BaseSettings):
     query_engine_db_path: str = "./data/snapshot.duckdb"
     # LiteLLM orchestrates the provider call from a single "provider/model"
     # string (SRS §2.2), so swapping providers is a config change, not a
-    # code change — e.g. "anthropic/claude-..." + ANTHROPIC_API_KEY would
-    # work too. GEMINI_API_KEY is what LiteLLM itself reads for anything
-    # prefixed "gemini/".
-    gemini_api_key: str | None = None
-    llm_model: str = "gemini/gemma-4-31b-it"
+    # code change.
+    together_api_key: str | None = None
+    llm_model: str = "Qwen/Qwen3.7-Plus"
     internal_auth_token: str = "dev-internal-token"
+
+    @property
+    def is_llm_configured(self) -> bool:
+        import os
+        return bool(
+            self.together_api_key
+            or os.environ.get("TOGETHER_API_KEY")
+        )
 
 
 settings = Settings()
 
-# LiteLLM reads provider API keys straight from the process environment
-# (see litellm.llms.*.get_api_key), NOT from anything we pass to
-# acompletion(). Populating our own Settings from .env is not enough —
-# without this bridge, chat silently falls back to the offline templates
-# with "Missing GEMINI_API_KEY" spam in the logs.
 import os
 
-if settings.gemini_api_key and not os.environ.get("GEMINI_API_KEY"):
-    os.environ["GEMINI_API_KEY"] = settings.gemini_api_key
+if settings.together_api_key and not os.environ.get("TOGETHER_API_KEY"):
+    os.environ["TOGETHER_API_KEY"] = settings.together_api_key

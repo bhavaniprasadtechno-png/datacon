@@ -9,7 +9,7 @@ happen if we hold prices"). This module now routes in two layers:
      question AND a compact schema of the data actually available for this
      turn, and returns the set of agents most relevant to it.
   2. `route(question)` — deterministic regex fallback used when the LLM
-     isn't configured (no GEMINI_API_KEY), fails, or when the caller wants
+     isn't configured (no TOGETHER_API_KEY), fails, or when the caller wants
      a synchronous decision. Same signature/return shape as before, so
      existing callers keep working.
 
@@ -213,16 +213,22 @@ async def route_dynamic(question: str, context: dict | None, model: str | None =
 
     Results are cached per (question, data-schema, model) for `_ROUTER_CACHE_TTL_SECS`
     so repeated turns skip the round-trip. Falls back to `route()` when:
-      * GEMINI_API_KEY isn't set (offline mode),
+      * TOGETHER_API_KEY isn't set (offline mode),
       * the LLM call fails,
       * or the reply can't be parsed into a valid intent list.
     """
     fallback = route(question)
-    if not settings.gemini_api_key:
+    if not settings.is_llm_configured:
         return fallback
 
     schema = _summarise_context_schema(context)
-    cache_key = _cache_key(question, schema, model or settings.llm_model)
+    target_model = model or settings.llm_model
+    if not target_model:
+        target_model = f"together_ai/{settings.llm_model}"
+    elif not target_model.startswith("together"):
+        target_model = f"together_ai/{target_model}"
+
+    cache_key = _cache_key(question, schema, target_model)
     cached = _cache_get(cache_key)
     if cached is not None:
         logger.debug("Router cache hit for %s...", cache_key[:12])
@@ -236,16 +242,25 @@ async def route_dynamic(question: str, context: dict | None, model: str | None =
             f"Data available this turn:\n{schema}\n\n"
             'Respond with JSON only: {"intents": [...]}.'
         )
-        response = await litellm.acompletion(
-            model=model or settings.llm_model,
+        stream = await litellm.acompletion(
+            model=target_model,
             messages=[
                 {"role": "system", "content": _ROUTER_SYSTEM},
                 {"role": "user", "content": user_prompt},
             ],
             max_tokens=128,
             temperature=0,
+            stream=True,
+            timeout=15,
         )
-        raw = response.choices[0].message.content or ""
+        parts = []
+        async for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = getattr(chunk.choices[0].delta, "content", None)
+            if delta:
+                parts.append(delta)
+        raw = "".join(parts)
     except Exception as e:
         logger.warning("Dynamic router LLM call failed (%s); using regex fallback.", e)
         return fallback

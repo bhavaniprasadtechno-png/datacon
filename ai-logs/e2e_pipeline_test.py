@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """E2E test for the multi-agent pipeline: retriever → router → analysts →
 validator → responder, running against a live FastAPI ai/ service with a
-real GEMINI_API_KEY."""
+real TOGETHER_API_KEY."""
 import json
 import re
 import sys
@@ -33,7 +33,7 @@ CTX = {
 
 def stream_chat(message, timeout=60):
     body = json.dumps({"message": message, "context": CTX,
-                       "model": "gemini/gemini-2.5-flash"}).encode()
+                       "model": "Qwen/Qwen3.7-Plus"}).encode()
     req = urllib.request.Request(f"{BASE}/internal/chat/stream", data=body,
                                  headers=HEADERS, method="POST")
     events = []

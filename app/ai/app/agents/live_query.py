@@ -10,7 +10,7 @@ connected data sources, this planner decides:
 The output is a ``QueryPlan`` that ``connectors/query.py`` executes safely
 (whitelisted identifiers, parameterised values, hard row cap).
 
-If no ``GEMINI_API_KEY`` is configured OR the LLM's plan is unparseable /
+If no ``TOGETHER_API_KEY`` is configured OR the LLM's plan is unparseable /
 invalid against the catalog, this planner returns ``None`` and the
 retriever silently skips live querying — the pre-computed metrics blob
 remains the answer's source.
@@ -106,7 +106,7 @@ async def plan_query(question: str, catalog: list[dict], model: str | None = Non
     or ``None`` if live querying isn't warranted / possible."""
     if not catalog:
         return None
-    if not settings.gemini_api_key:
+    if not settings.is_llm_configured:
         return None
     try:
         import litellm
@@ -116,16 +116,31 @@ async def plan_query(question: str, catalog: list[dict], model: str | None = Non
             f"Available tables:\n{_catalog_snippet(catalog)}\n\n"
             "Respond with JSON only."
         )
-        response = await litellm.acompletion(
-            model=model or settings.llm_model,
+        target_model = model or settings.llm_model
+        if not target_model:
+            target_model = f"together_ai/{settings.llm_model}"
+        elif not target_model.startswith("together"):
+            target_model = f"together_ai/{target_model}"
+
+        stream = await litellm.acompletion(
+            model=target_model,
             messages=[
                 {"role": "system", "content": _PLANNER_SYSTEM},
                 {"role": "user", "content": user_prompt},
             ],
             max_tokens=512,
             temperature=0,
+            stream=True,
+            timeout=15,
         )
-        raw = response.choices[0].message.content or ""
+        parts = []
+        async for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = getattr(chunk.choices[0].delta, "content", None)
+            if delta:
+                parts.append(delta)
+        raw = "".join(parts)
     except Exception as e:
         logger.warning("Live query planner LLM call failed (%s); skipping live query.", e)
         return None

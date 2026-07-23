@@ -20,6 +20,8 @@ import { queryClient } from "./lib/queryClient";
 import { useAuthStore } from "./stores/useAuthStore";
 import { useThemeStore } from "./stores/useThemeStore";
 
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
+
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) return null;
@@ -38,18 +40,18 @@ function AppRoutes() {
           </RequireAuth>
         }
       >
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/chat/history" element={<ChatHistoryPage />} />
-        <Route path="/insights" element={<InsightsPage />} />
-        <Route path="/connectors" element={<ConnectorsPage />} />
-        <Route path="/data-sources" element={<DataSourcesPage />} />
+        <Route path="/chat" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
+        <Route path="/chat/history" element={<ErrorBoundary><ChatHistoryPage /></ErrorBoundary>} />
+        <Route path="/insights" element={<ErrorBoundary><InsightsPage /></ErrorBoundary>} />
+        <Route path="/connectors" element={<ErrorBoundary><ConnectorsPage /></ErrorBoundary>} />
+        <Route path="/data-sources" element={<ErrorBoundary><DataSourcesPage /></ErrorBoundary>} />
         {/* <Route path="/forecasts" element={<ForecastsPage />} /> */}
-        <Route path="/themes" element={<ThemesPage />} />
+        <Route path="/themes" element={<ErrorBoundary><ThemesPage /></ErrorBoundary>} />
         <Route
           path="/settings/users"
           element={
             <RequireAdmin>
-              <UsersPage />
+              <ErrorBoundary><UsersPage /></ErrorBoundary>
             </RequireAdmin>
           }
         />
@@ -57,7 +59,7 @@ function AppRoutes() {
           path="/settings/roles"
           element={
             <RequireAdmin>
-              <RolesPage />
+              <ErrorBoundary><RolesPage /></ErrorBoundary>
             </RequireAdmin>
           }
         />
@@ -65,7 +67,7 @@ function AppRoutes() {
           path="/settings/assign"
           element={
             <RequireAdmin>
-              <AssignRolesPage />
+              <ErrorBoundary><AssignRolesPage /></ErrorBoundary>
             </RequireAdmin>
           }
         />
@@ -73,7 +75,7 @@ function AppRoutes() {
           path="/settings/permissions"
           element={
             <RequireAdmin>
-              <PermissionsPage />
+              <ErrorBoundary><PermissionsPage /></ErrorBoundary>
             </RequireAdmin>
           }
         />
@@ -92,7 +94,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppRoutes />
+        <ErrorBoundary>
+          <AppRoutes />
+        </ErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>
   );

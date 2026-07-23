@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+venv_site = Path(__file__).resolve().parent.parent / ".venv" / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages"
+if venv_site.exists() and str(venv_site) not in sys.path:
+    sys.path.insert(0, str(venv_site))
+
 import logging
 from fastapi import FastAPI
 
@@ -23,4 +30,4 @@ app.include_router(metrics_router)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "ai", "llm_configured": bool(settings.gemini_api_key)}
+    return {"status": "ok", "service": "ai", "llm_configured": settings.is_llm_configured}

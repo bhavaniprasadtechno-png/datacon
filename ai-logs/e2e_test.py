@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """E2E test for the dynamic router + agents + cache path against a live
-FastAPI ai/ service running with a real GEMINI_API_KEY."""
+FastAPI ai/ service running with a real TOGETHER_API_KEY."""
 import json
 import re
 import sys
@@ -44,7 +44,7 @@ CTX = {
 
 def stream_chat(message: str, timeout: int = 45) -> dict:
     body = json.dumps({"message": message, "context": CTX,
-                       "model": "gemini/gemini-2.5-flash"}).encode()
+                       "model": "Qwen/Qwen3.7-Plus"}).encode()
     req = urllib.request.Request(f"{BASE}/internal/chat/stream", data=body, headers=HEADERS, method="POST")
     intents: list[str] = []
     per_agent_text: dict[str, list[str]] = {}

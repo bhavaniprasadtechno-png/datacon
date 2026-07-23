@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { AVAILABLE_LLM_MODELS, CHAT_SUGGESTIONS, INTENT_META, type ChatIntent, type Citation } from "@datacon/shared-types";
-import { useChatMessages, useFeedback, streamChat } from "../../api/chat";
+import { useChatMessages, useFeedback, streamChat, useLlmModels } from "../../api/chat";
 import { useToast } from "../../stores/useToastStore";
 import { AgentVisualization } from "./AgentVisualization";
 import type { ChatMessage, ChatPayload } from "../../lib/types";
@@ -27,6 +27,7 @@ const INTENT_ICON: Record<ChatIntent, typeof FileText> = {
   diagnostic: Compass,
   predictive: LineChart,
   prescriptive: Play,
+  general: Sparkles,
 };
 
 const CONFIDENCE_LABEL = { high: "High confidence", medium: "Medium confidence", low: "Low confidence" } as const;
@@ -34,6 +35,7 @@ const CONFIDENCE_COLOR = { high: "#0f8a5c", medium: "#a3730c", low: "#7a7f8a" } 
 
 export function ChatPage() {
   const qc = useQueryClient();
+  const { data: availableModels = AVAILABLE_LLM_MODELS } = useLlmModels();
   // The active conversation lives in the URL (?c=...) — the sidebar's
   // "New chat" button and RECENT CONVERSATIONS list drive it by navigating,
   // so they work from any page, not just this one.
@@ -43,13 +45,25 @@ export function ChatPage() {
   const feedback = useFeedback();
   const { addToast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [model, setModel] = useState<string>(() => localStorage.getItem(STORAGE_MODEL) || AVAILABLE_LLM_MODELS[0].id);
+  const [model, setModel] = useState<string>(() => {
+    const stored = localStorage.getItem(STORAGE_MODEL);
+    if (stored && availableModels.some((m) => m.id === stored)) {
+      return stored;
+    }
+    return availableModels[0]?.id ?? "Qwen/Qwen3.7-Plus";
+  });
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sendingRef = useRef(false);
   const sentPending = useRef(false);
   const [openCitation, setOpenCitation] = useState<Citation | null>(null);
+
+  useEffect(() => {
+    if (availableModels.length > 0 && !availableModels.some((m) => m.id === model)) {
+      setModel(availableModels[0].id);
+    }
+  }, [availableModels, model]);
 
   useEffect(() => {
     // Mirror server history into local state whenever it (re)loads — except
@@ -91,43 +105,51 @@ export function ChatPage() {
     // its own bubble. Ids assigned per intent when the agents frame arrives.
     const agentIds = new Map<string, string>();
 
-    await streamChat(trimmed, activeConversationId, model, {
-      onConversation: (conversationId) => {
-        if (conversationId !== activeConversationId) setSearchParams({ c: conversationId }, { replace: true });
-      },
-      onAgents: (intents) => {
-        const placeholders = intents.map((intent) => {
-          const id = `local-${localIdSeq++}`;
-          agentIds.set(intent, id);
-          return { id, role: "agent", intent: intent as ChatIntent, text: "", payload: null, vote: 0, streaming: true } as ChatMessage;
-        });
-        setMessages((prev) => [...prev, ...placeholders]);
-      },
-      onAgentDelta: (intent, chunk) => {
-        const id = agentIds.get(intent);
-        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: m.text + chunk } : m)));
-      },
-      onAgentDone: (result) => {
-        const id = agentIds.get(result.intent);
-        setMessages((prev) =>
-          prev.map((m) => (m.id === id ? { ...m, text: result.text, payload: result.payload as ChatPayload, streaming: false } : m)),
-        );
-      },
-      onDone: () => {
-        sendingRef.current = false;
-        setSending(false);
-        // Refreshes the sidebar's title (auto-set from the first message),
-        // preview snippet, and updatedAt-based ordering.
-        qc.invalidateQueries({ queryKey: ["chat-conversations"] });
-      },
-      onError: (message) => {
-        addToast({ icon: <AlertCircle size={16} />, accent: "#e2603f", title: "Chat failed", desc: message });
-        const pendingIds = new Set(agentIds.values());
-        setMessages((prev) => prev.filter((m) => !pendingIds.has(m.id)));
-        sendingRef.current = false;
-        setSending(false);
-      },
-    });
+    try {
+      await streamChat(trimmed, activeConversationId, model, {
+        onConversation: (conversationId) => {
+          if (conversationId !== activeConversationId) setSearchParams({ c: conversationId }, { replace: true });
+        },
+        onAgents: (intents) => {
+          const placeholders = intents.map((intent) => {
+            const id = `local-${localIdSeq++}`;
+            agentIds.set(intent, id);
+            return { id, role: "agent", intent: intent as ChatIntent, text: "", payload: null, vote: 0, streaming: true } as ChatMessage;
+          });
+          setMessages((prev) => [...prev, ...placeholders]);
+        },
+        onAgentDelta: (intent, chunk) => {
+          const id = agentIds.get(intent);
+          setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: m.text + chunk } : m)));
+        },
+        onAgentDone: (result) => {
+          const id = agentIds.get(result.intent);
+          setMessages((prev) =>
+            prev.map((m) => (m.id === id ? { ...m, text: result.text, payload: result.payload as ChatPayload, streaming: false } : m)),
+          );
+        },
+        onDone: () => {
+          sendingRef.current = false;
+          setSending(false);
+          // Refreshes the sidebar's title (auto-set from the first message),
+          // preview snippet, and updatedAt-based ordering.
+          qc.invalidateQueries({ queryKey: ["chat-conversations"] });
+        },
+        onError: (message) => {
+          addToast({ icon: <AlertCircle size={16} />, accent: "#e2603f", title: "Chat failed", desc: message });
+          const pendingIds = new Set(agentIds.values());
+          setMessages((prev) => prev.filter((m) => !pendingIds.has(m.id)));
+          sendingRef.current = false;
+          setSending(false);
+        },
+      });
+    } catch (err: any) {
+      addToast({ icon: <AlertCircle size={16} />, accent: "#e2603f", title: "Chat error", desc: err?.message || "An unexpected streaming error occurred." });
+      const pendingIds = new Set(agentIds.values());
+      setMessages((prev) => prev.filter((m) => !pendingIds.has(m.id)));
+      sendingRef.current = false;
+      setSending(false);
+    }
   };
 
   const vote = (id: string, dir: -1 | 1) => {
@@ -158,7 +180,7 @@ export function ChatPage() {
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
               <SelectContent>
-                {AVAILABLE_LLM_MODELS.map((m) => (
+                {availableModels.map((m) => (
                   <SelectItem key={m.id} value={m.id}>
                     {m.label}
                   </SelectItem>
@@ -211,16 +233,16 @@ export function ChatPage() {
                     </div>
                     <span style={{ fontSize: 12.5, fontWeight: 700 }}>Datacon</span>
                     {m.intent && (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, font: "600 9.5px 'IBM Plex Mono',monospace", color: INTENT_META[m.intent].color, background: INTENT_META[m.intent].bg, padding: "2px 8px", borderRadius: 20 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, font: "600 9.5px 'IBM Plex Mono',monospace", color: INTENT_META[m.intent]?.color ?? "#64748b", background: INTENT_META[m.intent]?.bg ?? "#f1f5f9", padding: "2px 8px", borderRadius: 20 }}>
                         {(() => {
-                          const Icon = INTENT_ICON[m.intent];
+                          const Icon = INTENT_ICON[m.intent as ChatIntent] || Sparkles;
                           return <Icon size={10} />;
                         })()}
-                        {INTENT_META[m.intent].label}
+                        {INTENT_META[m.intent]?.label || m.intent}
                       </span>
                     )}
-                    {!m.streaming && m.payload && (
-                      <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: CONFIDENCE_COLOR[m.payload.confidence] }}>
+                    {!m.streaming && m.payload && m.payload.confidence && CONFIDENCE_LABEL[m.payload.confidence] && (
+                      <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: CONFIDENCE_COLOR[m.payload.confidence] ?? "var(--ac-muted)" }}>
                         {CONFIDENCE_LABEL[m.payload.confidence]}
                       </span>
                     )}

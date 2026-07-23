@@ -2,6 +2,7 @@ import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Line, LineChart, Res
 import type { AgentChart as AgentChartData } from "@datacon/shared-types";
 
 function formatMillions(value: number): string {
+  if (typeof value !== "number" || isNaN(value)) return "$0.00M";
   return `$${value.toFixed(2)}M`;
 }
 
@@ -15,13 +16,15 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
 }
 
 export function AgentChart({ chart }: { chart: AgentChartData }) {
-  if (!chart.data.length) return null;
+  if (!chart || !chart.data || !Array.isArray(chart.data) || !chart.data.length) return null;
+
+  const titleText = (chart.title || "Chart").toUpperCase();
 
   if (chart.type === "bar") {
     return (
       <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>
         <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)", marginBottom: 8 }}>
-          {chart.title.toUpperCase()}
+          {titleText}
         </div>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={chart.data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
@@ -41,8 +44,8 @@ export function AgentChart({ chart }: { chart: AgentChartData }) {
   // pair of points instead of duplicating formatted fields on the payload.
   const last = chart.data[chart.data.length - 1];
   const prev = chart.data.length > 1 ? chart.data[chart.data.length - 2] : undefined;
-  const hasForecast = last.lower !== undefined && last.upper !== undefined;
-  const growthPct = hasForecast && prev ? ((last.value - prev.value) / prev.value) * 100 : undefined;
+  const hasForecast = last && typeof last.lower === "number" && typeof last.upper === "number";
+  const growthPct = hasForecast && prev && typeof prev.value === "number" && prev.value !== 0 ? ((last.value - prev.value) / prev.value) * 100 : undefined;
 
   // recharts Areas fill from the chart's zero baseline independently unless
   // stacked with a shared stackId. To render a true lower..upper band, stack
@@ -50,13 +53,13 @@ export function AgentChart({ chart }: { chart: AgentChartData }) {
   // on top, so the visible fill spans exactly [lower, upper].
   const bandData = chart.data.map((d) => ({
     ...d,
-    band: d.lower !== undefined && d.upper !== undefined ? d.upper - d.lower : undefined,
+    band: d && typeof d.lower === "number" && typeof d.upper === "number" ? d.upper - d.lower : undefined,
   }));
 
   return (
     <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)" }}>{chart.title.toUpperCase()}</span>
+        <span style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)" }}>{titleText}</span>
         {hasForecast && <span style={{ font: "600 10px 'IBM Plex Mono',monospace", color: "var(--ac-muted)" }}>95% CI</span>}
       </div>
       <ResponsiveContainer width="100%" height={140}>
@@ -80,7 +83,7 @@ export function AgentChart({ chart }: { chart: AgentChartData }) {
           </LineChart>
         )}
       </ResponsiveContainer>
-      {hasForecast && (
+      {hasForecast && last && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, textAlign: "center", marginTop: 10 }}>
           <Stat label="PROJECTED" value={formatMillions(last.value)} />
           <Stat label="95% CI" value={`${formatMillions(last.lower as number)}–${formatMillions(last.upper as number)}`} />

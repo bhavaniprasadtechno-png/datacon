@@ -64,6 +64,34 @@ def drop_datasets(prefix: str) -> None:
             conn.close()
 
 
+def ensure_seeded_from_postgres() -> None:
+    db_url = settings.database_url or os.environ.get("DATABASE_URL")
+    if not db_url:
+        return
+    try:
+        import json
+        from sqlalchemy import create_engine, text
+
+        engine = create_engine(db_url)
+        with engine.connect() as conn:
+            try:
+                rows = conn.execute(text('SELECT "name", "columns", "sampleRows" FROM "unified_datasets"')).fetchall()
+            except Exception:
+                rows = conn.execute(text('SELECT "name", "columns", "sampleRows" FROM "UnifiedDataset"')).fetchall()
+
+            for name, columns, sample_rows in rows:
+                if not name or not columns:
+                    continue
+                cols = columns if isinstance(columns, list) else json.loads(columns)
+                s_rows = sample_rows if isinstance(sample_rows, list) else (json.loads(sample_rows) if sample_rows else [])
+                if not s_rows:
+                    continue
+                df = pd.DataFrame(s_rows, columns=cols)
+                load_dataset(name, df)
+    except Exception as e:
+        logger.warning("[DuckDB] Could not seed DuckDB from PostgreSQL unified_datasets: %s", e)
+
+
 def schema() -> dict[str, list[str]]:
     """Table name -> column names, for every table currently loaded."""
     with _lock:
@@ -72,6 +100,13 @@ def schema() -> dict[str, list[str]]:
             tables = conn.execute(
                 "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
             ).fetchall()
+            if not tables:
+                conn.close()
+                ensure_seeded_from_postgres()
+                conn = _connect()
+                tables = conn.execute(
+                    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+                ).fetchall()
             out: dict[str, list[str]] = {}
             for (table_name,) in tables:
                 cols = conn.execute(

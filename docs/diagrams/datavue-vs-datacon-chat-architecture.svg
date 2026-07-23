@@ -88,7 +88,7 @@
   <rect x="830" y="100" width="720" height="190" rx="8" fill="#0f172a"/>
   <rect x="830" y="100" width="720" height="190" rx="8" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
   <text x="844" y="124" class="b-title">ChatPage.tsx + AgentVisualization.tsx + AgentChart.tsx (React + Vite)</text>
-  <text x="844" y="146" class="b-line">• Per-intent bubbles — one turn can fan out to several agents; live LLM model picker (Gemini 2.5/3, Gemma 4)</text>
+  <text x="844" y="146" class="b-line">• Per-intent bubbles — one turn can fan out to several agents; live LLM model picker (Qwen 3.7 Plus)</text>
   <text x="844" y="161" class="b-line">• CorrelationTag · DataTable · Citations/CitationChip → citation drawer (same shape as Datavue)</text>
   <text x="844" y="176" class="b-line" fill="#fda4af">• ① ActionsTable — plain grid: title / impact / effort / owner only. No rationale, no expected_impact, no per-item citations</text>
   <text x="844" y="191" class="b-line" fill="#fda4af">• ② AgentChart line — CI shown only as PROJECTED / 95% CI / GROWTH stat tiles; no shaded band on the chart itself</text>

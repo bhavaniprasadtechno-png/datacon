@@ -94,11 +94,30 @@ def _clean(text: str) -> str:
     return text.strip()
 
 
-async def generate_sql(question: str, schema: dict[str, list[str]], error_context: str | None = None, model: str | None = None) -> str | None:
-    """Returns a single SQL string, or None if no LLM is configured, the
-    schema is empty, the provider call fails, or the model declined."""
-    if not settings.gemini_api_key or not schema:
+def _fallback_sql(question: str, schema: dict[str, list[str]]) -> str | None:
+    if not schema:
         return None
+    import re
+    q_words = re.findall(r"\w+", question.lower())
+    for table_name in schema.keys():
+        clean_name = table_name.lower().split("_")[-1]
+        full_name = table_name.lower()
+        for word in q_words:
+            if len(word) >= 3 and (word == clean_name or word in clean_name or clean_name in word or word in full_name):
+                return f'SELECT * FROM "{table_name}" LIMIT 100;'
+    first_table = list(schema.keys())[0]
+    return f'SELECT * FROM "{first_table}" LIMIT 100;'
+
+
+async def generate_sql(question: str, schema: dict[str, list[str]], error_context: str | None = None, model: str | None = None) -> str | None:
+    """Returns a single SQL string, or fallback SQL if the provider call fails,
+    or None if the schema is empty."""
+    if not schema:
+        return None
+
+    if not settings.is_llm_configured:
+        logger.info("[Generator] No LLM configured; using schema fallback SQL.")
+        return _fallback_sql(question, schema)
 
     # Enrich prompt with metadata about connectors and uploaded data sources
     conn_meta = _get_connector_metadata()
@@ -117,31 +136,35 @@ async def generate_sql(question: str, schema: dict[str, list[str]], error_contex
 
     import litellm
 
+    import os
     resolved_model = model or settings.llm_model
+    if not resolved_model:
+        resolved_model = f"together_ai/{settings.llm_model}"
+    elif not resolved_model.startswith("together"):
+        resolved_model = f"together_ai/{resolved_model}"
 
     for attempt in range(2):
         try:
             logger.info("[Generator] Calling LiteLLM (attempt %d/2) for model=%s...", attempt + 1, resolved_model)
-            response = await litellm.acompletion(
+            stream = await litellm.acompletion(
                 model=resolved_model,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": prompt},
                 ],
-                # Low temperature so the same question maps to the same SQL
-                # (and thus the same downstream numbers) run over run.
                 temperature=0.2,
-                # Reasoning models spend tokens on internal thinking before visible answers.
                 max_tokens=1024,
-                stream=False,
-                # No timeout here: a real schema-heavy prompt on this model takes
-                # ~20s to fully generate in non-streaming mode (measured), so a
-                # 20s timeout was clipping legitimate-but-slow responses right
-                # before they finished. The API gateway's own 120s timeout
-                # (ai-client.service.ts) is the outer backstop for a truly dead
-                # call.
+                stream=True,
+                timeout=25,
             )
-            text = _clean(response.choices[0].message.content or "")
+            parts = []
+            async for chunk in stream:
+                if not chunk.choices:
+                    continue
+                delta = getattr(chunk.choices[0].delta, "content", None)
+                if delta:
+                    parts.append(delta)
+            text = _clean("".join(parts))
             logger.info("[Generator] LLM raw response text (attempt %d/2): '%s'", attempt + 1, text)
             
             if text and text.upper() != "NO_ANSWER":
@@ -149,13 +172,13 @@ async def generate_sql(question: str, schema: dict[str, list[str]], error_contex
             
             if text.upper() == "NO_ANSWER":
                 logger.warning("[Generator] LLM declined to answer the question (returned NO_ANSWER).")
-                return None
+                return _fallback_sql(question, schema)
                 
             logger.warning("[Generator] LLM returned empty response on attempt %d/2", attempt + 1)
         except Exception as e:
             logger.warning("[Generator] SQL generation attempt %d/2 failed: %s", attempt + 1, e)
             if attempt == 1:
-                logger.exception("[Generator] All SQL generation attempts failed.")
-                return None
+                logger.warning("[Generator] All LLM SQL generation attempts failed; using schema fallback SQL.")
+                return _fallback_sql(question, schema)
 
-    return None
+    return _fallback_sql(question, schema)
