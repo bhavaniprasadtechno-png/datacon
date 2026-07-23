@@ -5,10 +5,12 @@ from app.query_engine.executor import answer_question, grouped_count
 
 logger = logging.getLogger("app.agents.descriptive")
 
+from app.rag.chroma_store import query as chroma_query
+
 SYSTEM = (
-    "You are Datacon's descriptive analytics agent. Given a real query result table, "
-    "answer the user's question about it in one tight paragraph (3-4 sentences) for a "
-    "business audience. Do not invent numbers beyond what's provided."
+    "You are Datacon's descriptive analytics agent. Given a real query result table "
+    "or cited Data Source document excerpts, answer the user's question clearly in one tight paragraph "
+    "for a business audience. Reference cited document titles when answering from Data Sources."
 )
 
 _DISTRIBUTION_DENYLIST = ("email", "name", "url", "phone", "date", "created", "updated", "title", "description")
@@ -59,7 +61,45 @@ def _pick_distribution_column(columns: list[str], rows: list[list]) -> str | Non
 async def prepare(question: str, model: str | None = None) -> AgentPrep:
     result = await answer_question(question, model)
 
-    if not result.ok:
+    if not result.ok or not result.rows:
+        # Tier 2: Check Data Sources (uploaded documents in ChromaDB)
+        hits = []
+        if question and question.strip():
+            try:
+                raw_hits = chroma_query(question.strip(), n_results=4)
+                hits = [h for h in raw_hits if h.get("distance") is None or h["distance"] <= 1.2]
+            except Exception:
+                hits = []
+
+        citations = [
+            {
+                "id": i + 1,
+                "documentTitle": h["metadata"].get("title", h["metadata"].get("filename", "Untitled")),
+                "filename": h["metadata"].get("filename", ""),
+                "chunkIndex": h["metadata"].get("chunk_index", 0),
+                "snippet": h.get("snippet", "")[:400],
+            }
+            for i, h in enumerate(hits)
+        ]
+
+        if citations:
+            doc_snippets = "\n".join(
+                [f"- Document [{c['documentTitle']}] ({c['filename']}): \"{c['snippet']}\"" for c in citations]
+            )
+            prompt = (
+                f"Question: {question}\n\n"
+                f"Relevant Data Source Document Excerpts:\n{doc_snippets}\n\n"
+                f"Answer the user's question clearly using the uploaded Data Source document excerpts above."
+            )
+            offline_text = f"According to uploaded Data Source document ({citations[0]['documentTitle']}): \"{citations[0]['snippet']}\""
+            return AgentPrep(
+                system=SYSTEM,
+                prompt=prompt,
+                offline_text=offline_text,
+                payload={"confidence": "high", "citations": citations},
+            )
+
+        # Tier 3: Low confidence / general fallback
         return AgentPrep(
             system=SYSTEM,
             prompt=f"Question: {question}\n\n{result.message}",

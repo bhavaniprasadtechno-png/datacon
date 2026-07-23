@@ -105,8 +105,7 @@ def _fallback_sql(question: str, schema: dict[str, list[str]]) -> str | None:
         for word in q_words:
             if len(word) >= 3 and (word == clean_name or word in clean_name or clean_name in word or word in full_name):
                 return f'SELECT * FROM "{table_name}" LIMIT 100;'
-    first_table = list(schema.keys())[0]
-    return f'SELECT * FROM "{first_table}" LIMIT 100;'
+    return None
 
 
 async def generate_sql(question: str, schema: dict[str, list[str]], error_context: str | None = None, model: str | None = None) -> str | None:

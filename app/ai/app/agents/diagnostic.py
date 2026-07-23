@@ -33,6 +33,45 @@ async def prepare(question: str, model: str | None = None) -> AgentPrep:
     count_idx = column_index(result.columns, "count", "total") if result.ok else -1
 
     if not result.ok or count_idx < 0 or len(result.rows) < 2:
+        hits = []
+        if question and question.strip():
+            try:
+                raw_hits = chroma_query(question.strip(), n_results=3)
+                hits = [h for h in raw_hits if h.get("distance") is None or h["distance"] <= 1.2]
+            except Exception:
+                hits = []
+
+        citations = [
+            {
+                "id": i + 1,
+                "documentTitle": h["metadata"].get("title", h["metadata"].get("filename", "Untitled")),
+                "filename": h["metadata"].get("filename", ""),
+                "chunkIndex": h["metadata"].get("chunk_index", 0),
+                "snippet": h.get("snippet", "")[:220],
+            }
+            for i, h in enumerate(hits)
+        ]
+
+        if citations:
+            citation_desc = f" findings in {citations[0]['documentTitle']}, which notes: \"{citations[0]['snippet'][:120]}...\""
+            offline_text = f"Correlating your question with uploaded Data Sources,{citation_desc}"
+            prompt = (
+                f"Question: {question}\n\n"
+                f"Cited Data Source Excerpts:\n"
+                f"{[c['snippet'] for c in citations]}\n\n"
+                f"Explain the diagnostic findings or root causes based on the cited excerpts above."
+            )
+            return AgentPrep(
+                system=SYSTEM,
+                prompt=prompt,
+                offline_text=offline_text,
+                payload={
+                    "confidence": "high",
+                    "citations": citations,
+                    "correlation": f"query ↔ {citations[0]['documentTitle']}",
+                },
+            )
+
         return AgentPrep(
             system=SYSTEM,
             prompt=f"Question: {question}\n\nNo day-by-day event data is connected.",

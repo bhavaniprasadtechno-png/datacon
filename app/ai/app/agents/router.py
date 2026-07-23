@@ -118,7 +118,8 @@ _DESCRIPTIVE = re.compile(
 _BUSINESS_CONTEXT = re.compile(
     r"revenue|sales|region|quarter|forecast|growth|churn|customer|account|ticket|support|billing|incident|"
     r"dashboard|metric|kpi|connector|dataset|table|document|upload|insight|trend|anomal|role|permission|user|"
-    r"data|report|chart|analysis|analytics|lead",
+    r"data|report|chart|analysis|analytics|lead|avaria|jewel|proposal|brief|runbook|sop|doc|file|pdf|txt|md|text|"
+    r"tech|specification|manual|guide|info|detail",
     re.I,
 )
 
@@ -148,20 +149,18 @@ _ROUTER_SYSTEM = (
     "You are the intent router for Datacon, an analytics assistant. "
     "Given a user question and a summary of the data currently available, "
     "decide which analytics agents should answer it. Available agents:\n"
-    "  - descriptive: summarise, compare, list, show current values or breakdowns.\n"
-    "  - diagnostic:  explain WHY something happened, root causes, drivers.\n"
+    "  - descriptive: summarise, compare, list, show current values, breakdowns, or document summaries.\n"
+    "  - diagnostic:  explain WHY something happened, root causes, drivers, incident analysis.\n"
     "  - predictive:  forecast, project, estimate future values.\n"
     "  - prescriptive: recommend actions, next steps, mitigations, plans.\n"
-    "  - general:     the question is NOT about the user's business data\n"
-    "                 (small talk, definitions, unrelated topics).\n\n"
+    "  - general:     general Q&A,definitions, small talk, or queries referencing uploaded document data sources.\n\n"
     "Rules:\n"
     "  * Return one or more agents when the question naturally covers "
-    "multiple analytical modes (e.g. 'why did X spike and what should we do?' "
-    "→ diagnostic + prescriptive).\n"
-    "  * If the question is unrelated to the available data, return ['general'].\n"
+    "multiple analytical modes.\n"
+    "  * If the question asks about uploaded documents, proposals, or general facts, pick 'general' or 'descriptive'.\n"
     "  * Never invent agents; only pick from the list above.\n"
     "  * Reply ONLY with compact JSON of the form: "
-    '{"intents": ["diagnostic", "prescriptive"]}'
+    '{"intents": ["general"]}'
 )
 
 
