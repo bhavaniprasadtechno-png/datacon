@@ -3,6 +3,7 @@ import { capsFromPermissions, type Capabilities } from "@datacon/shared-types";
 import type { CurrentUser } from "../lib/types";
 import { api } from "../api/client";
 import { queryClient } from "../lib/queryClient";
+import { supabase } from "../lib/supabaseClient";
 
 const EMPTY_CAPS = capsFromPermissions([]);
 
@@ -14,9 +15,11 @@ interface AuthState {
   fetchUser: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  quickLogin: (personaId: string) => Promise<void>;
+  quickLogin: (personaId: string, email: string) => Promise<void>;
   logout: () => Promise<void>;
 }
+
+const SEED_PASSWORD = "Datacon123!";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: undefined,
@@ -42,19 +45,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   login: async (email, password) => {
-    await api.post("/auth/login", { email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
     await get().fetchUser();
   },
   register: async (name, email, password) => {
-    await api.post("/auth/register", { name, email, password });
+    const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
+    if (error) throw error;
     await get().fetchUser();
   },
-  quickLogin: async (personaId) => {
-    await api.post("/auth/quick-login", { personaId });
+  quickLogin: async (_personaId, email) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password: SEED_PASSWORD });
+    if (error) throw error;
     await get().fetchUser();
   },
   logout: async () => {
-    await api.post("/auth/logout");
+    await supabase.auth.signOut();
     set({
       user: undefined,
       caps: EMPTY_CAPS,
@@ -63,6 +69,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     queryClient.clear();
   },
 }));
+
+supabase.auth.onAuthStateChange(() => {
+  useAuthStore.getState().fetchUser();
+});
 
 export function useAuth() {
   const user = useAuthStore((state) => state.user);

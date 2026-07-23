@@ -1,8 +1,16 @@
 import axios from "axios";
+import { supabase } from "../lib/supabaseClient";
 
 export const api = axios.create({
   baseURL: "/api",
-  withCredentials: true,
+});
+
+api.interceptors.request.use(async (config) => {
+  const { data } = await supabase.auth.getSession();
+  if (data.session?.access_token) {
+    config.headers.Authorization = `Bearer ${data.session.access_token}`;
+  }
+  return config;
 });
 
 export interface ApiErrorShape {

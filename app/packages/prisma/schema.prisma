@@ -3,45 +3,35 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ───────────────────────────── Auth / RBAC ─────────────────────────────
 
+// id is always a Supabase Auth user id (auth.users.id) — never generated
+// locally. Assigned at signup (via the handle_new_user trigger) or by
+// UsersService.create() after inviting the user through the Supabase
+// Admin API.
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  initials     String
-  avatarGrad   String   @default("var(--ac-grad)")
-  title        String? // e.g. "Senior Analyst", "VP Sales & Ops"
-  roleId       String
-  role         Role     @relation(fields: [roleId], references: [id])
-  tokenVersion Int      @default(0)
-  isCore       Boolean  @default(false) // seed personas: cannot be deleted
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @db.Uuid
+  email      String   @unique
+  name       String
+  initials   String
+  avatarGrad String   @default("var(--ac-grad)")
+  title      String? // e.g. "Senior Analyst", "VP Sales & Ops"
+  roleId     String
+  role       Role     @relation(fields: [roleId], references: [id])
+  isCore     Boolean  @default(false) // seed personas: cannot be deleted
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  refreshTokens RefreshToken[]
   conversations Conversation[]
   documents     DataSource[]
   feedback      Feedback[]
 
   @@map("users")
-}
-
-model RefreshToken {
-  id        String   @id @default(cuid())
-  jti       String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  revoked   Boolean  @default(false)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@map("refresh_tokens")
 }
 
 model Role {
@@ -165,7 +155,7 @@ model DataSource {
   sampleRows   Json?
   storageKey   String?
   failureMsg   String?
-  uploadedById String
+  uploadedById String    @db.Uuid
   uploadedBy   User      @relation(fields: [uploadedById], references: [id])
   createdAt    DateTime  @default(now())
 
@@ -183,7 +173,7 @@ enum Intent {
 
 model Conversation {
   id        String    @id @default(cuid())
-  userId    String
+  userId    String    @db.Uuid
   user      User      @relation(fields: [userId], references: [id])
   title     String?
   createdAt DateTime  @default(now())
@@ -211,7 +201,7 @@ model Feedback {
   id        String   @id @default(cuid())
   messageId String   @unique
   message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  userId    String
+  userId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id])
   vote      Int // -1 | 0 | 1
   createdAt DateTime @default(now())

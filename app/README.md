@@ -14,9 +14,7 @@ Full-stack implementation of the Datacon prototype (`../project/Datacon.dc.html`
 
 Each app keeps its **own** `.env` (no shared root-level file): `api/.env`, `ai/.env`, and `packages/prisma/.env`. `DATABASE_URL` and `INTERNAL_AUTH_TOKEN` must be kept identical across the files that need them (see the comments in each `.env.example` for which siblings to match) — this is the same tradeoff `render.yaml` makes in production, where `INTERNAL_AUTH_TOKEN` is hardcoded identically into both services' env vars since Render has no cross-service variable-sharing construct.
 
-1. **Database**: either
-   - create a [Supabase](https://supabase.com) project and copy its Postgres connection string into `DATABASE_URL`, **or**
-   - run Postgres locally (`docker compose up -d app_postgres`, or a native `postgresql` install) and point `DATABASE_URL` at it.
+1. **Database**: create a [Supabase](https://supabase.com) project (or use the existing `datacon-staging-ew` project) and copy its direct Postgres connection string into `DATABASE_URL` — see `api/.env.example` for the exact format.
 2. Copy each app's example env file and fill in secrets:
    - `cp api/.env.example api/.env` (`CONNECTOR_ENCRYPTION_KEY` — generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`; pick an `INTERNAL_AUTH_TOKEN`)
    - `cp ai/.env.example ai/.env` (same `INTERNAL_AUTH_TOKEN` as above)
@@ -30,7 +28,7 @@ For sample external data sources to test the Postgres/MySQL/MongoDB connector en
 
 ## What's implemented
 
-- **Auth & RBAC** — double-JWT cookie auth, custom roles/permissions, Users/Roles/Assign-roles/Permissions admin pages.
+- **Auth & RBAC** — Supabase Auth (bearer tokens, verified server-side via `getClaims`), custom roles/permissions, Users/Roles/Assign-roles/Permissions admin pages.
 - **Connectors** — all 7 engine types with real drivers (SQLite/Postgres/MySQL/HTTP fully live; MongoDB/BigQuery/Snowflake real code, need external creds/instances to exercise), AES-256-GCM secret encryption, Unified Data Store catalog with table previews.
 - **Data Sources** — real upload → chunk/embed → ChromaDB indexing pipeline (PDF/TXT/MD) or column/row parsing (CSV), with the exact validation messages from the design.
 - **Chat** — real intent routing, 4 agents (descriptive/diagnostic/predictive/prescriptive) computing over real seeded business data + real RAG citations, SSE token streaming, feedback.

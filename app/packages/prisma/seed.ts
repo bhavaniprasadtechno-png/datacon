@@ -6,11 +6,14 @@
 import * as path from "path";
 import * as dotenv from "dotenv";
 import { PrismaClient, ConnectorEngine, ConnectorStatus, DocType, DocStatus } from "./index";
-import * as bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const prisma = new PrismaClient();
+const supabaseAdmin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
 // Seed login password for all demo personas — documented in app/README, not for production use.
 const SEED_PASSWORD = "Datacon123!";
@@ -294,12 +297,27 @@ async function main() {
   }
 
   console.log("Seeding users...");
-  const passwordHash = await bcrypt.hash(SEED_PASSWORD, 12);
+  const personaIds: Record<string, string> = {};
+  const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
   for (const u of USERS) {
+    let authUser = existingUsers?.users.find((au) => au.email === u.email);
+    if (!authUser) {
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email: u.email,
+        password: SEED_PASSWORD,
+        email_confirm: true,
+        user_metadata: { name: u.name },
+      });
+      if (error || !data.user) throw new Error(`Could not create Supabase user ${u.email}: ${error?.message}`);
+      authUser = data.user;
+    }
+    personaIds[u.id] = authUser.id;
+
+    const { id: _slug, ...rest } = u;
     await prisma.user.upsert({
-      where: { id: u.id },
-      update: { ...u, passwordHash },
-      create: { ...u, passwordHash },
+      where: { id: authUser.id },
+      update: rest,
+      create: { id: authUser.id, ...rest },
     });
   }
 
@@ -324,7 +342,9 @@ async function main() {
 
   console.log("Seeding data sources...");
   for (const d of DOCUMENTS) {
-    await prisma.dataSource.upsert({ where: { id: d.id }, update: d, create: d });
+    const { uploadedById, ...rest } = d;
+    const data = { ...rest, uploadedById: personaIds[uploadedById] };
+    await prisma.dataSource.upsert({ where: { id: d.id }, update: data, create: data });
   }
 
   console.log(`Done. Seed login password for all personas: ${SEED_PASSWORD}`);

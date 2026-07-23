@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, Res, UseGuards } from "@nestjs/common";
 import type { Response } from "express";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { PermissionsGuard } from "../auth/guards/permissions.guard";
 import { RequirePermissions } from "../auth/decorators/require-permissions.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
@@ -10,7 +10,7 @@ import { ChatService } from "./chat.service";
 import { SendMessageDto } from "./dto/send-message.dto";
 import { FeedbackDto } from "./dto/feedback.dto";
 
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SupabaseAuthGuard, PermissionsGuard)
 @Controller("chat")
 export class ChatController {
   private readonly logger = new Logger(ChatController.name);

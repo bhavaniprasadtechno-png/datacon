@@ -1,13 +1,13 @@
 import { Controller, Delete, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { PermissionsGuard } from "../auth/guards/permissions.guard";
 import { RequirePermissions } from "../auth/decorators/require-permissions.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { AuthenticatedUser } from "../auth/token.types";
 import { DocumentsService } from "./documents.service";
 
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SupabaseAuthGuard, PermissionsGuard)
 @Controller("documents")
 export class DocumentsController {
   constructor(private readonly documents: DocumentsService) {}

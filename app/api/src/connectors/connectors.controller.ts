@@ -1,11 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { PermissionsGuard } from "../auth/guards/permissions.guard";
 import { RequirePermissions } from "../auth/decorators/require-permissions.decorator";
 import { ConnectorsService } from "./connectors.service";
 import { SaveConnectorDto } from "./dto/save-connector.dto";
 
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SupabaseAuthGuard, PermissionsGuard)
 @Controller("connectors")
 export class ConnectorsController {
   constructor(private readonly connectors: ConnectorsService) {}

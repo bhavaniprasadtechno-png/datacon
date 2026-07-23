@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { PermissionsGuard } from "../auth/guards/permissions.guard";
 import { RequirePermissions } from "../auth/decorators/require-permissions.decorator";
 import { UsersService } from "./users.service";
@@ -7,7 +7,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { AssignRoleDto } from "./dto/assign-role.dto";
 
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SupabaseAuthGuard, PermissionsGuard)
 @Controller("users")
 export class UsersController {
   constructor(private readonly users: UsersService) {}

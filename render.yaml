@@ -1,6 +1,11 @@
-# Render Blueprint — deploys the NestJS API, the FastAPI AI service, and a
-# Postgres database together. In the Render dashboard: New -> Blueprint ->
-# select this repo. Render will read this file automatically.
+# Render Blueprint — deploys the NestJS API and the FastAPI AI service. In
+# the Render dashboard: New -> Blueprint -> select this repo. Render will
+# read this file automatically.
+#
+# The app's primary Postgres is Supabase (datacon-staging-ew), not a
+# Render-managed database — see docs/superpowers/specs/2026-07-22-supabase-auth-migration-design.md.
+# DATABASE_URL/DIRECT_URL/SUPABASE_* below must be set in the Render
+# dashboard's Environment tab to the same values as app/api/.env.
 #
 # NOTE: written offline (this environment's network policy blocks
 # render.com's docs/API), so double-check it against Render's Blueprint
@@ -8,13 +13,6 @@
 # (envVarGroups at the service level was tried and rejected by Render's own
 # validator — "field envVarGroups not found in type file.Service" — so the
 # shared secret below is a plain literal value instead.)
-
-databases:
-  - name: datacon-db
-    databaseName: datacon
-    user: datacon
-    plan: free
-    postgresMajorVersion: "16"
 
 services:
   - type: web
@@ -36,14 +34,18 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Supabase Postgres (datacon-staging-ew) — pooled runtime connection.
+      # See app/api/.env.example for the exact connection-string format.
       - key: DATABASE_URL
-        fromDatabase:
-          name: datacon-db
-          property: connectionString
-      - key: JWT_ACCESS_SECRET
-        generateValue: true
-      - key: JWT_REFRESH_SECRET
-        generateValue: true
+        sync: false
+      # Non-pgbouncer connection, used only by `prisma migrate deploy` above.
+      - key: DIRECT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      # Service-role key — never expose this to the browser/web service.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
       - key: CONNECTOR_ENCRYPTION_KEY
         generateValue: true
       # Shared secret so this service can call datacon-ai's /internal/*
@@ -58,7 +60,8 @@ services:
       - key: AI_SERVICE_URL
         sync: false
       # Set to the Vercel deployment's URL once that's live (e.g.
-      # https://datacon.vercel.app) — needed for the auth cookie's CORS check.
+      # https://datacon.vercel.app) — needed so the browser's bearer-token
+      # requests pass the API's CORS check.
       - key: CORS_ORIGINS
         sync: false
 

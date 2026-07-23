@@ -1,5 +1,5 @@
 import { Controller, Get, Query, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { PermissionsGuard } from "../auth/guards/permissions.guard";
 import { RequirePermissions } from "../auth/decorators/require-permissions.decorator";
 import { MetricsService } from "../metrics/metrics.service";
@@ -8,7 +8,7 @@ import { AiClientService } from "../common/ai-client.service";
 const VALID_MODELS = new Set(["OLS", "Holt-Winters"]);
 const VALID_HORIZONS = new Set([3, 6, 12]);
 
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SupabaseAuthGuard, PermissionsGuard)
 @Controller("forecasts")
 export class ForecastsController {
   constructor(

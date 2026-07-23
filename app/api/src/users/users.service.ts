@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import * as bcrypt from "bcryptjs";
 import { PrismaService } from "../prisma/prisma.service";
+import { getSupabaseAdminClient } from "../auth/supabase-admin.client";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 
@@ -56,17 +56,25 @@ export class UsersService {
     const role = await this.prisma.role.findUnique({ where: { id: dto.roleId } });
     if (!role) throw new BadRequestException("Unknown role.");
 
-    const count = await this.prisma.user.count();
-    const tempPassword = bcrypt.genSaltSync(10); // random-looking placeholder; real invite flow would email a reset link
-    const passwordHash = await bcrypt.hash(tempPassword, 12);
+    const { data, error } = await getSupabaseAdminClient().auth.admin.inviteUserByEmail(dto.email, {
+      data: { name: dto.name },
+    });
+    if (error || !data?.user) {
+      throw new BadRequestException(error?.message ?? "Could not invite this user.");
+    }
 
-    const user = await this.prisma.user.create({
-      data: {
+    const count = await this.prisma.user.count();
+    // handle_new_user already inserted a "viewer"-role row for this id — upsert
+    // it here to apply the chosen role/title in the same request.
+    const user = await this.prisma.user.upsert({
+      where: { id: data.user.id },
+      update: { name: dto.name, title: dto.title, roleId: dto.roleId },
+      create: {
+        id: data.user.id,
         name: dto.name,
         email: dto.email,
         title: dto.title,
         roleId: dto.roleId,
-        passwordHash,
         initials: initialsFor(dto.name),
         avatarGrad: AVATAR_GRADIENTS[count % AVATAR_GRADIENTS.length],
         isCore: false,

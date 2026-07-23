@@ -1,8 +1,8 @@
 import { Controller, Get, Param, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { ConnectorsService } from "./connectors.service";
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(SupabaseAuthGuard)
 @Controller("catalog")
 export class CatalogController {
   constructor(private readonly connectors: ConnectorsService) {}

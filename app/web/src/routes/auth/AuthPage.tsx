@@ -169,7 +169,7 @@ export function AuthPage() {
             {personas?.map((p) => (
               <button
                 key={p.id}
-                onClick={() => quickLogin(p.id)}
+                onClick={() => quickLogin(p.id, p.email)}
                 style={{
                   display: "flex",
                   alignItems: "center",

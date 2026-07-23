@@ -2,6 +2,7 @@ import { Test } from "@nestjs/testing";
 import { ForecastsController } from "./forecasts.controller";
 import { MetricsService } from "../metrics/metrics.service";
 import { AiClientService } from "../common/ai-client.service";
+import { PrismaService } from "../prisma/prisma.service";
 
 describe("ForecastsController", () => {
   let controller: ForecastsController;
@@ -19,6 +20,11 @@ describe("ForecastsController", () => {
       providers: [
         { provide: MetricsService, useValue: metrics },
         { provide: AiClientService, useValue: { client: { post: aiPost } } },
+        // SupabaseAuthGuard (applied via @UseGuards on the controller) needs
+        // PrismaService to be constructible in this test's DI container —
+        // it's never actually invoked here since these tests call
+        // controller.get() directly, bypassing the guard pipeline.
+        { provide: PrismaService, useValue: {} },
       ],
     }).compile();
     controller = moduleRef.get(ForecastsController);

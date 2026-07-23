@@ -10,6 +10,7 @@ export type ChatPayload = AgentPayload;
 export interface Persona {
   id: string;
   name: string;
+  email: string;
   title: string | null;
   initials: string;
   avatarGrad: string;

@@ -1,24 +1,10 @@
 version: "3.9"
 
-# Local dev infrastructure. Supabase Postgres is used for the app's own
-# primary database in real deployments (DATABASE_URL in .env); the
-# containers below are sample *external* data sources for the Postgres/
-# MySQL/MongoDB connector engines, plus the ChromaDB vector store.
+# Local dev infrastructure. Supabase Postgres (datacon-staging-ew) is the
+# app's own primary database in both dev and staging — the containers below
+# are sample *external* data sources for the Postgres/MySQL/MongoDB
+# connector engines, plus the ChromaDB vector store.
 services:
-  # The app's own primary database for local dev, so the stack is runnable
-  # before a Supabase project exists. Point DATABASE_URL at Supabase in
-  # staging/production; this container is dev-only.
-  app_postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: datacon
-      POSTGRES_PASSWORD: datacon
-      POSTGRES_DB: datacon
-    ports:
-      - "5432:5432"
-    volumes:
-      - app_postgres_data:/var/lib/postgresql/data
-
   sample_postgres:
     image: postgres:16-alpine
     environment:
@@ -61,7 +47,6 @@ services:
       - chroma_data:/chroma/chroma
 
 volumes:
-  app_postgres_data:
   sample_postgres_data:
   sample_mysql_data:
   sample_mongo_data:
