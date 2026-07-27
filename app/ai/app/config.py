@@ -8,8 +8,6 @@ class Settings(BaseSettings):
     chroma_url: str = "http://localhost:8001"
     chroma_persist_dir: str = "./.chroma"
     query_engine_db_path: str = "./data/snapshot.duckdb"
-    # LiteLLM orchestrates the provider call from a single "provider/model"
-    # string (SRS §2.2), so swapping providers is a config change, not a
     # code change.
     together_api_key: str | None = None
     llm_model: str = "Qwen/Qwen3.7-Plus"

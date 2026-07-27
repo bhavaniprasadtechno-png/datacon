@@ -3,28 +3,68 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ───────────────────────────── Auth / RBAC ─────────────────────────────
 
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  initials     String
-  avatarGrad   String   @default("var(--ac-grad)")
-  title        String? // e.g. "Senior Analyst", "VP Sales & Ops"
-  roleId       String
-  role         Role     @relation(fields: [roleId], references: [id])
-  tokenVersion Int      @default(0)
-  isCore       Boolean  @default(false) // seed personas: cannot be deleted
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
 
-  refreshTokens RefreshToken[]
+model Organization {
+  id        String        @id @default(cuid())
+  name      String
+  status    AccountStatus @default(ACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  users         User[]
+  roles         Role[]
+  connectors    Connector[]
+  datasets      UnifiedDataset[]
+  documents     DataSource[]
+  conversations Conversation[]
+  messages      Message[]
+  feedback      Feedback[]
+
+  @@map("organizations")
+}
+
+// Deliberately NOT related to `User`/`Organization` — a platform admin must
+// never be able to show up in any workspace-scoped query. Provisioned
+// directly (one-off script), never through self-registration.
+model PlatformAdmin {
+  id        String   @id @db.Uuid // = auth.users.id
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("platform_admins")
+}
+
+// id is always a Supabase Auth user id (auth.users.id) — never generated
+// locally. Assigned at signup (via POST /auth/complete-registration) or by
+// UsersService.create() after inviting the user through the Supabase
+// Admin API.
+model User {
+  id         String        @id @db.Uuid
+  orgId      String
+  org        Organization  @relation(fields: [orgId], references: [id])
+  email      String        @unique
+  name       String
+  initials   String
+  avatarGrad String        @default("var(--ac-grad)")
+  title      String? // e.g. "Senior Analyst", "VP Sales & Ops"
+  roleId     String
+  role       Role          @relation(fields: [roleId], references: [id])
+  isCore     Boolean       @default(false) // seed personas: cannot be deleted
+  status     AccountStatus @default(ACTIVE)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
   conversations Conversation[]
   documents     DataSource[]
   feedback      Feedback[]
@@ -32,20 +72,10 @@ model User {
   @@map("users")
 }
 
-model RefreshToken {
-  id        String   @id @default(cuid())
-  jti       String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  revoked   Boolean  @default(false)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@map("refresh_tokens")
-}
-
 model Role {
   id          String   @id @default(cuid())
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id])
   name        String
   colorHex    String?
   bgHex       String?
@@ -101,6 +131,8 @@ enum ConnectorStatus {
 
 model Connector {
   id            String          @id @default(cuid())
+  orgId         String
+  org           Organization    @relation(fields: [orgId], references: [id])
   name          String
   engine        ConnectorEngine
   config        Json // non-secret fields (host, database, schema, sslMode, format, ...)
@@ -121,6 +153,8 @@ model Connector {
 
 model UnifiedDataset {
   id          String    @id @default(cuid())
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id])
   connectorId String
   connector   Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
   name        String
@@ -153,6 +187,8 @@ enum DocStatus {
 
 model DataSource {
   id           String    @id @default(cuid())
+  orgId        String
+  org          Organization @relation(fields: [orgId], references: [id])
   title        String
   filename     String
   type         DocType
@@ -165,7 +201,7 @@ model DataSource {
   sampleRows   Json?
   storageKey   String?
   failureMsg   String?
-  uploadedById String
+  uploadedById String    @db.Uuid
   uploadedBy   User      @relation(fields: [uploadedById], references: [id])
   createdAt    DateTime  @default(now())
 
@@ -183,7 +219,9 @@ enum Intent {
 
 model Conversation {
   id        String    @id @default(cuid())
-  userId    String
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
+  userId    String    @db.Uuid
   user      User      @relation(fields: [userId], references: [id])
   title     String?
   createdAt DateTime  @default(now())
@@ -195,6 +233,8 @@ model Conversation {
 
 model Message {
   id             String       @id @default(cuid())
+  orgId          String
+  org            Organization @relation(fields: [orgId], references: [id])
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   role           String // "user" | "agent"
@@ -209,9 +249,11 @@ model Message {
 
 model Feedback {
   id        String   @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
   messageId String   @unique
   message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  userId    String
+  userId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id])
   vote      Int // -1 | 0 | 1
   createdAt DateTime @default(now())

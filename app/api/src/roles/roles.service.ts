@@ -31,14 +31,15 @@ export class RolesService {
     };
   }
 
-  async list() {
-    const roles = await this.prisma.role.findMany({ include: this.include(), orderBy: { createdAt: "asc" } });
+  async list(orgId: string) {
+    const roles = await this.prisma.scoped.role.findMany({ where: { orgId }, include: this.include(), orderBy: { createdAt: "asc" } });
     return roles.map((r) => this.shape(r));
   }
 
-  async create(dto: CreateRoleDto) {
-    const role = await this.prisma.role.create({
+  async create(orgId: string, dto: CreateRoleDto) {
+    const role = await this.prisma.scoped.role.create({
       data: {
+        orgId,
         name: dto.name,
         colorHex: dto.colorHex,
         bgHex: deriveBg(dto.colorHex),
@@ -50,18 +51,18 @@ export class RolesService {
     return this.shape(role);
   }
 
-  async update(id: string, dto: UpdateRoleDto) {
-    const role = await this.prisma.role.findUnique({ where: { id } });
-    if (!role) throw new NotFoundException("Role not found.");
+  async update(orgId: string, id: string, dto: UpdateRoleDto) {
+    const role = await this.prisma.scoped.role.findUnique({ where: { id } });
+    if (!role || role.orgId !== orgId) throw new NotFoundException("Role not found.");
 
     if (dto.permissions) {
-      await this.prisma.rolePermission.deleteMany({ where: { roleId: id } });
-      await this.prisma.rolePermission.createMany({
+      await this.prisma.scoped.rolePermission.deleteMany({ where: { roleId: id } });
+      await this.prisma.scoped.rolePermission.createMany({
         data: dto.permissions.map((key) => ({ roleId: id, permissionKey: key })),
       });
     }
 
-    const updated = await this.prisma.role.update({
+    const updated = await this.prisma.scoped.role.update({
       where: { id },
       data: {
         name: dto.name,
@@ -73,33 +74,33 @@ export class RolesService {
     return this.shape(updated);
   }
 
-  async remove(id: string) {
-    const role = await this.prisma.role.findUnique({ where: { id }, include: this.include() });
-    if (!role) throw new NotFoundException("Role not found.");
+  async remove(orgId: string, id: string) {
+    const role = await this.prisma.scoped.role.findUnique({ where: { id }, include: this.include() });
+    if (!role || role.orgId !== orgId) throw new NotFoundException("Role not found.");
     if (role.isSystem) {
       throw new ForbiddenException("System roles can't be deleted.");
     }
     if (role._count.users > 0) {
       throw new ConflictException(`${role.name} is assigned to ${role._count.users} user(s). Reassign them first.`);
     }
-    await this.prisma.role.delete({ where: { id } });
+    await this.prisma.scoped.role.delete({ where: { id } });
     return { ok: true };
   }
 
-  async applyPermissionsMatrix(matrix: Record<string, string[]>) {
+  async applyPermissionsMatrix(orgId: string, matrix: Record<string, string[]>) {
     const roleIds = Object.keys(matrix);
-    const existing = await this.prisma.role.findMany({ where: { id: { in: roleIds } } });
+    const existing = await this.prisma.scoped.role.findMany({ where: { id: { in: roleIds }, orgId } });
     if (existing.length !== roleIds.length) {
       throw new BadRequestException("One or more roles in the matrix were not found.");
     }
-    await this.prisma.$transaction(
+    await this.prisma.scoped.$transaction(
       roleIds.flatMap((roleId) => [
-        this.prisma.rolePermission.deleteMany({ where: { roleId } }),
-        this.prisma.rolePermission.createMany({
+        this.prisma.scoped.rolePermission.deleteMany({ where: { roleId } }),
+        this.prisma.scoped.rolePermission.createMany({
           data: matrix[roleId].map((key) => ({ roleId, permissionKey: key })),
         }),
       ]),
     );
-    return this.list();
+    return this.list(orgId);
   }
 }

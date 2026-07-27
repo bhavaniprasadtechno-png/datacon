@@ -88,8 +88,9 @@ export class ConnectorsService {
     };
   }
 
-  async list() {
-    const rows = await this.prisma.connector.findMany({
+  async list(orgId: string) {
+    const rows = await this.prisma.scoped.connector.findMany({
+      where: { orgId },
       include: { _count: { select: { datasets: true } } },
       orderBy: { createdAt: "asc" },
     });
@@ -109,13 +110,14 @@ export class ConnectorsService {
   }
 
   /** "Connect & discover" — persists the connector, then immediately syncs it. */
-  async create(dto: SaveConnectorDto) {
+  async create(orgId: string, dto: SaveConnectorDto) {
     this.validateFields(dto.engine, dto.fields);
     const { config, plainSecrets } = this.splitFields(dto.engine, dto.fields);
     const secrets = this.encryptSecrets(plainSecrets);
 
-    const row = await this.prisma.connector.create({
+    const row = await this.prisma.scoped.connector.create({
       data: {
+        orgId,
         name: dto.name?.trim() || `${dto.engine} connector`,
         engine: toEngineEnum(dto.engine),
         config,
@@ -129,17 +131,17 @@ export class ConnectorsService {
     return this.findOneShaped(row.id);
   }
 
-  async remove(id: string) {
-    const row = await this.prisma.connector.findUnique({ where: { id } });
-    if (!row) throw new NotFoundException("Connector not found.");
-    await this.prisma.connector.delete({ where: { id } });
+  async remove(orgId: string, id: string) {
+    const row = await this.prisma.scoped.connector.findUnique({ where: { id } });
+    if (!row || row.orgId !== orgId) throw new NotFoundException("Connector not found.");
+    await this.prisma.scoped.connector.delete({ where: { id } });
     return { ok: true };
   }
 
-  async syncNow(id: string) {
-    const row = await this.prisma.connector.findUnique({ where: { id } });
-    if (!row) throw new NotFoundException("Connector not found.");
-    await this.prisma.connector.update({ where: { id }, data: { status: "SYNCING" } });
+  async syncNow(orgId: string, id: string) {
+    const row = await this.prisma.scoped.connector.findUnique({ where: { id } });
+    if (!row || row.orgId !== orgId) throw new NotFoundException("Connector not found.");
+    await this.prisma.scoped.connector.update({ where: { id }, data: { status: "SYNCING" } });
     const engineId = toEngineId(row.engine);
     const plainSecrets = this.decryptSecrets(row.secrets as Record<string, string>);
     await this.runSync(id, engineId, row.config as Record<string, string>, plainSecrets);
@@ -152,18 +154,20 @@ export class ConnectorsService {
       const data = res.data as { ok: boolean; message: string; datasets: { name: string; columns: string[]; rowCount: number; sampleRows: string[][] }[] };
 
       if (!data.ok) {
-        await this.prisma.connector.update({
+        await this.prisma.scoped.connector.update({
           where: { id },
           data: { status: "ERROR", lastTestOk: false, lastTestMsg: data.message, lastTestAt: new Date() },
         });
         return;
       }
 
-      await this.prisma.$transaction([
-        this.prisma.unifiedDataset.deleteMany({ where: { connectorId: id } }),
+      const connector = await this.prisma.scoped.connector.findUniqueOrThrow({ where: { id } });
+      await this.prisma.scoped.$transaction([
+        this.prisma.scoped.unifiedDataset.deleteMany({ where: { connectorId: id } }),
         ...data.datasets.map((d) =>
-          this.prisma.unifiedDataset.create({
+          this.prisma.scoped.unifiedDataset.create({
             data: {
+              orgId: connector.orgId,
               connectorId: id,
               name: d.name,
               columns: d.columns,
@@ -174,13 +178,13 @@ export class ConnectorsService {
             },
           }),
         ),
-        this.prisma.connector.update({
+        this.prisma.scoped.connector.update({
           where: { id },
           data: { status: "SYNCED", lastSyncedAt: new Date(), lastTestOk: true, lastTestMsg: data.message, lastTestAt: new Date() },
         }),
       ]);
     } catch (e: any) {
-      await this.prisma.connector.update({
+      await this.prisma.scoped.connector.update({
         where: { id },
         data: { status: "ERROR", lastTestOk: false, lastTestMsg: e?.message ?? "Sync failed.", lastTestAt: new Date() },
       });
@@ -188,14 +192,15 @@ export class ConnectorsService {
   }
 
   private async findOneShaped(id: string) {
-    const row = await this.prisma.connector.findUniqueOrThrow({ where: { id }, include: { _count: { select: { datasets: true } } } });
+    const row = await this.prisma.scoped.connector.findUniqueOrThrow({ where: { id }, include: { _count: { select: { datasets: true } } } });
     return this.shape(row);
   }
 
   // ── Unified Data Store / Catalog ──
 
-  async catalog() {
-    const rows = await this.prisma.unifiedDataset.findMany({
+  async catalog(orgId: string) {
+    const rows = await this.prisma.scoped.unifiedDataset.findMany({
+      where: { orgId },
       include: { connector: { select: { name: true, engine: true } } },
       orderBy: { name: "asc" },
     });
@@ -212,9 +217,9 @@ export class ConnectorsService {
     }));
   }
 
-  async tablePreview(id: string) {
-    const row = await this.prisma.unifiedDataset.findUnique({ where: { id }, include: { connector: { select: { name: true } } } });
-    if (!row) throw new NotFoundException("Table not found.");
+  async tablePreview(orgId: string, id: string) {
+    const row = await this.prisma.scoped.unifiedDataset.findUnique({ where: { id }, include: { connector: { select: { name: true } } } });
+    if (!row || row.orgId !== orgId) throw new NotFoundException("Table not found.");
     return {
       id: row.id,
       name: row.name,

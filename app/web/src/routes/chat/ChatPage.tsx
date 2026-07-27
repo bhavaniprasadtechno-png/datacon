@@ -45,15 +45,10 @@ export function ChatPage() {
   const feedback = useFeedback();
   const { addToast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [model, setModel] = useState<string>(() => {
-    const stored = localStorage.getItem(STORAGE_MODEL);
-    if (stored && availableModels.some((m) => m.id === stored)) {
-      return stored;
-    }
-    return availableModels[0]?.id ?? "Qwen/Qwen3.7-Plus";
-  });
+  const [model, setModel] = useState<string>(() => localStorage.getItem(STORAGE_MODEL) || AVAILABLE_LLM_MODELS[0].id);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [thinking, setThinking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sendingRef = useRef(false);
   const sentPending = useRef(false);
@@ -84,7 +79,7 @@ export function ChatPage() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+  }, [messages, thinking]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_MODEL, model);
@@ -96,6 +91,7 @@ export function ChatPage() {
     sendingRef.current = true;
     setSending(true);
     setDraft("");
+    setThinking(true);
 
     const userMsg: ChatMessage = { id: `local-${localIdSeq++}`, role: "user", intent: null, text: trimmed, payload: null, vote: 0 };
     setMessages((prev) => [...prev, userMsg]);
@@ -111,6 +107,7 @@ export function ChatPage() {
           if (conversationId !== activeConversationId) setSearchParams({ c: conversationId }, { replace: true });
         },
         onAgents: (intents) => {
+          setThinking(false);
           const placeholders = intents.map((intent) => {
             const id = `local-${localIdSeq++}`;
             agentIds.set(intent, id);
@@ -141,6 +138,7 @@ export function ChatPage() {
           setMessages((prev) => prev.filter((m) => !pendingIds.has(m.id)));
           sendingRef.current = false;
           setSending(false);
+          setThinking(false);
         },
       });
     } catch (err: any) {
@@ -149,6 +147,7 @@ export function ChatPage() {
       setMessages((prev) => prev.filter((m) => !pendingIds.has(m.id)));
       sendingRef.current = false;
       setSending(false);
+      setThinking(false);
     }
   };
 
@@ -254,10 +253,13 @@ export function ChatPage() {
                         {m.streaming && <span style={{ display: "inline-block", width: 7, height: 14, background: "var(--ac)", marginLeft: 2, animation: "dvblink .9s infinite", verticalAlign: "middle" }} />}
                       </div>
                     ) : (
-                      <div style={{ display: "flex", gap: 4 }}>
-                        {[0, 1, 2].map((i) => (
-                          <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#c3c7d6", animation: `dvbounce 1.1s ${i * 0.15}s infinite` }} />
-                        ))}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 13, color: "var(--ac-muted)" }}>Analyzing data...</span>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          {[0, 1, 2].map((i) => (
+                            <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#c3c7d6", animation: `dvbounce 1.1s ${i * 0.15}s infinite` }} />
+                          ))}
+                        </div>
                       </div>
                     )}
                     {!m.streaming && <AgentVisualization message={m} onOpenCitation={setOpenCitation} />}
@@ -283,6 +285,29 @@ export function ChatPage() {
                   </div>
                 </div>
               ),
+            )}
+            {thinking && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "var(--radius-sm)", background: "var(--ac)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Sparkles size={13} />
+                  </div>
+                  <span style={{ fontSize: 12.5, fontWeight: 700 }}>Datacon</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, font: "600 9.5px 'IBM Plex Mono',monospace", color: "var(--ac-muted)", background: "var(--ac-bg-muted)", padding: "2px 8px", borderRadius: 20 }}>
+                    Thinking
+                  </span>
+                </div>
+                <div style={{ background: "#fff", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 13, color: "var(--ac-muted)" }}>Thinking...</span>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      {[0, 1, 2].map((i) => (
+                        <span key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#c3c7d6", animation: `dvbounce 1.1s ${i * 0.15}s infinite` }} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

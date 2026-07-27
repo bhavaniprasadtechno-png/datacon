@@ -19,18 +19,26 @@ def _connect(config: dict, secrets: dict):
 def test(config: dict, secrets: dict) -> TestResult:
     if not config.get("host") or not config.get("database") or not config.get("username"):
         return TestResult(False, "Host, database and username are required.")
+    conn = None
+    cur = None
     try:
         conn = _connect(config, secrets)
         cur = conn.cursor()
         cur.execute("SELECT 1")
-        conn.close()
         return TestResult(True, "Connection succeeded.")
     except Exception as e:
         return TestResult(False, f"Couldn't connect: {e}")
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 def sync(config: dict, secrets: dict) -> SyncResult:
     schema = config.get("schema") or "public"
+    conn = None
+    cur = None
     try:
         conn = _connect(config, secrets)
         cur = conn.cursor()
@@ -52,7 +60,11 @@ def sync(config: dict, secrets: dict) -> SyncResult:
             rows = cur.fetchall()
             sample_rows = [[str(v) for v in row] for row in rows[:5]]
             datasets.append(DatasetResult(name=table, columns=columns, row_count=row_count, sample_rows=sample_rows, rows=rows))
-        conn.close()
         return SyncResult(True, f"Discovered {len(datasets)} table(s) in schema {schema}.", datasets)
     except Exception as e:
         return SyncResult(False, f"Sync failed: {e}", [])
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()

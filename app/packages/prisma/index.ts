@@ -49,3 +49,10 @@ export const Intent = {
 } as const;
 
 export type Intent = (typeof Intent)[keyof typeof Intent];
+
+export const AccountStatus = {
+  ACTIVE: "ACTIVE",
+  SUSPENDED: "SUSPENDED",
+} as const;
+
+export type AccountStatus = (typeof AccountStatus)[keyof typeof AccountStatus];

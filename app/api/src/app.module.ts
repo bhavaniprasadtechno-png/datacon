@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { APP_INTERCEPTOR } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
 import { PrismaModule } from "./prisma/prisma.module";
 import { CommonModule } from "./common/common.module";
@@ -13,6 +14,8 @@ import { MetricsModule } from "./metrics/metrics.module";
 import { ChatModule } from "./chat/chat.module";
 import { ForecastsModule } from "./forecasts/forecasts.module";
 import { InsightsModule } from "./insights/insights.module";
+import { PlatformAdminModule } from "./platform-admin/platform-admin.module";
+import { OrgContextInterceptor } from "./prisma/org-context.interceptor";
 
 @Module({
   imports: [
@@ -29,7 +32,9 @@ import { InsightsModule } from "./insights/insights.module";
     ChatModule,
     ForecastsModule,
     InsightsModule,
+    PlatformAdminModule,
   ],
   controllers: [HealthController],
+  providers: [{ provide: APP_INTERCEPTOR, useClass: OrgContextInterceptor }],
 })
 export class AppModule {}

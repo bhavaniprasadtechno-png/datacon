@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Logger, Param, Patch, Post, Query, Res, UseGuards } from "@nestjs/common";
 import type { Response } from "express";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { PermissionsGuard } from "../auth/guards/permissions.guard";
 import { RequirePermissions } from "../auth/decorators/require-permissions.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
@@ -11,7 +11,7 @@ import { AVAILABLE_LLM_MODELS } from "@datacon/shared-types";
 import { SendMessageDto } from "./dto/send-message.dto";
 import { FeedbackDto } from "./dto/feedback.dto";
 
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SupabaseAuthGuard, PermissionsGuard)
 @Controller("chat")
 export class ChatController {
   private readonly logger = new Logger(ChatController.name);
@@ -33,33 +33,33 @@ export class ChatController {
 
   @Get("conversations")
   async conversations(@Query("search") search: string | undefined, @CurrentUser() user: AuthenticatedUser) {
-    return this.chat.listConversations(user.id, search);
+    return this.chat.listConversations(user.orgId, user.id, search);
   }
 
   @Post("conversations")
   async createConversation(@CurrentUser() user: AuthenticatedUser) {
-    return this.chat.createConversation(user.id);
+    return this.chat.createConversation(user.orgId, user.id);
   }
 
   @Delete("conversations/:id")
   async deleteConversation(@Param("id") id: string, @CurrentUser() user: AuthenticatedUser) {
-    await this.chat.deleteConversation(user.id, id);
+    await this.chat.deleteConversation(user.orgId, user.id, id);
     return { ok: true };
   }
 
   @Get("messages")
   async messages(@Query("conversationId") conversationId: string | undefined, @CurrentUser() user: AuthenticatedUser) {
-    return this.chat.listMessages(user.id, conversationId);
+    return this.chat.listMessages(user.orgId, user.id, conversationId);
   }
 
   @RequirePermissions("ask_agents")
   @Post("stream")
   async stream(@Body() dto: SendMessageDto, @CurrentUser() user: AuthenticatedUser, @Res() res: Response) {
     this.logger.log(`[Chat] Received chat request from user ${user.id} (ConversationId: "${dto.conversationId ?? 'NEW'}")`);
-    
-    const conversation = await this.chat.getOrCreateConversation(user.id, dto.conversationId);
+
+    const conversation = await this.chat.getOrCreateConversation(user.orgId, user.id, dto.conversationId);
     this.logger.log(`[Chat] Using Conversation ID: ${conversation.id}. Appending user message: "${dto.message}"`);
-    await this.chat.appendUserMessage(conversation.id, dto.message);
+    await this.chat.appendUserMessage(user.orgId, conversation.id, dto.message);
 
     let upstream;
     try {
@@ -109,7 +109,7 @@ export class ChatController {
         buffer = buffer.slice(idx + 2);
         const eventMatch = frame.match(/^event: (.+)$/m);
         const dataMatch = frame.match(/^data: (.+)$/m);
-        
+
         if (eventMatch) {
           const eventType = eventMatch[1];
           if (eventType === "agent_start" && dataMatch) {
@@ -135,7 +135,7 @@ export class ChatController {
       for (const result of results) {
         if (result.text) {
           this.logger.log(`[Chat] [Conversation ${conversation.id}] Saving response for agent '${result.intent}' to Postgres...`);
-          await this.chat.appendAgentMessage(conversation.id, result.intent, result.text, result.payload);
+          await this.chat.appendAgentMessage(user.orgId, conversation.id, result.intent, result.text, result.payload);
         }
       }
       this.logger.log(`[Chat] [Conversation ${conversation.id}] End response stream successfully.`);
@@ -150,6 +150,6 @@ export class ChatController {
 
   @Patch("messages/:id/feedback")
   async feedback(@Param("id") id: string, @Body() dto: FeedbackDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.chat.setFeedback(id, user.id, dto.vote);
+    return this.chat.setFeedback(user.orgId, id, user.id, dto.vote);
   }
 }

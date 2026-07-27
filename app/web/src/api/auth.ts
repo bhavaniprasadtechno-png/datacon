@@ -1,14 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "./client";
-import type { Persona } from "../lib/types";
 
-export function usePersonas() {
-  return useQuery({
-    queryKey: ["personas"],
-    queryFn: async () => {
-      const res = await api.get<Persona[]>("/auth/personas");
-      return res.data;
-    },
-    staleTime: 5 * 60_000,
+export function useCompleteRegistration() {
+  return useMutation({
+    mutationFn: async (dto: { name: string; orgName: string }) => (await api.post("/auth/complete-registration", dto)).data,
   });
 }

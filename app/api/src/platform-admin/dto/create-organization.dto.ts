@@ -1,14 +1,14 @@
 import { IsEmail, IsString, MinLength } from "class-validator";
 
-export class RegisterDto {
+export class CreateOrganizationDto {
   @IsString()
   @MinLength(1)
   name!: string;
 
   @IsEmail()
-  email!: string;
+  adminEmail!: string;
 
   @IsString()
-  @MinLength(8)
-  password!: string;
+  @MinLength(1)
+  adminName!: string;
 }

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import { AVAILABLE_LLM_MODELS, type LlmModelOption } from "@datacon/shared-types";
 import type { ChatMessage, Conversation } from "../lib/types";
+import { supabase } from "../lib/supabaseClient";
 
 export function useLlmModels() {
   return useQuery({
@@ -89,10 +90,16 @@ interface StreamHandlers {
 }
 
 export async function streamChat(message: string, conversationId: string | null, model: string | null, handlers: StreamHandlers): Promise<void> {
+  const { data } = await supabase.auth.getSession();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (data.session?.access_token) {
+    headers["Authorization"] = `Bearer ${data.session.access_token}`;
+  }
+
   let res = await fetch("/api/chat/stream", {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ message, conversationId: conversationId ?? undefined, model: model ?? undefined }),
   });
 

@@ -6,14 +6,18 @@
 import * as path from "path";
 import * as dotenv from "dotenv";
 import { PrismaClient, ConnectorEngine, ConnectorStatus, DocType, DocStatus } from "./index";
-import * as bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const prisma = new PrismaClient();
+const supabaseAdmin = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
 // Seed login password for all demo personas — documented in app/README, not for production use.
 const SEED_PASSWORD = "Datacon123!";
+const ORG_ID = "acme-corp";
 
 const PERMISSIONS = [
   { key: "view_dashboards", label: "View dashboards & forecasts", group: "Analytics" },
@@ -275,6 +279,13 @@ const DOCUMENTS = [
 ];
 
 async function main() {
+  console.log("Seeding organization...");
+  await prisma.organization.upsert({
+    where: { id: ORG_ID },
+    update: { name: "Acme Corp" },
+    create: { id: ORG_ID, name: "Acme Corp" },
+  });
+
   console.log("Seeding permissions...");
   for (const p of PERMISSIONS) {
     await prisma.permission.upsert({ where: { key: p.key }, update: p, create: p });
@@ -284,8 +295,8 @@ async function main() {
   for (const r of ROLES) {
     await prisma.role.upsert({
       where: { id: r.id },
-      update: { name: r.name, colorHex: r.colorHex, bgHex: r.bgHex, isSystem: r.isSystem },
-      create: { id: r.id, name: r.name, colorHex: r.colorHex, bgHex: r.bgHex, isSystem: r.isSystem },
+      update: { orgId: ORG_ID, name: r.name, colorHex: r.colorHex, bgHex: r.bgHex, isSystem: r.isSystem },
+      create: { id: r.id, orgId: ORG_ID, name: r.name, colorHex: r.colorHex, bgHex: r.bgHex, isSystem: r.isSystem },
     });
     await prisma.rolePermission.deleteMany({ where: { roleId: r.id } });
     for (const key of r.perms) {
@@ -294,12 +305,27 @@ async function main() {
   }
 
   console.log("Seeding users...");
-  const passwordHash = await bcrypt.hash(SEED_PASSWORD, 12);
+  const personaIds: Record<string, string> = {};
+  const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
   for (const u of USERS) {
+    let authUser = existingUsers?.users.find((au) => au.email === u.email);
+    if (!authUser) {
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email: u.email,
+        password: SEED_PASSWORD,
+        email_confirm: true,
+        user_metadata: { name: u.name },
+      });
+      if (error || !data.user) throw new Error(`Could not create Supabase user ${u.email}: ${error?.message}`);
+      authUser = data.user;
+    }
+    personaIds[u.id] = authUser.id;
+
+    const { id: _slug, ...rest } = u;
     await prisma.user.upsert({
-      where: { id: u.id },
-      update: { ...u, passwordHash },
-      create: { ...u, passwordHash },
+      where: { id: authUser.id },
+      update: { ...rest, orgId: ORG_ID },
+      create: { id: authUser.id, orgId: ORG_ID, ...rest },
     });
   }
 
@@ -307,8 +333,8 @@ async function main() {
   for (const c of CONNECTORS) {
     await prisma.connector.upsert({
       where: { id: c.id },
-      update: { ...c, secrets: {} },
-      create: { ...c, secrets: {} },
+      update: { ...c, orgId: ORG_ID, secrets: {} },
+      create: { ...c, orgId: ORG_ID, secrets: {} },
     });
   }
 
@@ -316,16 +342,36 @@ async function main() {
   for (const t of TABLES) {
     const existing = await prisma.unifiedDataset.findFirst({ where: { connectorId: t.connectorId, name: t.name } });
     if (existing) {
-      await prisma.unifiedDataset.update({ where: { id: existing.id }, data: { ...t, syncedAt: new Date() } });
+      await prisma.unifiedDataset.update({ where: { id: existing.id }, data: { ...t, orgId: ORG_ID, syncedAt: new Date() } });
     } else {
-      await prisma.unifiedDataset.create({ data: { ...t, syncedAt: new Date() } });
+      await prisma.unifiedDataset.create({ data: { ...t, orgId: ORG_ID, syncedAt: new Date() } });
     }
   }
 
   console.log("Seeding data sources...");
   for (const d of DOCUMENTS) {
-    await prisma.dataSource.upsert({ where: { id: d.id }, update: d, create: d });
+    const { uploadedById, ...rest } = d;
+    const data = { ...rest, orgId: ORG_ID, uploadedById: personaIds[uploadedById] };
+    await prisma.dataSource.upsert({ where: { id: d.id }, update: data, create: data });
   }
+
+  console.log("Seeding platform admin...");
+  const { data: existingPlatformAdmins } = await supabaseAdmin.auth.admin.listUsers();
+  let platformAdminAuthUser = existingPlatformAdmins?.users.find((au) => au.email === "platform-admin@datacon.internal");
+  if (!platformAdminAuthUser) {
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email: "platform-admin@datacon.internal",
+      password: SEED_PASSWORD,
+      email_confirm: true,
+    });
+    if (error || !data.user) throw new Error(`Could not create platform admin auth user: ${error?.message}`);
+    platformAdminAuthUser = data.user;
+  }
+  await prisma.platformAdmin.upsert({
+    where: { id: platformAdminAuthUser.id },
+    update: {},
+    create: { id: platformAdminAuthUser.id, email: "platform-admin@datacon.internal" },
+  });
 
   console.log(`Done. Seed login password for all personas: ${SEED_PASSWORD}`);
 }

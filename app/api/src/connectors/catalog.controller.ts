@@ -1,19 +1,21 @@
 import { Controller, Get, Param, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { AuthenticatedUser } from "../auth/token.types";
 import { ConnectorsService } from "./connectors.service";
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(SupabaseAuthGuard)
 @Controller("catalog")
 export class CatalogController {
   constructor(private readonly connectors: ConnectorsService) {}
 
   @Get()
-  list() {
-    return this.connectors.catalog();
+  list(@CurrentUser() user: AuthenticatedUser) {
+    return this.connectors.catalog(user.orgId);
   }
 
   @Get(":id")
-  preview(@Param("id") id: string) {
-    return this.connectors.tablePreview(id);
+  preview(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string) {
+    return this.connectors.tablePreview(user.orgId, id);
   }
 }

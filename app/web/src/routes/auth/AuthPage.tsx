@@ -1,9 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../stores/useAuthStore";
-import { usePersonas } from "../../api/auth";
 import { apiErrorMessage } from "../../api/client";
-import { Avatar } from "../../components/shell/Sidebar";
 
 const PIPELINE = [
   { label: "Descriptive", color: "#2bb8c4" },
@@ -15,18 +13,18 @@ const PIPELINE = [
 export function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("Jordan Lee");
+  const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("tom@acme.com");
   const [password, setPassword] = useState("Datacon123!");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const brandRef = useRef<HTMLDivElement>(null);
-  const { login, register, quickLogin, isAuthenticated } = useAuth();
-  const { data: personas } = usePersonas();
+  const { login, register, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/chat", { replace: true });
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated) navigate(user?.kind === "platform_admin" ? "/platform-admin" : "/chat", { replace: true });
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     function onMove(e: PointerEvent) {
@@ -48,7 +46,7 @@ export function AuthPage() {
     setSubmitting(true);
     try {
       if (mode === "login") await login(email, password);
-      else await register(name, email, password);
+      else await register(name, email, password, orgName);
     } catch (err) {
       setError(apiErrorMessage(err, "Something went wrong. Please try again."));
     } finally {
@@ -125,12 +123,17 @@ export function AuthPage() {
         <div style={{ width: 392, maxWidth: "90vw" }}>
           <h2 style={{ fontSize: 25, fontWeight: 800, letterSpacing: "-.02em", margin: 0 }}>{mode === "login" ? "Sign in to Datacon" : "Create your account"}</h2>
           <p style={{ fontSize: 13.5, color: "#71768a", margin: "6px 0 22px" }}>
-            {mode === "login" ? "Use your work account, or jump straight into a role to explore." : "Set up secure, role-based access for your team."}
+            {mode === "login" ? "Use your work account to sign in." : "Create your own workspace and invite your team."}
           </p>
           <form onSubmit={submit}>
             {mode === "register" && (
               <Field label="Full name">
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jordan Lee" style={inputStyle} />
+              </Field>
+            )}
+            {mode === "register" && (
+              <Field label="Workspace name">
+                <input value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="Acme Corp" style={inputStyle} />
               </Field>
             )}
             <Field label="Work email">
@@ -158,49 +161,6 @@ export function AuthPage() {
               {mode === "login" ? "Sign in" : "Create account"}
             </button>
           </form>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "22px 0" }}>
-            <div style={{ flex: 1, height: 1, background: "#e9eaf2" }} />
-            <span style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".14em", color: "#a3a8bd" }}>OR JUMP IN AS</span>
-            <div style={{ flex: 1, height: 1, background: "#e9eaf2" }} />
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {personas?.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => quickLogin(p.id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  width: "100%",
-                  padding: "9px 12px",
-                  border: "1px solid #e2e4ee",
-                  borderRadius: 12,
-                  background: "#fff",
-                  textAlign: "left",
-                }}
-              >
-                <Avatar grad={p.avatarGrad} initials={p.initials} size={36} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{p.name}</div>
-                  <div style={{ fontSize: 11, color: "#9499ad" }}>{p.title}</div>
-                </div>
-                <span
-                  style={{
-                    font: "600 9.5px 'IBM Plex Mono',monospace",
-                    padding: "3px 8px",
-                    borderRadius: 20,
-                    color: p.role.colorHex ?? "#71768a",
-                    background: p.role.bgHex ?? "#f0f1f6",
-                  }}
-                >
-                  {p.role.name.toUpperCase()}
-                </span>
-              </button>
-            ))}
-          </div>
 
           <div style={{ fontSize: 12.5, color: "#9499ad", marginTop: 18, textAlign: "center" }}>
             {mode === "login" ? "New to Datacon? " : "Already have an account? "}
