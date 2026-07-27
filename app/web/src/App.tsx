@@ -16,6 +16,11 @@ import { ChatHistoryPage } from "./routes/chat/ChatHistoryPage";
 // import { ForecastsPage } from "./routes/forecasts/ForecastsPage";
 import { InsightsPage } from "./routes/insights/InsightsPage";
 import { ThemesPage } from "./routes/themes/ThemesPage";
+import { OrganizationsPage } from "./routes/platform-admin/OrganizationsPage";
+import { OrgUsersPage } from "./routes/platform-admin/OrgUsersPage";
+import { PlatformOverviewPage } from "./routes/platform-admin/PlatformOverviewPage";
+import { ComingSoonPage } from "./routes/platform-admin/ComingSoonPage";
+import { PlatformAdminShell } from "./components/shell/PlatformAdminShell";
 import { queryClient } from "./lib/queryClient";
 import { useAuthStore } from "./stores/useAuthStore";
 import { useThemeStore } from "./stores/useThemeStore";
@@ -27,10 +32,31 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function RequirePlatformAdmin({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (user?.kind !== "platform_admin") return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<AuthPage />} />
+      <Route
+        element={
+          <RequirePlatformAdmin>
+            <PlatformAdminShell />
+          </RequirePlatformAdmin>
+        }
+      >
+        <Route path="/platform-admin" element={<Navigate to="/platform-admin/dashboard" replace />} />
+        <Route path="/platform-admin/dashboard" element={<PlatformOverviewPage />} />
+        <Route path="/platform-admin/organizations" element={<OrganizationsPage />} />
+        <Route path="/platform-admin/organizations/:orgId/users" element={<OrgUsersPage />} />
+        <Route path="/platform-admin/plans" element={<ComingSoonPage title="Subscription plans" />} />
+        <Route path="/platform-admin/providers" element={<ComingSoonPage title="Providers" />} />
+      </Route>
       <Route
         element={
           <RequireAuth>

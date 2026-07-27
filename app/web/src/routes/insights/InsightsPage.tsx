@@ -16,7 +16,7 @@ export function InsightsPage() {
 
   const liveSyncs = connectors?.filter((c) => c.status === "SYNCED" || c.status === "SYNCING").length ?? 0;
   const todayLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
-  const greeting = user?.roleName === "Viewer" ? "Welcome back" : "Good morning";
+  const greeting = user?.kind === "org_member" && user.roleName === "Viewer" ? "Welcome back" : "Good morning";
 
   const askAbout = (question: string) => {
     if (question) sessionStorage.setItem("datacon:pendingQuestion", question);
@@ -45,7 +45,7 @@ export function InsightsPage() {
         <div>
           <div style={{ fontSize: 11.5, fontWeight: 600, color: "#9499ad" }}>{todayLabel}</div>
           <h1 style={{ fontSize: 25, fontWeight: 800, margin: "2px 0 0" }}>
-            {greeting}, {user?.name.split(" ")[0]}
+            {greeting}, {user?.kind === "org_member" ? user.name.split(" ")[0] : ""}
           </h1>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--ac-soft)", color: "var(--ac-deep)", padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>

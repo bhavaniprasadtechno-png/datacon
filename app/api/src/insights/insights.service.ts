@@ -12,13 +12,13 @@ export class InsightsService {
     private readonly ai: AiClientService,
   ) {}
 
-  async get() {
+  async get(orgId: string) {
     const [revenueHistory, regionRevenue, ticketDaily, churnSnapshot, ticketTableRowCount] = await Promise.all([
       this.metrics.revenueHistory(),
       this.metrics.regionRevenue(),
       this.metrics.ticketDaily(),
       this.metrics.churnSnapshot(),
-      this.metrics.ticketTableRowCount(),
+      this.metrics.ticketTableRowCount(orgId),
     ]);
 
     const totalCurrent = regionRevenue.current.reduce((s, r) => s + r.revenue, 0);

@@ -13,13 +13,37 @@ SYSTEM_PROMPT = (
 )
 
 
+def _get_clean_db_url(url: str) -> str:
+    if not url:
+        return ""
+    if "pgbouncer=" in url:
+        from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+        try:
+            parsed = urlparse(url)
+            qparams = [(k, v) for k, v in parse_qsl(parsed.query) if k != 'pgbouncer']
+            new_query = urlencode(qparams)
+            return urlunparse((
+                parsed.scheme,
+                parsed.netloc,
+                parsed.path,
+                parsed.params,
+                new_query,
+                parsed.fragment
+            ))
+        except Exception:
+            pass
+    return url
+
+
 def _get_connector_metadata() -> dict[str, dict]:
     if not settings.database_url:
         return {}
     import psycopg2
     import json
+    conn = None
+    cur = None
     try:
-        conn = psycopg2.connect(settings.database_url)
+        conn = psycopg2.connect(_get_clean_db_url(settings.database_url))
         cur = conn.cursor()
         cur.execute("SELECT id, name, engine, config FROM connectors")
         rows = cur.fetchall()
@@ -32,20 +56,25 @@ def _get_connector_metadata() -> dict[str, dict]:
                 "engine": engine,
                 "database": config.get("database") or config.get("databaseName") or config.get("filePath")
             }
-        cur.close()
-        conn.close()
         return metadata
     except Exception as e:
         logger.warning("[Generator] Failed to fetch connector metadata: %s", e)
         return {}
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 def _get_datasource_metadata() -> dict[str, dict]:
     if not settings.database_url:
         return {}
     import psycopg2
+    conn = None
+    cur = None
     try:
-        conn = psycopg2.connect(settings.database_url)
+        conn = psycopg2.connect(_get_clean_db_url(settings.database_url))
         cur = conn.cursor()
         cur.execute("SELECT id, title, filename FROM data_sources")
         rows = cur.fetchall()
@@ -56,12 +85,15 @@ def _get_datasource_metadata() -> dict[str, dict]:
                 "title": title,
                 "filename": filename
             }
-        cur.close()
-        conn.close()
         return metadata
     except Exception as e:
         logger.warning("[Generator] Failed to fetch datasource metadata: %s", e)
         return {}
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 def _format_connector_context(metadata: dict[str, dict]) -> str:

@@ -14,12 +14,9 @@ interface AuthState {
   isAuthenticated: boolean;
   fetchUser: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  quickLogin: (personaId: string, email: string) => Promise<void>;
+  register: (name: string, email: string, password: string, orgName: string) => Promise<void>;
   logout: () => Promise<void>;
 }
-
-const SEED_PASSWORD = "Datacon123!";
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: undefined,
@@ -31,17 +28,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const res = await api.get<CurrentUser>("/auth/me");
       set({
         user: res.data,
-        caps: capsFromPermissions(res.data.permissions),
+        caps: res.data.kind === "org_member" ? capsFromPermissions(res.data.permissions) : EMPTY_CAPS,
         isAuthenticated: true,
         isLoading: false,
       });
     } catch {
-      set({
-        user: undefined,
-        caps: EMPTY_CAPS,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+      set({ user: undefined, caps: EMPTY_CAPS, isAuthenticated: false, isLoading: false });
     }
   },
   login: async (email, password) => {
@@ -49,23 +41,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) throw error;
     await get().fetchUser();
   },
-  register: async (name, email, password) => {
+  register: async (name, email, password, orgName) => {
     const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
     if (error) throw error;
-    await get().fetchUser();
-  },
-  quickLogin: async (_personaId, email) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password: SEED_PASSWORD });
-    if (error) throw error;
+    await api.post("/auth/complete-registration", { name, orgName });
     await get().fetchUser();
   },
   logout: async () => {
     await supabase.auth.signOut();
-    set({
-      user: undefined,
-      caps: EMPTY_CAPS,
-      isAuthenticated: false,
-    });
+    set({ user: undefined, caps: EMPTY_CAPS, isAuthenticated: false });
     queryClient.clear();
   },
 }));
@@ -81,17 +65,7 @@ export function useAuth() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const login = useAuthStore((state) => state.login);
   const register = useAuthStore((state) => state.register);
-  const quickLogin = useAuthStore((state) => state.quickLogin);
   const logout = useAuthStore((state) => state.logout);
 
-  return {
-    user,
-    caps,
-    isLoading,
-    isAuthenticated,
-    login,
-    register,
-    quickLogin,
-    logout,
-  };
+  return { user, caps, isLoading, isAuthenticated, login, register, logout };
 }

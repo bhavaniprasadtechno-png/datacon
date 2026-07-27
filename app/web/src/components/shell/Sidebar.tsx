@@ -52,6 +52,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { user, caps, logout } = useAuth();
+  const orgUser = user?.kind === "org_member" ? user : undefined;
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -295,20 +296,20 @@ export function Sidebar() {
       </div>
 
       <div style={{ padding: "16px 14px", borderTop: "1px solid var(--ac-border)", display: "flex", flexDirection: "column", gap: 10, flexShrink: 0 }}>
-        {user && !collapsed && (
+        {orgUser && !collapsed && (
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <Avatar grad={user.avatarGrad} initials={user.initials} size={36} />
+            <Avatar grad={orgUser.avatarGrad} initials={orgUser.initials} size={36} />
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{orgUser.name}</div>
               <div style={{ fontSize: 10.5, color: "var(--ac-muted)" }}>
-                {user.roleName} · {user.title}
+                {orgUser.roleName} · {orgUser.title}
               </div>
             </div>
           </div>
         )}
-        {collapsed && user && (
+        {collapsed && orgUser && (
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-            <Avatar grad={user.avatarGrad} initials={user.initials} size={30} />
+            <Avatar grad={orgUser.avatarGrad} initials={orgUser.initials} size={30} />
           </div>
         )}
         <div style={{ display: "flex", gap: 6, justifyContent: collapsed ? "center" : "stretch" }}>
@@ -389,7 +390,7 @@ export function Avatar({ grad, initials, size, ring }: { grad: string; initials:
 
 function ProfileModal({ onClose, onSignOut }: { onClose: () => void; onSignOut: () => void }) {
   const { user } = useAuth();
-  if (!user) return null;
+  if (!user || user.kind !== "org_member") return null;
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(26,29,41,.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60 }}>
       <div onClick={(e) => e.stopPropagation()} className="dvfu" style={{ width: 440, maxWidth: "92vw", background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 30px 70px -20px rgba(26,29,41,.5)" }}>

@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import { getSupabaseAdminClient } from "../supabase-admin.client";
 import { AuthenticatedUser } from "../token.types";
@@ -23,12 +23,16 @@ export class SupabaseAuthGuard implements CanActivate {
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { role: { include: { permissions: true } } },
+      include: { role: { include: { permissions: true } }, org: { select: { status: true } } },
     });
     if (!user) throw new UnauthorizedException("No profile for this account.");
+    if (user.status === "SUSPENDED" || user.org.status === "SUSPENDED") {
+      throw new ForbiddenException("This account has been suspended.");
+    }
 
     const authedUser: AuthenticatedUser = {
       id: user.id,
+      orgId: user.orgId,
       roleId: user.roleId,
       permissions: user.role.permissions.map((p) => p.permissionKey),
     };

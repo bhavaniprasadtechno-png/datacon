@@ -1,21 +1,24 @@
-import { Controller, Get, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
+import { SupabaseTokenGuard } from "./guards/supabase-token.guard";
+import { Bootstrapping } from "./decorators/bootstrapping.decorator";
 import { AuthService } from "./auth.service";
-import { SupabaseAuthGuard } from "./guards/supabase-auth.guard";
-import { CurrentUser } from "./decorators/current-user.decorator";
-import { AuthenticatedUser } from "./token.types";
+import { CompleteRegistrationDto } from "./dto/complete-registration.dto";
 
 @Controller("auth")
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
-  @Get("personas")
-  personas() {
-    return this.auth.personas();
+  @UseGuards(SupabaseTokenGuard)
+  @Bootstrapping()
+  @Get("me")
+  async me(@Req() req: { supabaseUserId: string }) {
+    return this.auth.me(req.supabaseUserId);
   }
 
-  @UseGuards(SupabaseAuthGuard)
-  @Get("me")
-  async me(@CurrentUser() user: AuthenticatedUser) {
-    return this.auth.me(user.id);
+  @UseGuards(SupabaseTokenGuard)
+  @Bootstrapping()
+  @Post("complete-registration")
+  async completeRegistration(@Req() req: { supabaseUserId: string }, @Body() dto: CompleteRegistrationDto) {
+    return this.auth.completeRegistration(req.supabaseUserId, dto.name, dto.orgName);
   }
 }

@@ -41,20 +41,16 @@ export class UsersService {
     } as const;
   }
 
-  async list() {
-    const users = await this.prisma.user.findMany({ select: this.select(), orderBy: { createdAt: "asc" } });
-    return users.map((u) => ({
-      ...u,
-      canDelete: !u.isCore,
-      permissionCount: u.role.permissions.length,
-    }));
+  async list(orgId: string) {
+    const users = await this.prisma.scoped.user.findMany({ where: { orgId }, select: this.select(), orderBy: { createdAt: "asc" } });
+    return users.map((u) => ({ ...u, canDelete: !u.isCore, permissionCount: u.role.permissions.length }));
   }
 
-  async create(dto: CreateUserDto) {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+  async create(orgId: string, dto: CreateUserDto) {
+    const existing = await this.prisma.scoped.user.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException("An account with this email already exists.");
-    const role = await this.prisma.role.findUnique({ where: { id: dto.roleId } });
-    if (!role) throw new BadRequestException("Unknown role.");
+    const role = await this.prisma.scoped.role.findUnique({ where: { id: dto.roleId } });
+    if (!role || role.orgId !== orgId) throw new BadRequestException("Unknown role.");
 
     const { data, error } = await getSupabaseAdminClient().auth.admin.inviteUserByEmail(dto.email, {
       data: { name: dto.name },
@@ -63,14 +59,13 @@ export class UsersService {
       throw new BadRequestException(error?.message ?? "Could not invite this user.");
     }
 
-    const count = await this.prisma.user.count();
-    // handle_new_user already inserted a "viewer"-role row for this id — upsert
-    // it here to apply the chosen role/title in the same request.
-    const user = await this.prisma.user.upsert({
+    const count = await this.prisma.scoped.user.count({ where: { orgId } });
+    const user = await this.prisma.scoped.user.upsert({
       where: { id: data.user.id },
       update: { name: dto.name, title: dto.title, roleId: dto.roleId },
       create: {
         id: data.user.id,
+        orgId,
         name: dto.name,
         email: dto.email,
         title: dto.title,
@@ -84,35 +79,33 @@ export class UsersService {
     return { ...user, canDelete: true, permissionCount: user.role.permissions.length };
   }
 
-  async update(id: string, dto: UpdateUserDto) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException("User not found.");
+  async update(orgId: string, id: string, dto: UpdateUserDto) {
+    const user = await this.prisma.scoped.user.findUnique({ where: { id } });
+    if (!user || user.orgId !== orgId) throw new NotFoundException("User not found.");
     if (dto.roleId) {
-      const role = await this.prisma.role.findUnique({ where: { id: dto.roleId } });
-      if (!role) throw new BadRequestException("Unknown role.");
+      const role = await this.prisma.scoped.role.findUnique({ where: { id: dto.roleId } });
+      if (!role || role.orgId !== orgId) throw new BadRequestException("Unknown role.");
     }
-    const updated = await this.prisma.user.update({
+    const updated = await this.prisma.scoped.user.update({
       where: { id },
-      data: { name: dto.name, email: dto.email, roleId: dto.roleId, title: dto.title },
+      data: { name: dto.name, email: dto.email, roleId: dto.roleId },
       select: this.select(),
     });
     return { ...updated, canDelete: !updated.isCore, permissionCount: updated.role.permissions.length };
   }
 
-  async remove(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException("User not found.");
-    if (user.isCore) {
-      throw new ForbiddenException("This is a core demo account and can't be removed.");
-    }
-    await this.prisma.user.delete({ where: { id } });
+  async remove(orgId: string, id: string) {
+    const user = await this.prisma.scoped.user.findUnique({ where: { id } });
+    if (!user || user.orgId !== orgId) throw new NotFoundException("User not found.");
+    if (user.isCore) throw new ForbiddenException("This is a core demo account and can't be removed.");
+    await this.prisma.scoped.user.delete({ where: { id } });
     return { ok: true };
   }
 
-  async assignRole(id: string, roleId: string) {
-    const role = await this.prisma.role.findUnique({ where: { id: roleId } });
-    if (!role) throw new BadRequestException("Unknown role.");
-    const updated = await this.prisma.user.update({
+  async assignRole(orgId: string, id: string, roleId: string) {
+    const role = await this.prisma.scoped.role.findUnique({ where: { id: roleId } });
+    if (!role || role.orgId !== orgId) throw new BadRequestException("Unknown role.");
+    const updated = await this.prisma.scoped.user.update({
       where: { id },
       data: { roleId },
       select: this.select(),

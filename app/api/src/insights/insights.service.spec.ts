@@ -34,7 +34,7 @@ describe("InsightsService", () => {
     metrics.churnSnapshot.mockResolvedValue(null);
     metrics.ticketTableRowCount.mockResolvedValue(0);
 
-    const result = await service.get();
+    const result = await service.get("acme-corp");
 
     expect(result.kpis.revenue.value).toBe("No data");
     expect(result.kpis.revenue.deltaPct).toBe(0);
@@ -50,7 +50,7 @@ describe("InsightsService", () => {
     metrics.churnSnapshot.mockResolvedValue(null);
     metrics.ticketTableRowCount.mockResolvedValue(0);
 
-    const result = await service.get();
+    const result = await service.get("acme-corp");
 
     expect(aiPost).not.toHaveBeenCalled();
     expect(result.forecast).toBeNull();
@@ -70,7 +70,7 @@ describe("InsightsService", () => {
     metrics.ticketTableRowCount.mockResolvedValue(120);
     aiPost.mockResolvedValue({ data: { series: [], projected: "$4.00M", ciLow: "$3.80M", ciHigh: "$4.20M" } });
 
-    const result = await service.get();
+    const result = await service.get("acme-corp");
 
     expect(result.kpis.revenue.value).toBe("$2.00M");
     expect(result.kpis.revenue.deltaPct).toBe(100);

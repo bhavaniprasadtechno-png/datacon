@@ -71,7 +71,6 @@ export interface LlmModelOption {
 }
 
 export const AVAILABLE_LLM_MODELS: LlmModelOption[] = [
-  { id: "gemini/gemini-2.5-flash", label: "Gemini 2.5 Flash", description: "Fast, low-cost default" },
-  { id: "gemini/gemini-3-flash-preview", label: "Gemini 3 Flash Preview", description: "Newer, more capable" },
+  { id: "gemini/gemini-3-flash-preview", label: "Gemini 3 Flash Preview", description: "Fast, low-cost default" },
   { id: "gemini/gemma-4-31b-it", label: "Gemma 4 31B", description: "Open-weight reasoning model" },
 ];

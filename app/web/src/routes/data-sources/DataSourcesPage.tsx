@@ -72,7 +72,7 @@ export function DataSourcesPage() {
           <Lock size={18} style={{ color: "var(--ac-muted)", flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: 13, fontWeight: 700 }}>Uploading is restricted to analysts and admins</div>
-            <div style={{ fontSize: 12, color: "var(--ac-muted)" }}>You're viewing as {user?.roleName} — switch to Sarah or Tom to add data sources.</div>
+            <div style={{ fontSize: 12, color: "var(--ac-muted)" }}>You're viewing as {user?.kind === "org_member" ? user.roleName : ""} — ask an admin to grant upload access to add data sources.</div>
           </div>
         </div>
       )}

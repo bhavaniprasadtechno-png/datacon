@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
 import type { ChatMessage, Conversation } from "../lib/types";
+import { supabase } from "../lib/supabaseClient";
 
 export function useConversations(search?: string) {
   // The search term is part of the key, so the sidebar's recents (no search)
@@ -79,10 +80,16 @@ interface StreamHandlers {
 }
 
 export async function streamChat(message: string, conversationId: string | null, model: string | null, handlers: StreamHandlers): Promise<void> {
+  const { data } = await supabase.auth.getSession();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (data.session?.access_token) {
+    headers["Authorization"] = `Bearer ${data.session.access_token}`;
+  }
+
   const res = await fetch("/api/chat/stream", {
     method: "POST",
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ message, conversationId: conversationId ?? undefined, model: model ?? undefined }),
   });
 

@@ -7,28 +7,21 @@ import type {
 
 export type ChatPayload = AgentPayload;
 
-export interface Persona {
-  id: string;
-  name: string;
-  email: string;
-  title: string | null;
-  initials: string;
-  avatarGrad: string;
-  roleId: string;
-  role: { name: string; colorHex: string | null; bgHex: string | null };
-}
-
-export interface CurrentUser {
-  id: string;
-  name: string;
-  email: string;
-  initials: string;
-  avatarGrad: string;
-  title: string | null;
-  roleId: string;
-  roleName: string;
-  permissions: PermissionKey[];
-}
+export type CurrentUser =
+  | { kind: "platform_admin"; id: string; email: string }
+  | {
+      kind: "org_member";
+      id: string;
+      orgId: string;
+      name: string;
+      email: string;
+      initials: string;
+      avatarGrad: string;
+      title: string | null;
+      roleId: string;
+      roleName: string;
+      permissions: PermissionKey[];
+    };
 
 export interface RbacRole {
   id: string;

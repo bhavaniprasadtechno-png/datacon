@@ -33,17 +33,18 @@ export class DocumentsService {
     };
   }
 
-  async list() {
-    const rows = await this.prisma.dataSource.findMany({
+  async list(orgId: string) {
+    const rows = await this.prisma.scoped.dataSource.findMany({
+      where: { orgId },
       include: { uploadedBy: { select: { email: true } } },
       orderBy: { createdAt: "desc" },
     });
     return rows.map((r) => this.shape(r));
   }
 
-  async preview(id: string) {
-    const row = await this.prisma.dataSource.findUnique({ where: { id } });
-    if (!row) throw new NotFoundException("Data source not found.");
+  async preview(orgId: string, id: string) {
+    const row = await this.prisma.scoped.dataSource.findUnique({ where: { id } });
+    if (!row || row.orgId !== orgId) throw new NotFoundException("Data source not found.");
     if (!row.columns || !row.sampleRows) {
       throw new NotFoundException("No table preview available for this file — try re-uploading it.");
     }
@@ -57,9 +58,9 @@ export class DocumentsService {
     };
   }
 
-  async remove(id: string) {
-    const row = await this.prisma.dataSource.findUnique({ where: { id } });
-    if (!row) throw new NotFoundException("Data source not found.");
+  async remove(orgId: string, id: string) {
+    const row = await this.prisma.scoped.dataSource.findUnique({ where: { id } });
+    if (!row || row.orgId !== orgId) throw new NotFoundException("Data source not found.");
 
     // Best-effort: clean up the ChromaDB index entry (PDF/TXT/MD only —
     // CSVs were never indexed there, so this is a harmless no-op for them).
@@ -70,11 +71,11 @@ export class DocumentsService {
       this.logger.warn(`Failed to remove ${id} from the vector index (deleting the record anyway): ${e?.message ?? e}`);
     }
 
-    await this.prisma.dataSource.delete({ where: { id } });
+    await this.prisma.scoped.dataSource.delete({ where: { id } });
     return { ok: true };
   }
 
-  async upload(file: Express.Multer.File, uploadedById: string) {
+  async upload(orgId: string, file: Express.Multer.File, uploadedById: string) {
     if (!file) throw new BadRequestException("No file was uploaded.");
 
     this.logger.log(`[Upload] Received upload request for file: "${file.originalname}" (${file.size} bytes) from user: ${uploadedById}`);
@@ -97,8 +98,9 @@ export class DocumentsService {
 
     const title = path.basename(file.originalname, path.extname(file.originalname));
     this.logger.log(`[Upload] Creating DataSource record in Postgres: title="${title}", type=${docType}`);
-    const row = await this.prisma.dataSource.create({
+    const row = await this.prisma.scoped.dataSource.create({
       data: {
+        orgId,
         title,
         filename: file.originalname,
         type: docType,
@@ -133,11 +135,11 @@ export class DocumentsService {
         columns?: string[];
         sampleRows?: string[][];
       };
-      
+
       this.logger.log(`[Upload] AI service successfully parsed document ID=${row.id}. Rows: ${data.rowCount ?? 0}, Columns: ${data.colCount ?? 0}, Chunks: ${data.chunkCount ?? 0}`);
 
       this.logger.log(`[Upload] Updating DataSource ID=${row.id} status to INDEXED...`);
-      const updated = await this.prisma.dataSource.update({
+      const updated = await this.prisma.scoped.dataSource.update({
         where: { id: row.id },
         data: {
           status: "INDEXED",
@@ -161,9 +163,9 @@ export class DocumentsService {
         gatewayStatus >= 502 && gatewayStatus <= 504
           ? "The AI service is temporarily unavailable — please try uploading again in a moment."
           : (e?.response?.data?.detail ?? e?.message ?? "Indexing failed.");
-      
+
       this.logger.error(`[Upload] Ingestion failed for document ID=${row.id}: ${failureMsg}`);
-      const updated = await this.prisma.dataSource.update({
+      const updated = await this.prisma.scoped.dataSource.update({
         where: { id: row.id },
         data: { status: "FAILED", failureMsg },
         include: { uploadedBy: { select: { email: true } } },

@@ -2,6 +2,8 @@ import { Body, Controller, Delete, Get, Param, Post, UseGuards } from "@nestjs/c
 import { SupabaseAuthGuard } from "../auth/guards/supabase-auth.guard";
 import { PermissionsGuard } from "../auth/guards/permissions.guard";
 import { RequirePermissions } from "../auth/decorators/require-permissions.decorator";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { AuthenticatedUser } from "../auth/token.types";
 import { ConnectorsService } from "./connectors.service";
 import { SaveConnectorDto } from "./dto/save-connector.dto";
 
@@ -11,8 +13,8 @@ export class ConnectorsController {
   constructor(private readonly connectors: ConnectorsService) {}
 
   @Get()
-  list() {
-    return this.connectors.list();
+  list(@CurrentUser() user: AuthenticatedUser) {
+    return this.connectors.list(user.orgId);
   }
 
   @RequirePermissions("manage_connectors")
@@ -23,19 +25,19 @@ export class ConnectorsController {
 
   @RequirePermissions("manage_connectors")
   @Post()
-  create(@Body() dto: SaveConnectorDto) {
-    return this.connectors.create(dto);
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: SaveConnectorDto) {
+    return this.connectors.create(user.orgId, dto);
   }
 
   @RequirePermissions("manage_connectors")
   @Post(":id/sync")
-  sync(@Param("id") id: string) {
-    return this.connectors.syncNow(id);
+  sync(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string) {
+    return this.connectors.syncNow(user.orgId, id);
   }
 
   @RequirePermissions("manage_connectors")
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.connectors.remove(id);
+  remove(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string) {
+    return this.connectors.remove(user.orgId, id);
   }
 }

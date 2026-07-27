@@ -13,25 +13,25 @@ export class DocumentsController {
   constructor(private readonly documents: DocumentsService) {}
 
   @Get()
-  list() {
-    return this.documents.list();
+  list(@CurrentUser() user: AuthenticatedUser) {
+    return this.documents.list(user.orgId);
   }
 
   @Get(":id/preview")
-  preview(@Param("id") id: string) {
-    return this.documents.preview(id);
+  preview(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string) {
+    return this.documents.preview(user.orgId, id);
   }
 
   @RequirePermissions("upload_docs")
   @Post()
   @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 25 * 1024 * 1024 } }))
   upload(@UploadedFile() file: Express.Multer.File, @CurrentUser() user: AuthenticatedUser) {
-    return this.documents.upload(file, user.id);
+    return this.documents.upload(user.orgId, file, user.id);
   }
 
   @RequirePermissions("upload_docs")
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.documents.remove(id);
+  remove(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string) {
+    return this.documents.remove(user.orgId, id);
   }
 }

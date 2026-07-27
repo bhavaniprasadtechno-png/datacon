@@ -93,8 +93,8 @@ export class MetricsService {
     };
   }
 
-  async ticketTableRowCount(): Promise<number> {
-    const row = await this.prisma.unifiedDataset.findFirst({ where: { name: "tickets" } });
+  async ticketTableRowCount(orgId: string): Promise<number> {
+    const row = await this.prisma.scoped.unifiedDataset.findFirst({ where: { orgId, name: "tickets" } });
     return row?.rowCount ?? 0;
   }
 }
