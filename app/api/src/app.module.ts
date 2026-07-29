@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { ConfigModule } from "@nestjs/config";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -16,6 +16,7 @@ import { ForecastsModule } from "./forecasts/forecasts.module";
 import { InsightsModule } from "./insights/insights.module";
 import { PlatformAdminModule } from "./platform-admin/platform-admin.module";
 import { OrgContextInterceptor } from "./prisma/org-context.interceptor";
+import { RequestTransactionMiddleware } from "./prisma/request-transaction.middleware";
 
 @Module({
   imports: [
@@ -37,4 +38,14 @@ import { OrgContextInterceptor } from "./prisma/org-context.interceptor";
   controllers: [HealthController],
   providers: [{ provide: APP_INTERCEPTOR, useClass: OrgContextInterceptor }],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RequestTransactionMiddleware)
+      .exclude(
+        { path: "chat/stream", method: RequestMethod.POST },
+        { path: "health", method: RequestMethod.GET },
+      )
+      .forRoutes("*");
+  }
+}

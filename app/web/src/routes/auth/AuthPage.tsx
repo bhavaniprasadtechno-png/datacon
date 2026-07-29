@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "../../stores/useAuthStore";
 import { apiErrorMessage } from "../../api/client";
 
@@ -156,9 +157,12 @@ export function AuthPage() {
                 padding: "12px 0",
                 boxShadow: "0 8px 20px -8px rgba(109,77,255,.7)",
                 opacity: submitting ? 0.7 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              {mode === "login" ? "Sign in" : "Create account"}
+              {submitting ? <Loader2 size={18} style={{ animation: "dvspin 1s linear infinite" }} /> : mode === "login" ? "Sign in" : "Create account"}
             </button>
           </form>
 

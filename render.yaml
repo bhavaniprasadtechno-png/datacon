@@ -27,7 +27,6 @@ services:
       npx prisma generate --schema packages/prisma/schema.prisma &&
       npm run build --workspace=packages/prisma &&
       npx prisma migrate deploy --schema packages/prisma/schema.prisma &&
-      npm run prisma:seed &&
       npm run build --workspace=api
     startCommand: node api/dist/main.js
     healthCheckPath: /api/health

@@ -1,5 +1,6 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
+import { requestTxStorage } from "../../prisma/request-transaction.storage";
 import { getSupabaseAdminClient } from "../supabase-admin.client";
 import { AuthenticatedUser } from "../token.types";
 
@@ -18,24 +19,31 @@ export class SupabaseAuthGuard implements CanActivate {
     if (!token) throw new UnauthorizedException("Missing bearer token.");
 
     const { data, error } = await getSupabaseAdminClient().auth.getClaims(token);
-    const userId = data?.claims?.sub as string | undefined;
+    const claims = data?.claims;
+    const userId = claims?.sub as string | undefined;
     if (error || !userId) throw new UnauthorizedException("Invalid or expired token.");
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { role: { include: { permissions: true } }, org: { select: { status: true } } },
-    });
-    if (!user) throw new UnauthorizedException("No profile for this account.");
-    if (user.status === "SUSPENDED" || user.org.status === "SUSPENDED") {
-      throw new ForbiddenException("This account has been suspended.");
+    const orgId = claims?.app_org_id as string | undefined;
+    const roleId = claims?.app_role_id as string | undefined;
+    const permissions = claims?.app_permissions as string[] | undefined;
+    if (!orgId || !roleId || !permissions) {
+      throw new UnauthorizedException("Session missing required claims — please sign in again.");
     }
 
-    const authedUser: AuthenticatedUser = {
-      id: user.id,
-      orgId: user.orgId,
-      roleId: user.roleId,
-      permissions: user.role.permissions.map((p) => p.permissionKey),
-    };
+    const reqTx = requestTxStorage.getStore();
+    // const client = (reqTx?.tx ?? this.prisma) as unknown as Pick<PrismaService, "user">;
+    // const status = await client.user.findUnique({
+    //   where: { id: userId },
+    //   select: { status: true, org: { select: { status: true } } },
+    //   relationLoadStrategy: "join",
+    // });
+    // console.log(`[perf] guard: user.findUnique() done at +${performance.now() - t0}ms`); // TEMP
+    // if (!status) throw new UnauthorizedException("No profile for this account.");
+    // if (status.status === "SUSPENDED" || status.org.status === "SUSPENDED") {
+    //   throw new ForbiddenException("This account has been suspended.");
+    // }
+
+    const authedUser: AuthenticatedUser = { id: userId, orgId, roleId, permissions };
     req.user = authedUser;
     return true;
   }

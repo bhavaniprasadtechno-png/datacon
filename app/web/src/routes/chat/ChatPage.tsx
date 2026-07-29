@@ -6,7 +6,6 @@ import { useChatMessages, useFeedback, streamChat, useLlmModels } from "../../ap
 import { useToast } from "../../stores/useToastStore";
 import { AgentVisualization } from "./AgentVisualization";
 import type { ChatMessage, ChatPayload } from "../../lib/types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import {
   Sparkles,
   ArrowUp,
@@ -174,18 +173,6 @@ export function ChatPage() {
                 </span>
               ))}
             </div>
-            <Select value={model} onValueChange={setModel}>
-              <SelectTrigger title="LLM model for this chat">
-                <SelectValue placeholder="Select model" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableModels.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
