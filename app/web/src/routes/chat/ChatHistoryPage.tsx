@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useConversations, useCreateConversation, useDeleteConversation } from "../../api/chat";
 import { useConfirm } from "../../stores/useConfirmStore";
+import { ConversationCardSkeleton } from "../../components/ui/Skeleton";
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -91,9 +92,14 @@ export function ChatHistoryPage() {
         )}
       </div>
 
-      {isLoading && <div style={{ padding: 20, color: "#9499ad" }}>Loading…</div>}
-
-      {!isLoading && conversations?.length === 0 && (
+      {isLoading ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <ConversationCardSkeleton />
+          <ConversationCardSkeleton />
+          <ConversationCardSkeleton />
+          <ConversationCardSkeleton />
+        </div>
+      ) : conversations?.length === 0 ? (
         <div style={{ textAlign: "center", padding: "48px 20px", color: "#9499ad" }}>
           {searching ? (
             <>
@@ -107,42 +113,42 @@ export function ChatHistoryPage() {
             </>
           )}
         </div>
-      )}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {conversations?.map((c) => (
-          <div
-            key={c.id}
-            onClick={() => navigate(`/chat?c=${c.id}`)}
-            className="dvfu"
-            style={{
-              position: "relative",
-              cursor: "pointer",
-              background: "#fff",
-              border: "1px solid #e9eaf2",
-              borderRadius: 14,
-              padding: "14px 44px 14px 16px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <div style={{ fontSize: 14.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
-              <div style={{ font: "500 11px 'IBM Plex Mono',monospace", color: "#b0b4c6", flexShrink: 0 }}>{relativeTime(c.updatedAt)}</div>
-            </div>
-            {c.preview && (
-              <div style={{ fontSize: 13, color: "#9499ad", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {c.preview}
-              </div>
-            )}
-            <button
-              onClick={(e) => removeConversation(c.id, e)}
-              title="Delete conversation"
-              style={{ position: "absolute", top: 12, right: 12, fontSize: 13, color: "#b0b4c6", padding: 6, borderRadius: 8, lineHeight: 1 }}
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {conversations?.map((c) => (
+            <div
+              key={c.id}
+              onClick={() => navigate(`/chat?c=${c.id}`)}
+              className="dvfu"
+              style={{
+                position: "relative",
+                cursor: "pointer",
+                background: "#fff",
+                border: "1px solid #e9eaf2",
+                borderRadius: 14,
+                padding: "14px 44px 14px 16px",
+              }}
             >
-              🗑
-            </button>
-          </div>
-        ))}
-      </div>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ fontSize: 14.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title || "Untitled conversation"}</div>
+                <div style={{ font: "500 11px 'IBM Plex Mono',monospace", color: "#b0b4c6", flexShrink: 0 }}>{relativeTime(c.updatedAt)}</div>
+              </div>
+              {c.preview && (
+                <div style={{ fontSize: 13, color: "#9499ad", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {c.preview}
+                </div>
+              )}
+              <button
+                onClick={(e) => removeConversation(c.id, e)}
+                title="Delete conversation"
+                style={{ position: "absolute", top: 12, right: 12, fontSize: 13, color: "#b0b4c6", padding: 6, borderRadius: 8, lineHeight: 1 }}
+              >
+                🗑
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

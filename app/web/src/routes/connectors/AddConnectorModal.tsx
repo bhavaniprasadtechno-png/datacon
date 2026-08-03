@@ -6,6 +6,7 @@ import { TYPE_STYLE } from "../../lib/connectorMeta";
 import { useCreateConnector, useTestDraftConnector } from "../../api/connectors";
 import { useToast } from "../../stores/useToastStore";
 import { apiErrorMessage } from "../../api/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 
 type Step = "pick" | "config";
 
@@ -131,13 +132,18 @@ export function AddConnectorModal({ open, onClose }: { open: boolean; onClose: (
           ))}
 
           <FormField label="SYNC SCHEDULE">
-            <select value={syncInterval} onChange={(e) => setSyncInterval(e.target.value)} style={fieldInputStyle(false)}>
-              {SYNC_SCHEDULE_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
+            <Select value={syncInterval} onValueChange={(v) => setSyncInterval(v)}>
+              <SelectTrigger style={fieldInputStyle(false)}>
+                <SelectValue placeholder="Select schedule..." />
+              </SelectTrigger>
+              <SelectContent position="popper" className="w-full">
+                {SYNC_SCHEDULE_OPTIONS.map((o) => (
+                  <SelectItem key={o} value={o}>
+                    {o}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </FormField>
 
           {testState === "testing" && <TestBanner tone="pending">Testing connection…</TestBanner>}
@@ -166,13 +172,18 @@ function DynamicField({ field, value, onChange }: { field: EngineField; value: s
   return (
     <FormField label={field.label.toUpperCase()} required={field.required} help={field.help}>
       {field.kind === "select" ? (
-        <select value={value || field.default || ""} onChange={(e) => onChange(e.target.value)} style={fieldInputStyle(false)}>
-          {field.options?.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
+        <Select value={value || field.default || ""} onValueChange={onChange}>
+          <SelectTrigger style={fieldInputStyle(false)}>
+            <SelectValue placeholder={`Select ${field.label.toLowerCase()}...`} />
+          </SelectTrigger>
+          <SelectContent position="popper" className="w-full">
+            {field.options?.map((o) => (
+              <SelectItem key={o} value={o}>
+                {o}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       ) : field.kind === "textarea" ? (
         <textarea value={value} onChange={(e) => onChange(e.target.value)} placeholder={field.placeholder} rows={4} style={{ ...fieldInputStyle(true), resize: "vertical" }} />
       ) : (

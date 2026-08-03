@@ -8,6 +8,7 @@ import { StatusBadge } from "../../components/ui/StatusBadge";
 import { useToast } from "../../stores/useToastStore";
 import { useConfirm } from "../../stores/useConfirmStore";
 import { apiErrorMessage } from "../../api/client";
+import { ListEntrySkeleton } from "../../components/ui/Skeleton";
 
 const CHIP_PALETTE = ["#5b5fc7", "#0f8a5c", "#c0405a", "#b8791f", "#2178c9"];
 
@@ -99,11 +100,19 @@ export function OrganizationsPage() {
       />
 
       <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "hidden" }}>
-        {isLoading && <div style={{ padding: 20, color: "#9499ad" }}>Loading…</div>}
-        {!isLoading && filteredOrgs.length === 0 && (
-          <div style={{ padding: 20, color: "#9499ad", fontSize: 13 }}>No workspaces match "{search}".</div>
+        {isLoading ? (
+          <>
+            <ListEntrySkeleton />
+            <ListEntrySkeleton />
+            <ListEntrySkeleton />
+            <ListEntrySkeleton />
+          </>
+        ) : (
+          filteredOrgs.length === 0 && (
+            <div style={{ padding: 20, color: "#9499ad", fontSize: 13 }}>No workspaces match "{search}".</div>
+          )
         )}
-        {filteredOrgs.map((o) => (
+        {!isLoading && filteredOrgs.map((o) => (
           <Link
             key={o.id}
             to={`/platform-admin/organizations/${o.id}/users`}

@@ -8,6 +8,7 @@ import { apiErrorMessage } from "../../api/client";
 import { PageHeader, FieldRow, inputStyle } from "./UsersPage";
 import type { RbacRole } from "../../lib/types";
 import type { PermissionKey } from "@datacon/shared-types";
+import { RoleCardSkeleton } from "../../components/ui/Skeleton";
 
 const ROLE_COLORS = ["var(--ac)", "#2bb8c4", "#e2603f", "#3f6fd6", "#13a06b", "#b9743a", "#c0392b"];
 
@@ -46,9 +47,16 @@ export function RolesPage() {
       <PageHeader title="Roles" sub="Define roles and the permissions each one grants" action={<Button variant="primary" onClick={() => setEditing("new")}>+ Create role</Button>} />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16 }}>
-        {isLoading && <div style={{ color: "#9499ad" }}>Loading…</div>}
-        {roles?.map((r) => (
-          <div key={r.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
+        {isLoading ? (
+          <>
+            <RoleCardSkeleton />
+            <RoleCardSkeleton />
+            <RoleCardSkeleton />
+            <RoleCardSkeleton />
+          </>
+        ) : (
+          roles?.map((r) => (
+            <div key={r.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <div style={{ width: 38, height: 38, borderRadius: 11, background: r.bgHex ?? "#f0f1f6", color: r.colorHex ?? "#71768a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>🛡</div>
               <div style={{ fontSize: 14, fontWeight: 800 }}>{r.name}</div>
@@ -79,7 +87,7 @@ export function RolesPage() {
               )}
             </div>
           </div>
-        ))}
+        )))}
       </div>
 
       <Modal open={editing !== null} onClose={() => setEditing(null)} width={480}>

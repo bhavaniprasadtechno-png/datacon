@@ -11,6 +11,7 @@ import { AddConnectorModal } from "./AddConnectorModal";
 import { TablePreviewModal } from "./TablePreviewModal";
 import type { Connector } from "../../lib/types";
 import { Lock, Trash2, Plus, AlertTriangle } from "lucide-react";
+import { ConnectorCardSkeleton, TableRowSkeleton } from "../../components/ui/Skeleton";
 
 export function ConnectorsPage() {
   const { caps } = useAuth();
@@ -72,49 +73,56 @@ export function ConnectorsPage() {
         )}
       </div>
 
-      {isLoading && <div style={{ color: "#9499ad" }}>Loading…</div>}
-
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 16, marginBottom: 30 }}>
-        {connectors?.map((c) => {
-          const style = TYPE_STYLE[c.engine];
-          const status = STATUS_META[c.status];
-          return (
-            <div key={c.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: style.bg, color: style.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, flexShrink: 0 }}>
-                  {style.letter}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700 }}>{c.name}</div>
-                  <div style={{ fontSize: 11.5, color: "#9499ad" }}>
-                    {c.engine} · {c.syncInterval}
+        {isLoading ? (
+          <>
+            <ConnectorCardSkeleton />
+            <ConnectorCardSkeleton />
+            <ConnectorCardSkeleton />
+            <ConnectorCardSkeleton />
+          </>
+        ) : (
+          connectors?.map((c) => {
+            const style = TYPE_STYLE[c.engine];
+            const status = STATUS_META[c.status];
+            return (
+              <div key={c.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: style.bg, color: style.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, flexShrink: 0 }}>
+                    {style.letter}
                   </div>
-                </div>
-                <span style={{ display: "flex", alignItems: "center", gap: 5, font: "600 10px 'IBM Plex Mono',monospace", color: status.color, background: status.bg, padding: "4px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: status.dot, animation: c.status === "SYNCING" ? "dvblink 1.2s infinite" : "none" }} />
-                  {status.label}
-                </span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--ac-border)", fontSize: 11.5, color: "var(--ac-muted)" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                  <Lock size={12} /> secrets *** · last sync {timeAgo(c.lastSyncedAt)}
-                </span>
-                {caps.manageConnectors ? (
-                  <div style={{ display: "flex", gap: 12 }}>
-                    <button onClick={() => sync(c)} style={{ color: "var(--ac)", fontWeight: 700 }}>
-                      Sync now
-                    </button>
-                    <button onClick={() => remove(c)} style={{ color: "#c0392b", fontWeight: 700 }}>
-                      Delete
-                    </button>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>{c.name}</div>
+                    <div style={{ fontSize: 11.5, color: "#9499ad" }}>
+                      {c.engine} · {c.syncInterval}
+                    </div>
                   </div>
-                ) : (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
-                )}
+                  <span style={{ display: "flex", alignItems: "center", gap: 5, font: "600 10px 'IBM Plex Mono',monospace", color: status.color, background: status.bg, padding: "4px 9px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: status.dot, animation: c.status === "SYNCING" ? "dvblink 1.2s infinite" : "none" }} />
+                    {status.label}
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--ac-border)", fontSize: 11.5, color: "var(--ac-muted)" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <Lock size={12} /> secrets *** · last sync {timeAgo(c.lastSyncedAt)}
+                  </span>
+                  {caps.manageConnectors ? (
+                    <div style={{ display: "flex", gap: 12 }}>
+                      <button onClick={() => sync(c)} style={{ color: "var(--ac)", fontWeight: 700 }}>
+                        Sync now
+                      </button>
+                      <button onClick={() => remove(c)} style={{ color: "#c0392b", fontWeight: 700 }}>
+                        Delete
+                      </button>
+                    </div>
+                  ) : (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Lock size={12} /> Locked</span>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
@@ -131,33 +139,42 @@ export function ConnectorsPage() {
           <span>STATUS</span>
           <span>ACTION</span>
         </div>
-        {catalog?.map((row) => {
-          const style = TYPE_STYLE[row.connectorEngine];
-          const status = STATUS_META[row.status === "syncing" ? "SYNCING" : row.status === "error" ? "ERROR" : "SYNCED"];
-          return (
-            <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1.2fr 160px 120px 92px", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid var(--ac-border)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                <div style={{ width: 26, height: 26, borderRadius: 7, background: style.bg, color: style.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, flexShrink: 0 }}>
-                  {style.letter}
+        {isLoading ? (
+          <>
+            <TableRowSkeleton gridCols="1.4fr 1.2fr 160px 120px 92px" />
+            <TableRowSkeleton gridCols="1.4fr 1.2fr 160px 120px 92px" />
+            <TableRowSkeleton gridCols="1.4fr 1.2fr 160px 120px 92px" />
+            <TableRowSkeleton gridCols="1.4fr 1.2fr 160px 120px 92px" />
+          </>
+        ) : (
+          catalog?.map((row) => {
+            const style = TYPE_STYLE[row.connectorEngine];
+            const status = STATUS_META[row.status === "syncing" ? "SYNCING" : row.status === "error" ? "ERROR" : "SYNCED"];
+            return (
+              <div key={row.id} style={{ display: "grid", gridTemplateColumns: "1.4fr 1.2fr 160px 120px 92px", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid var(--ac-border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  <div style={{ width: 26, height: 26, borderRadius: 7, background: style.bg, color: style.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 11, flexShrink: 0 }}>
+                    {style.letter}
+                  </div>
+                  <span style={{ font: "600 12.5px 'IBM Plex Mono',monospace" }}>{row.name}</span>
                 </div>
-                <span style={{ font: "600 12.5px 'IBM Plex Mono',monospace" }}>{row.name}</span>
+                <div style={{ fontSize: 12, color: "var(--ac-muted)" }}>{row.connectorName}</div>
+                <div style={{ fontSize: 12, color: "var(--ac-muted)" }}>
+                  {row.columns.length} cols · {row.rowCount.toLocaleString()} rows
+                </div>
+                <div>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: status.color }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: status.dot }} />
+                    {status.label}
+                  </span>
+                </div>
+                <button onClick={() => setPreviewId(row.id)} style={{ color: "var(--ac)", fontWeight: 700, fontSize: 12, textAlign: "left" }}>
+                  View table
+                </button>
               </div>
-              <div style={{ fontSize: 12, color: "var(--ac-muted)" }}>{row.connectorName}</div>
-              <div style={{ fontSize: 12, color: "var(--ac-muted)" }}>
-                {row.columns.length} cols · {row.rowCount.toLocaleString()} rows
-              </div>
-              <div>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: status.color }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: status.dot }} />
-                  {status.label}
-                </span>
-              </div>
-              <button onClick={() => setPreviewId(row.id)} style={{ color: "var(--ac)", fontWeight: 700, fontSize: 12, textAlign: "left" }}>
-                View table
-              </button>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       <AddConnectorModal open={showAdd} onClose={() => setShowAdd(false)} />

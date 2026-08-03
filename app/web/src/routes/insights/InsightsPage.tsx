@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../stores/useAuthStore";
 import { useInsights } from "../../api/insights";
 import { useConnectors } from "../../api/connectors";
+import { Skeleton, KpiCardSkeleton, ChartCardSkeleton } from "../../components/ui/Skeleton";
 
 const TONE_STYLE = {
   high: { bg: "#fdeee9", dot: "#e2603f" },
@@ -23,11 +24,7 @@ export function InsightsPage() {
     navigate("/chat");
   };
 
-  if (isLoading || !data) {
-    return <div style={{ padding: 32, color: "#9499ad" }}>Loading…</div>;
-  }
-
-  const series = data.forecast?.series ?? [];
+  const series = data?.forecast?.series ?? [];
   const values = series.map((s) => s.value);
   const min = Math.min(...values, 0);
   const max = Math.max(...values, 1);
@@ -55,57 +52,96 @@ export function InsightsPage() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 20 }}>
-        <KpiCard label="Total revenue" value={data.kpis.revenue.value} deltaLabel={`${data.kpis.revenue.deltaPct >= 0 ? "↑" : "↓"} ${Math.abs(data.kpis.revenue.deltaPct).toFixed(1)}%`} good={data.kpis.revenue.deltaPct >= 0} />
-        <KpiCard label="Net churn" value={data.kpis.churn.value} deltaLabel={`${data.kpis.churn.deltaPp <= 0 ? "↓" : "↑"} ${Math.abs(data.kpis.churn.deltaPp).toFixed(1)}pp`} good={data.kpis.churn.deltaPp <= 0} />
-        <KpiCard label="Daily tickets" value={data.kpis.tickets.value} deltaLabel={`${data.kpis.tickets.deltaPct >= 0 ? "↑" : "↓"} ${Math.abs(data.kpis.tickets.deltaPct).toFixed(0)}%`} good={data.kpis.tickets.deltaPct <= 0} />
-        <div style={{ background: "linear-gradient(140deg,#1a1d29,#34304f)", borderRadius: 16, padding: "17px 18px", color: "#fff" }}>
-          <div style={{ fontSize: 11.5, color: "#c3c7d6", marginBottom: 8 }}>Active anomalies</div>
-          <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>{data.kpis.anomalies.count}</div>
-          <span style={{ fontSize: 10.5, background: "rgba(255,255,255,.14)", padding: "3px 9px", borderRadius: 20 }}>
-            {data.kpis.anomalies.highCount} high · {data.kpis.anomalies.mediumCount} medium
-          </span>
-        </div>
+        {isLoading || !data ? (
+          <>
+            <KpiCardSkeleton />
+            <KpiCardSkeleton />
+            <KpiCardSkeleton />
+            <div style={{ background: "linear-gradient(140deg,#1a1d29,#34304f)", borderRadius: 16, padding: "17px 18px", color: "#fff", display: "flex", flexDirection: "column", gap: 8 }}>
+              <Skeleton className="h-3 w-1/3 bg-slate-800/80" />
+              <Skeleton className="h-7 w-1/2 bg-slate-800/80" />
+              <Skeleton className="h-3.5 w-2/3 bg-slate-800/80" />
+            </div>
+          </>
+        ) : (
+          <>
+            <KpiCard label="Total revenue" value={data.kpis.revenue.value} deltaLabel={`${data.kpis.revenue.deltaPct >= 0 ? "↑" : "↓"} ${Math.abs(data.kpis.revenue.deltaPct).toFixed(1)}%`} good={data.kpis.revenue.deltaPct >= 0} />
+            <KpiCard label="Net churn" value={data.kpis.churn.value} deltaLabel={`${data.kpis.churn.deltaPp <= 0 ? "↓" : "↑"} ${Math.abs(data.kpis.churn.deltaPp).toFixed(1)}pp`} good={data.kpis.churn.deltaPp <= 0} />
+            <KpiCard label="Daily tickets" value={data.kpis.tickets.value} deltaLabel={`${data.kpis.tickets.deltaPct >= 0 ? "↑" : "↓"} ${Math.abs(data.kpis.tickets.deltaPct).toFixed(0)}%`} good={data.kpis.tickets.deltaPct <= 0} />
+            <div style={{ background: "linear-gradient(140deg,#1a1d29,#34304f)", borderRadius: 16, padding: "17px 18px", color: "#fff" }}>
+              <div style={{ fontSize: 11.5, color: "#c3c7d6", marginBottom: 8 }}>Active anomalies</div>
+              <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>{data.kpis.anomalies.count}</div>
+              <span style={{ fontSize: 10.5, background: "rgba(255,255,255,.14)", padding: "3px 9px", borderRadius: 20 }}>
+                {data.kpis.anomalies.highCount} high · {data.kpis.anomalies.mediumCount} medium
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.55fr 1fr", gap: 16, marginBottom: 20 }}>
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 700 }}>Revenue &amp; forecast</div>
-            <button onClick={() => navigate("/forecasts")} style={{ fontSize: 12, color: "var(--ac)", fontWeight: 700 }}>
-              Open forecast →
-            </button>
-          </div>
-          <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: "block" }}>
-            <polyline points={points.join(" ")} fill="none" stroke="var(--ac)" strokeWidth={2.5} />
-          </svg>
-          <div style={{ display: "flex", gap: 16, fontSize: 11, color: "#9499ad", marginTop: 8 }}>
-            <span>● Actual</span>
-            <span>● Forecast (95% CI)</span>
-          </div>
-        </div>
-
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 12 }}>Needs your attention</div>
-          {data.attention.map((a) => {
-            const tone = TONE_STYLE[a.tone];
-            const content = (
-              <div style={{ display: "flex", gap: 10, padding: "9px 10px", borderRadius: 10, background: a.clickable ? tone.bg : "transparent", marginBottom: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: tone.dot, marginTop: 4, flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 700 }}>{a.title}</div>
-                  <div style={{ fontSize: 11.5, color: "#9499ad" }}>{a.desc}</div>
-                </div>
+        {isLoading || !data ? (
+          <>
+            <ChartCardSkeleton />
+            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18, display: "flex", flexDirection: "column", gap: 14 }}>
+              <Skeleton className="h-4 w-1/3 bg-slate-200/60" />
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[1, 2, 3].map((n) => (
+                  <div key={n} style={{ display: "flex", gap: 10 }}>
+                    <Skeleton className="mt-1 h-2 w-2 rounded-full bg-slate-200/60" />
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+                      <Skeleton className="h-3.5 w-[45%] bg-slate-200/60" />
+                      <Skeleton className="h-3 w-[60%] bg-slate-200/60" />
+                    </div>
+                  </div>
+                ))}
               </div>
-            );
-            return a.clickable ? (
-              <button key={a.id} onClick={() => askAbout(a.question!)} style={{ width: "100%", textAlign: "left" }}>
-                {content}
-              </button>
-            ) : (
-              <div key={a.id}>{content}</div>
-            );
-          })}
-        </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700 }}>Revenue &amp; forecast</div>
+                <button onClick={() => navigate("/forecasts")} style={{ fontSize: 12, color: "var(--ac)", fontWeight: 700 }}>
+                  Open forecast →
+                </button>
+              </div>
+              <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: "block" }}>
+                <polyline points={points.join(" ")} fill="none" stroke="var(--ac)" strokeWidth={2.5} />
+              </svg>
+              <div style={{ display: "flex", gap: 16, fontSize: 11, color: "#9499ad", marginTop: 8 }}>
+                <span>● Actual</span>
+                <span>● Forecast (95% CI)</span>
+              </div>
+            </div>
+
+            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 12 }}>Needs your attention</div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {data.attention.map((a) => {
+                  const tone = TONE_STYLE[a.tone];
+                  const content = (
+                    <div style={{ display: "flex", gap: 10, padding: "9px 10px", borderRadius: 10, background: a.clickable ? tone.bg : "transparent", marginBottom: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: tone.dot, marginTop: 4, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 700 }}>{a.title}</div>
+                        <div style={{ fontSize: 11.5, color: "#9499ad" }}>{a.desc}</div>
+                      </div>
+                    </div>
+                  );
+                  return a.clickable ? (
+                    <button key={a.id} onClick={() => askAbout(a.question!)} style={{ width: "100%", textAlign: "left" }}>
+                      {content}
+                    </button>
+                  ) : (
+                    <div key={a.id}>{content}</div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <button

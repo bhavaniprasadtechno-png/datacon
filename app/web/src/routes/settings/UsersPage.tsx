@@ -9,6 +9,7 @@ import { RoleBadge } from "../../components/ui/RoleBadge";
 import { Avatar } from "../../components/shell/Sidebar";
 import { apiErrorMessage } from "../../api/client";
 import type { RbacUser } from "../../lib/types";
+import { ListEntrySkeleton } from "../../components/ui/Skeleton";
 
 export function UsersPage() {
   const { data: users, isLoading } = useUsers();
@@ -52,12 +53,19 @@ export function UsersPage() {
           <span>PERMISSIONS</span>
           <span>ACTIONS</span>
         </div>
-        {isLoading && <div style={{ padding: 20, color: "#9499ad" }}>Loading…</div>}
-        {users?.map((u) => (
-          <div key={u.id} style={gridRow}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-              <Avatar grad={u.avatarGrad} initials={u.initials} size={34} />
-              <div style={{ minWidth: 0 }}>
+        {isLoading ? (
+          <>
+            <ListEntrySkeleton gridCols="1.5fr 1fr 150px 96px" />
+            <ListEntrySkeleton gridCols="1.5fr 1fr 150px 96px" />
+            <ListEntrySkeleton gridCols="1.5fr 1fr 150px 96px" />
+            <ListEntrySkeleton gridCols="1.5fr 1fr 150px 96px" />
+          </>
+        ) : (
+          users?.map((u) => (
+            <div key={u.id} style={gridRow}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <Avatar grad={u.avatarGrad} initials={u.initials} size={34} />
+                <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>
                   {u.name} {u.id === me?.id && <span style={{ color: "#9499ad", fontWeight: 500 }}>· you</span>}
                 </div>
@@ -79,7 +87,7 @@ export function UsersPage() {
               )}
             </div>
           </div>
-        ))}
+        )))}
       </div>
 
       <Modal open={editing !== null} onClose={() => setEditing(null)}>

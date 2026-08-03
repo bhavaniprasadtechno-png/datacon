@@ -9,6 +9,7 @@ import { Avatar } from "../../components/shell/Sidebar";
 import { apiErrorMessage } from "../../api/client";
 import { PageHeader, FieldRow } from "./UsersPage";
 import type { RbacUser } from "../../lib/types";
+import { ListEntrySkeleton } from "../../components/ui/Skeleton";
 
 export function AssignRolesPage() {
   const { data: users, isLoading } = useUsers();
@@ -53,10 +54,17 @@ export function AssignRolesPage() {
           <span>CURRENT ROLE</span>
           <span>ACTION</span>
         </div>
-        {isLoading && <div style={{ padding: 20, color: "#9499ad" }}>Loading…</div>}
-        {users?.map((u) => (
-          <div key={u.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 120px", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid #f5f6fb" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {isLoading ? (
+          <>
+            <ListEntrySkeleton gridCols="1.6fr 1fr 120px" />
+            <ListEntrySkeleton gridCols="1.6fr 1fr 120px" />
+            <ListEntrySkeleton gridCols="1.6fr 1fr 120px" />
+            <ListEntrySkeleton gridCols="1.6fr 1fr 120px" />
+          </>
+        ) : (
+          users?.map((u) => (
+            <div key={u.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 120px", alignItems: "center", padding: "12px 18px", borderBottom: "1px solid #f5f6fb" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Avatar grad={u.avatarGrad} initials={u.initials} size={32} />
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{u.name}</div>
@@ -70,7 +78,7 @@ export function AssignRolesPage() {
               Change role
             </button>
           </div>
-        ))}
+        )))}
       </div>
 
       <Modal open={!!target} onClose={() => setTarget(null)}>

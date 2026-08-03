@@ -6,6 +6,7 @@ import { useConfirm } from "../../stores/useConfirmStore";
 import { Button } from "../../components/ui/Button";
 import { apiErrorMessage } from "../../api/client";
 import { PageHeader } from "./UsersPage";
+import { Skeleton } from "../../components/ui/Skeleton";
 
 export function PermissionsPage() {
   const { data: roles, isLoading } = useRoles();
@@ -72,8 +73,33 @@ export function PermissionsPage() {
         }
       />
 
-      {isLoading && <div style={{ color: "#9499ad" }}>Loading…</div>}
-      {roles && perms && (
+      {isLoading ? (
+        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid #f0f1f6" }}>
+                <th style={{ textAlign: "left", padding: "12px 18px", fontSize: 10.5, color: "#9499ad" }}>PERMISSION</th>
+                <th style={{ width: 82, padding: "12px 8px" }}><Skeleton className="h-3 w-12 mx-auto" /></th>
+                <th style={{ width: 82, padding: "12px 8px" }}><Skeleton className="h-3 w-12 mx-auto" /></th>
+                <th style={{ width: 82, padding: "12px 8px" }}><Skeleton className="h-3 w-12 mx-auto" /></th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 7 }).map((_, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid #f5f6fb" }}>
+                  <td style={{ padding: "10px 18px" }}>
+                    <Skeleton className="h-3.5 w-1/3 mb-2" />
+                    <Skeleton className="h-3 w-1/4" />
+                  </td>
+                  <td style={{ textAlign: "center" }}><Skeleton className="h-[26px] w-[26px] rounded-md mx-auto" /></td>
+                  <td style={{ textAlign: "center" }}><Skeleton className="h-[26px] w-[26px] rounded-md mx-auto" /></td>
+                  <td style={{ textAlign: "center" }}><Skeleton className="h-[26px] w-[26px] rounded-md mx-auto" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : roles && perms && (
         <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
             <thead>

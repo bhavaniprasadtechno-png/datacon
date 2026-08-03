@@ -7,6 +7,7 @@ import { UploadModal } from "./UploadModal";
 import { DataSourceTableModal } from "./DataSourceTableModal";
 import type { DataSourceRecord, DocStatus, DocType } from "../../lib/types";
 import { RefreshCw, Upload, Lock, Eye, Trash2, Check, Loader2, XCircle } from "lucide-react";
+import { TableRowSkeleton } from "../../components/ui/Skeleton";
 
 const TYPE_CHIP: Record<DocType, { bg: string; color: string }> = {
   PDF: { bg: "#fdeee9", color: "#c0392b" },
@@ -86,78 +87,68 @@ export function DataSourcesPage() {
           <span>UPLOADED</span>
           <span>ACTIONS</span>
         </div>
-        {isLoading && <div style={{ padding: 20, color: "#9499ad" }}>Loading…</div>}
-        {rows?.map((row) => {
-          const chip = TYPE_CHIP[row.type];
-          const status = STATUS_META[row.status];
-          return (
-            <div key={row.id} style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.7fr) 66px 150px 120px 170px 100px", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #f5f6fb" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: chip.bg, color: chip.color, display: "flex", alignItems: "center", justifyContent: "center", font: "700 10px 'IBM Plex Mono',monospace", flexShrink: 0 }}>
-                  {row.type}
+        {isLoading ? (
+          <>
+            <TableRowSkeleton gridCols="minmax(150px,1.7fr) 66px 150px 120px 170px 100px" />
+            <TableRowSkeleton gridCols="minmax(150px,1.7fr) 66px 150px 120px 170px 100px" />
+            <TableRowSkeleton gridCols="minmax(150px,1.7fr) 66px 150px 120px 170px 100px" />
+            <TableRowSkeleton gridCols="minmax(150px,1.7fr) 66px 150px 120px 170px 100px" />
+            <TableRowSkeleton gridCols="minmax(150px,1.7fr) 66px 150px 120px 170px 100px" />
+          </>
+        ) : (
+          rows?.map((row) => {
+            const chip = TYPE_CHIP[row.type];
+            const status = STATUS_META[row.status];
+            return (
+              <div key={row.id} style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.7fr) 66px 150px 120px 170px 100px", alignItems: "center", padding: "10px 18px", borderBottom: "1px solid #f5f6fb" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: chip.bg, color: chip.color, display: "flex", alignItems: "center", justifyContent: "center", font: "700 10px 'IBM Plex Mono',monospace", flexShrink: 0 }}>
+                    {row.type}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</div>
+                    <div style={{ fontSize: 11, color: "#9499ad", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.filename}</div>
+                  </div>
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.title}</div>
-                  <div style={{ font: "500 11px 'IBM Plex Mono',monospace", color: "#9499ad" }}>{row.filename}</div>
+                <div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: chip.color }}>{row.type}</span>
+                </div>
+                <div style={{ fontSize: 12.5, color: "#5a5f72" }}>{formatSize(row)}</div>
+                <div>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, color: status.color, fontWeight: 600 }}>
+                    <span style={{ animation: status.blink ? "dvblink 1.2s infinite" : "none", display: "flex", alignItems: "center" }}>
+                      {status.icon}
+                    </span>
+                    {status.label}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12.5, color: "#9499ad" }}>
+                  {new Date(row.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  {row.type === "CSV" ? (
+                    <button onClick={() => setPreviewId(row.id)} style={{ color: "var(--ac)", fontWeight: 700, fontSize: 12, textAlign: "left", display: "flex", alignItems: "center", gap: 4, padding: 0 }}>
+                      <Eye size={13} /> View
+                    </button>
+                  ) : (
+                    <span style={{ color: "#d4d7e2", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                      <Eye size={13} /> View
+                    </span>
+                  )}
+                  {caps.uploadDocs ? (
+                    <button onClick={() => removeRow(row)} style={{ color: "#c0392b", fontWeight: 700, fontSize: 12, textAlign: "left", display: "flex", alignItems: "center", gap: 4, padding: 0 }}>
+                      <Trash2 size={13} /> Delete
+                    </button>
+                  ) : (
+                    <span style={{ color: "#d4d7e2", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                      <Trash2 size={13} /> Delete
+                    </span>
+                  )}
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: "#71768a" }}>{row.type}</div>
-              <div style={{ fontSize: 12, color: "#71768a" }}>{formatSize(row)}</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: status.color, fontWeight: 600 }}>
-                <span style={{ animation: status.blink ? "dvblink 1.2s infinite" : "none" }}>{status.icon}</span>
-                {status.label}
-              </div>
-              <div style={{ font: "500 11px 'IBM Plex Mono',monospace", color: "#b0b4c6" }}>
-                {new Date(row.createdAt).toLocaleString()}
-                <div>by {row.uploadedBy}</div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                {row.type === "CSV" && row.status === "INDEXED" && (
-                  <button
-                    onClick={() => setPreviewId(row.id)}
-                    title="View table"
-                    aria-label="View table"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 30,
-                      height: 30,
-                      color: "var(--ac)",
-                      background: "var(--ac-soft)",
-                      border: "none",
-                      borderRadius: "var(--radius-sm)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Eye size={14} />
-                  </button>
-                )}
-                {caps.uploadDocs && (
-                  <button
-                    onClick={() => removeRow(row)}
-                    title="Delete"
-                    aria-label="Delete"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 30,
-                      height: 30,
-                      color: "#c0392b",
-                      background: "#fdeee9",
-                      border: "none",
-                      borderRadius: "var(--radius-sm)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       <UploadModal open={showUpload} onClose={() => setShowUpload(false)} />

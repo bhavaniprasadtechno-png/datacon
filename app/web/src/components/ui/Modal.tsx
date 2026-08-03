@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "../shadcn-ui/ui/dialog";
 
 interface Props {
   open: boolean;
@@ -8,47 +9,29 @@ interface Props {
   z?: number;
 }
 
-export function Modal({ open, onClose, width = 440, children, z = 44 }: Props) {
-  if (!open) return null;
+export function Modal({ open, onClose, children, width = 440 }: Props) {
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(26,29,41,.42)",
-        backdropFilter: "blur(3px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: z,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="dvfu"
-        style={{
-          width,
-          maxWidth: "92vw",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          background: "#fff",
-          borderRadius: 18,
-          boxShadow: "0 30px 70px -20px rgba(26,29,41,.5)",
-          padding: 22,
-        }}
+    <Dialog open={open} onOpenChange={(val) => { if (!val) onClose(); }}>
+      <DialogContent 
+        className="max-h-[90vh] overflow-y-auto rounded-xl p-5 shadow-lg border-border bg-background"
+        style={{ maxWidth: `min(${width}px, 92vw)` }}
+        showCloseButton={false}
       >
+        <div className="sr-only">
+          <DialogTitle>Dialog Window</DialogTitle>
+          <DialogDescription>Content modal details</DialogDescription>
+        </div>
         {children}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 export function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-      <div style={{ fontSize: 17, fontWeight: 800 }}>{title}</div>
-      <button onClick={onClose} style={{ fontSize: 16, color: "#9499ad" }}>
+    <div className="flex items-center justify-between mb-4">
+      <div className="text-[17px] font-extrabold text-foreground">{title}</div>
+      <button onClick={onClose} className="text-[16px] text-muted-foreground hover:text-foreground">
         ✕
       </button>
     </div>

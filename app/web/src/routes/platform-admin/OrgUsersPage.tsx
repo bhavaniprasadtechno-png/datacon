@@ -8,6 +8,7 @@ import { Avatar } from "../../components/shell/Sidebar";
 import { useToast } from "../../stores/useToastStore";
 import { useConfirm } from "../../stores/useConfirmStore";
 import { apiErrorMessage } from "../../api/client";
+import { ListEntrySkeleton } from "../../components/ui/Skeleton";
 
 export function OrgUsersPage() {
   const { orgId } = useParams<{ orgId: string }>();
@@ -60,25 +61,33 @@ export function OrgUsersPage() {
         sub={`${users?.length ?? 0} ${users?.length === 1 ? "user" : "users"} in this organization`}
       />
       <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "hidden" }}>
-        {isLoading && <div style={{ padding: 20, color: "#9499ad" }}>Loading…</div>}
-        {users?.map((u) => (
-          <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 18px", minHeight: 56, borderBottom: "1px solid #f5f6fb" }}>
-            <Avatar grad={u.avatarGrad} initials={u.initials} size={34} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>{u.name}</div>
-              <div style={{ fontSize: 11.5, color: "#9499ad" }}>{u.email}</div>
+        {isLoading ? (
+          <>
+            <ListEntrySkeleton />
+            <ListEntrySkeleton />
+            <ListEntrySkeleton />
+            <ListEntrySkeleton />
+          </>
+        ) : (
+          users?.map((u) => (
+            <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 18px", minHeight: 56, borderBottom: "1px solid #f5f6fb" }}>
+              <Avatar grad={u.avatarGrad} initials={u.initials} size={34} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{u.name}</div>
+                <div style={{ fontSize: 11.5, color: "#9499ad" }}>{u.email}</div>
+              </div>
+              <StatusBadge status={u.status} />
+              <Button
+                variant={u.status === "ACTIVE" ? "danger" : "secondary"}
+                onClick={() => toggleUserStatus(u)}
+                style={{ padding: "4px 10px", fontSize: 11.5, flexShrink: 0 }}
+              >
+                {u.status === "ACTIVE" ? "Suspend" : "Activate"}
+              </Button>
+              <RoleBadge name={u.role.name} color={null} bg={null} />
             </div>
-            <StatusBadge status={u.status} />
-            <Button
-              variant={u.status === "ACTIVE" ? "danger" : "secondary"}
-              onClick={() => toggleUserStatus(u)}
-              style={{ padding: "4px 10px", fontSize: 11.5, flexShrink: 0 }}
-            >
-              {u.status === "ACTIVE" ? "Suspend" : "Activate"}
-            </Button>
-            <RoleBadge name={u.role.name} color={null} bg={null} />
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

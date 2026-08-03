@@ -1,16 +1,20 @@
+import { Badge } from "../shadcn-ui/ui/badge";
+
 export function RoleBadge({ name, color, bg }: { name: string; color?: string | null; bg?: string | null }) {
   return (
-    <span
+    <Badge
+      variant="outline"
       style={{
-        font: "600 10px 'IBM Plex Mono',monospace",
-        padding: "3px 9px",
-        borderRadius: 20,
         color: color ?? "#71768a",
-        background: bg ?? "#f0f1f6",
-        whiteSpace: "nowrap",
+        backgroundColor: bg ?? "#f0f1f6",
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: "10px",
+        fontWeight: 600,
+        textTransform: "uppercase",
       }}
+      className="px-2.5 py-1 whitespace-nowrap rounded-full border-none"
     >
-      {name.toUpperCase()}
-    </span>
+      {name}
+    </Badge>
   );
 }
