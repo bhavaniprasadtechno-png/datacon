@@ -8,6 +8,9 @@ import pandas as pd
 
 SUPPORTED_EXTENSIONS = (".csv", ".parquet", ".json")
 
+# ponytail: fixed ceiling, bump if a legitimate object needs to be larger
+MAX_OBJECT_BYTES = 50_000_000
+
 
 def is_data_object(key: str) -> bool:
     if key.endswith("/"):
@@ -15,13 +18,19 @@ def is_data_object(key: str) -> bool:
     return key.lower().endswith(SUPPORTED_EXTENSIONS)
 
 
-def dataset_name(key: str) -> str:
-    base = key.rsplit("/", 1)[-1]
-    lower = base.lower()
+def dataset_name(key: str, prefix: str = "") -> str:
+    if prefix and key.startswith(prefix):
+        relative = key[len(prefix):].strip("/")
+    else:
+        # No (matching) prefix: fall back to basename-only, matching pre-fix behavior.
+        relative = key.rsplit("/", 1)[-1]
+    lower = relative.lower()
     for ext in SUPPORTED_EXTENSIONS:
         if lower.endswith(ext):
-            return base[: -len(ext)]
-    return base
+            relative = relative[: -len(ext)]
+            break
+    relative = relative.replace("/", "_")
+    return relative or key.rsplit("/", 1)[-1]
 
 
 def read_table(data: bytes, key: str) -> pd.DataFrame:
@@ -30,5 +39,9 @@ def read_table(data: bytes, key: str) -> pd.DataFrame:
     if lower.endswith(".parquet"):
         return pd.read_parquet(buf)
     if lower.endswith(".json"):
-        return pd.read_json(buf)
+        try:
+            return pd.read_json(buf)
+        except ValueError:
+            buf.seek(0)
+            return pd.read_json(buf, lines=True)
     return pd.read_csv(buf)

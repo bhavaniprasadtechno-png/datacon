@@ -1,9 +1,12 @@
 import json
+import logging
 
 from app.connectors.types import TestResult, SyncResult, DatasetResult
-from app.connectors.drivers._object_storage import is_data_object, dataset_name, read_table
+from app.connectors.drivers._object_storage import is_data_object, dataset_name, read_table, MAX_OBJECT_BYTES
 
 OBJECT_CAP = 200  # ponytail: fixed page size, paginate if a bucket needs more matching objects than this
+
+logger = logging.getLogger("app.connectors.drivers.gcs")
 
 
 def _missing_required(config: dict, secrets: dict) -> str | None:
@@ -50,14 +53,19 @@ def sync(config: dict, secrets: dict) -> SyncResult:
                 continue
             if count >= OBJECT_CAP:
                 break
-            count += 1
+            size = blob.size or 0
+            if size <= 0 or size > MAX_OBJECT_BYTES:
+                # Zero-byte or oversized blob: skip silently, same as not matching is_data_object.
+                continue
             try:
                 data = blob.download_as_bytes()
                 df = read_table(data, key)
                 columns = [str(c) for c in df.columns]
                 sample_rows = df.head(5).astype(str).values.tolist()
-                datasets.append(DatasetResult(name=dataset_name(key), columns=columns, row_count=len(df), sample_rows=sample_rows))
-            except Exception:
+                datasets.append(DatasetResult(name=dataset_name(key, prefix), columns=columns, row_count=len(df), sample_rows=sample_rows))
+                count += 1
+            except Exception as e:
+                logger.warning("[GCS] Skipping %s: %s", key, e)
                 continue
         return SyncResult(True, f"Discovered {len(datasets)} object(s).", datasets)
     except ImportError:

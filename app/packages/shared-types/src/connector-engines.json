@@ -138,7 +138,7 @@
     "secondary": [
       { "key": "prefix", "label": "Object key / prefix", "placeholder": "exports/sales/2026/", "required": true, "help": "A single file key or a prefix to sync every object under it." },
       { "key": "region", "label": "Region", "placeholder": "us-east-1", "required": true },
-      { "key": "accessKeyId", "label": "Access key ID", "placeholder": "AKIAIOSFODNN7EXAMPLE", "required": true },
+      { "key": "accessKeyId", "label": "Access key ID", "placeholder": "AKIAIOSFODNN7EXAMPLE", "required": true, "secret": true },
       { "key": "secretAccessKey", "label": "Secret access key", "placeholder": "••••••••••••••", "type": "password", "required": true, "secret": true },
       { "key": "format", "label": "File format", "placeholder": "csv, parquet or json" }
     ]
