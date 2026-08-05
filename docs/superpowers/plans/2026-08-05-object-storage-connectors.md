@@ -133,9 +133,10 @@ git commit -m "feat(shared-types): add S3, Azure and GCS connector field registr
 **Files:**
 - Modify: `app/packages/prisma/schema.prisma:115-124`
 - Create: `app/packages/prisma/migrations/20260805130000_add_object_storage_connector_engines/migration.sql`
+- Modify: `app/packages/prisma/index.ts:3-12`
 
 **Interfaces:**
-- Produces: `ConnectorEngine` enum gains `S3`, `AZURE`, `GCS` values, propagated to the generated Prisma client's `ConnectorEngine` TS type (re-exported from `app/packages/prisma/index.ts`), which `ConnectorsController`/`ConnectorsService` already type against generically.
+- Produces: `ConnectorEngine` enum gains `S3`, `AZURE`, `GCS` values in the Prisma schema. **`app/packages/prisma/index.ts` hand-maintains its own `ConnectorEngine` const/type as a manual mirror of the schema enum (it does not re-export the generated Prisma Client type) — this must be updated in the same task or `ConnectorsService`'s calls into the generically-typed Prisma client (e.g. `connectors.service.ts:145,212`) fail to compile.**
 
 - [ ] **Step 1: Add the enum values**
 
@@ -173,15 +174,40 @@ ALTER TYPE "ConnectorEngine" ADD VALUE 'GCS';
 Run: `npm run generate --workspace=packages/prisma` (this runs `prisma generate`, which also validates schema syntax)
 Expected: completes with no errors, regenerates the Prisma client with `S3`/`AZURE`/`GCS` on the `ConnectorEngine` type.
 
-- [ ] **Step 4: Apply the migration to your local dev database**
+- [ ] **Step 4: Update the hand-maintained `ConnectorEngine` mirror in `app/packages/prisma/index.ts`**
+
+`app/packages/prisma/index.ts` does not re-export the generated Prisma Client enum — it hand-maintains its own `ConnectorEngine` const object (a workaround so downstream packages don't need `@prisma/client` as a direct dependency). Add the three new keys, keeping the existing style:
+
+```typescript
+export const ConnectorEngine = {
+  SQLITE: "SQLITE",
+  POSTGRES: "POSTGRES",
+  SUPABASE: "SUPABASE",
+  MYSQL: "MYSQL",
+  MONGODB: "MONGODB",
+  HTTP: "HTTP",
+  BIGQUERY: "BIGQUERY",
+  SNOWFLAKE: "SNOWFLAKE",
+  S3: "S3",
+  AZURE: "AZURE",
+  GCS: "GCS",
+} as const;
+```
+
+- [ ] **Step 5: Build the prisma package and the API workspace**
+
+Run: `npm run build --workspace=packages/prisma && npm run build --workspace=api`
+Expected: both build with no TypeScript errors — this is what catches a mismatch between the hand-maintained `ConnectorEngine` mirror and the Prisma-generated type, since `ConnectorsService` (`app/api/src/connectors/connectors.service.ts`) passes values typed against `@datacon/prisma`'s `ConnectorEngine` into calls typed against the generated Prisma Client's `ConnectorEngine`.
+
+- [ ] **Step 6: Apply the migration to your local dev database**
 
 Run: `npm run prisma:migrate --workspace=packages/prisma` (requires a running local Postgres matching `DATABASE_URL`)
 Expected: `Your database is now in sync with your schema.` and the new migration is recorded in `_prisma_migrations`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add app/packages/prisma/schema.prisma app/packages/prisma/migrations/20260805130000_add_object_storage_connector_engines
+git add app/packages/prisma/schema.prisma app/packages/prisma/migrations/20260805130000_add_object_storage_connector_engines app/packages/prisma/index.ts
 git commit -m "feat(prisma): add S3, Azure and GCS to ConnectorEngine enum"
 ```
 
