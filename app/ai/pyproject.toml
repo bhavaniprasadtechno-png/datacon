@@ -27,6 +27,7 @@ cloud = [
     "boto3>=1.35.0",
     "azure-storage-blob>=12.23.0",
     "google-cloud-storage>=2.18.0",
+    "pyarrow>=18.0.0",
 ]
 
 [tool.uv]
