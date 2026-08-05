@@ -9,6 +9,9 @@ export const ConnectorEngine = {
   HTTP: "HTTP",
   BIGQUERY: "BIGQUERY",
   SNOWFLAKE: "SNOWFLAKE",
+  S3: "S3",
+  AZURE: "AZURE",
+  GCS: "GCS",
 } as const;
 
 export type ConnectorEngine = (typeof ConnectorEngine)[keyof typeof ConnectorEngine];
