@@ -10,6 +10,9 @@ export const TYPE_STYLE: Record<ConnectorEngineId, { letter: string; bg: string;
   sqlite: { letter: "L", bg: "#e6f6ee", color: "#3a9d6a" },
   mongodb: { letter: "G", bg: "#e6f6ee", color: "#1d8e5a" },
   http: { letter: "H", bg: "var(--ac-soft)", color: "var(--ac)" },
+  s3: { letter: "S3", bg: "#fdf3e3", color: "#b9791f" },
+  azure: { letter: "A", bg: "#e9f2fd", color: "#2a6fc9" },
+  gcs: { letter: "G", bg: "#eef0f4", color: "#5a6b86" },
 };
 
 export const STATUS_META: Record<ConnectorStatus, { label: string; color: string; bg: string; dot: string }> = {
