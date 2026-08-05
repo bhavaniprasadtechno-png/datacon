@@ -2,7 +2,7 @@ import logging
 
 import pandas as pd
 from app.connectors.types import TestResult, SyncResult
-from app.connectors.drivers import sqlite_driver, postgres_driver, mysql_driver, mongodb_driver, http_driver, bigquery_driver, snowflake_driver, supabase_driver
+from app.connectors.drivers import sqlite_driver, postgres_driver, mysql_driver, mongodb_driver, http_driver, bigquery_driver, snowflake_driver, supabase_driver, s3_driver, azure_driver, gcs_driver
 from app.query_engine import snapshot_store
 
 logger = logging.getLogger("app.connectors.service")
@@ -16,6 +16,9 @@ _DRIVERS = {
     "http": http_driver,
     "bigquery": bigquery_driver,
     "snowflake": snowflake_driver,
+    "s3": s3_driver,
+    "azure": azure_driver,
+    "gcs": gcs_driver,
 }
 
 
