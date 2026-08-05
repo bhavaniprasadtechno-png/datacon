@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../stores/useAuthStore";
 import { useConversations, useCreateConversation, useDeleteConversation } from "../../api/chat";
@@ -100,18 +101,19 @@ export function Sidebar() {
         style={{
           background: "#fff",
           borderRight: "1px solid var(--ac-border)",
-          padding: "20px 14px",
+          padding: collapsed ? "16px 8px" : "20px 14px",
           display: "flex",
           flexDirection: "column",
           flexShrink: 0,
+          alignItems: collapsed ? "center" : "stretch",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24, justifyContent: collapsed ? "center" : "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: collapsed ? 12 : 24, justifyContent: collapsed ? "center" : "space-between", width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, justifyContent: collapsed ? "center" : "flex-start" }}>
             <div
               style={{
-                width: collapsed ? 34 : 32,
-                height: collapsed ? 34 : 32,
+                width: 32,
+                height: 32,
                 borderRadius: 10,
                 background: "var(--ac-logo)",
                 display: "flex",
@@ -133,7 +135,23 @@ export function Sidebar() {
           )}
         </div>
         {collapsed && (
-          <button title="Expand menu" onClick={() => setCollapsed(false)} style={{ color: "#9499ad", marginBottom: 12, display: "flex", alignItems: "center" }}>
+          <button
+            title="Expand menu"
+            onClick={() => setCollapsed(false)}
+            style={{
+              color: "#9499ad",
+              marginBottom: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+              borderRadius: "var(--radius-sm)",
+              background: "var(--ac-bg-muted)",
+              border: "1px solid var(--ac-border)",
+              flexShrink: 0,
+            }}
+          >
             <ChevronRight size={16} />
           </button>
         )}
@@ -165,14 +183,14 @@ export function Sidebar() {
         {/* One scrollable region for nav + recent conversations, so expanding
             User Management (or a long chat list) scrolls here instead of
             pushing the pinned user card off the bottom. */}
-        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column" }} className="dv-side-scroll">
-        <nav style={{ display: "flex", flexDirection: "column", gap: 3, flexShrink: 0 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", width: "100%", alignItems: collapsed ? "center" : "stretch" }} className="dv-side-scroll">
+        <nav style={{ display: "flex", flexDirection: "column", gap: 3, flexShrink: 0, width: "100%" }}>
           {NAV.map((item) => {
             if (item.id === "settings" && !caps.admin) return null;
             const active = location.pathname === item.to || (item.id === "settings" && onUserMgmtPage) || (item.id === "chat" && onChatArea);
             return (
-              <div key={item.id}>
-                {item.divider && <div style={{ height: 1, background: "var(--ac-border)", margin: "10px 4px" }} />}
+              <div key={item.id} style={{ width: "100%" }}>
+                {item.divider && <div style={{ height: 1, background: "var(--ac-border)", margin: collapsed ? "10px 0" : "10px 4px" }} />}
                 <NavLink
                   to={item.to}
                   title={item.label}
@@ -188,14 +206,16 @@ export function Sidebar() {
                   style={{
                     display: "flex",
                     alignItems: "center",
+                    justifyContent: collapsed ? "center" : "flex-start",
                     gap: 10,
-                    padding: "9px 11px",
+                    padding: collapsed ? "9px 0" : "9px 11px",
                     borderRadius: "var(--radius-sm)",
                     fontSize: 13.5,
                     textDecoration: "none",
                     background: active ? "var(--ac-soft)" : "transparent",
                     color: active ? "var(--ac)" : "var(--ac-muted)",
                     fontWeight: active ? 600 : 500,
+                    width: "100%",
                   }}
                 >
                   <span style={{ display: "flex", alignItems: "center" }}>{item.icon}</span>
@@ -203,7 +223,7 @@ export function Sidebar() {
                   {collapsed && <span className="dv-tip">{item.label}</span>}
                 </NavLink>
                 {item.id === "settings" && caps.admin && userMgmtOpen && (
-                  <div className="dv-sub" style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, marginBottom: 3 }}>
+                  <div className="dv-sub" style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 3, marginBottom: 3, width: "100%" }}>
                     {SUB_NAV.map((s) => (
                       <NavLink
                         key={s.id}
@@ -213,14 +233,16 @@ export function Sidebar() {
                         style={({ isActive }) => ({
                           display: "flex",
                           alignItems: "center",
+                          justifyContent: collapsed ? "center" : "flex-start",
                           gap: 9,
-                          padding: "7px 10px",
+                          padding: collapsed ? "7px 0" : "7px 10px",
                           borderRadius: "var(--radius-sm)",
                           fontSize: 12.5,
                           textDecoration: "none",
                           background: isActive ? "var(--ac-soft)" : "transparent",
                           color: isActive ? "var(--ac)" : "var(--ac-muted)",
                           fontWeight: isActive ? 600 : 500,
+                          width: "100%",
                         })}
                       >
                         <span>{s.icon}</span>
@@ -295,9 +317,9 @@ export function Sidebar() {
         )}
       </div>
 
-      <div style={{ padding: "16px 14px", borderTop: "1px solid var(--ac-border)", display: "flex", flexDirection: "column", gap: 10, flexShrink: 0 }}>
+      <div style={{ padding: collapsed ? "14px 0" : "16px 14px", borderTop: "1px solid var(--ac-border)", display: "flex", flexDirection: "column", gap: 10, flexShrink: 0, width: "100%", alignItems: "center" }}>
         {orgUser && !collapsed && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, width: "100%" }}>
             <Avatar grad={orgUser.avatarGrad} initials={orgUser.initials} size={36} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 12.5, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{orgUser.name}</div>
@@ -308,22 +330,24 @@ export function Sidebar() {
           </div>
         )}
         {collapsed && orgUser && (
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
-            <Avatar grad={orgUser.avatarGrad} initials={orgUser.initials} size={30} />
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
+            <Avatar grad={orgUser.avatarGrad} initials={orgUser.initials} size={32} />
           </div>
         )}
-        <div style={{ display: "flex", gap: 6, justifyContent: collapsed ? "center" : "stretch" }}>
+        <div style={{ display: "flex", flexDirection: collapsed ? "column" : "row", gap: 6, width: "100%", justifyContent: "center", alignItems: "center" }}>
           <button
             title="Profile"
             onClick={() => setShowProfile(true)}
             className="dv-navitem"
             style={{
               flex: collapsed ? undefined : 1,
+              width: collapsed ? 36 : "100%",
+              height: collapsed ? 36 : undefined,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 6,
-              padding: "7px 0",
+              padding: collapsed ? 0 : "7px 0",
               borderRadius: "var(--radius-sm)",
               fontSize: 12,
               color: "var(--ac-fg)",
@@ -341,11 +365,13 @@ export function Sidebar() {
             className="dv-navitem"
             style={{
               flex: collapsed ? undefined : 1,
+              width: collapsed ? 36 : "100%",
+              height: collapsed ? 36 : undefined,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 6,
-              padding: "7px 0",
+              padding: collapsed ? 0 : "7px 0",
               borderRadius: "var(--radius-sm)",
               fontSize: 12,
               color: "#c0405a",
@@ -391,16 +417,18 @@ export function Avatar({ grad, initials, size, ring }: { grad: string; initials:
 function ProfileModal({ onClose, onSignOut }: { onClose: () => void; onSignOut: () => void }) {
   const { user } = useAuth();
   if (!user || user.kind !== "org_member") return null;
-  return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(26,29,41,.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60 }}>
+  return createPortal(
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(26,29,41,.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
       <div onClick={(e) => e.stopPropagation()} className="dvfu" style={{ width: 440, maxWidth: "92vw", background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 30px 70px -20px rgba(26,29,41,.5)" }}>
         <div style={{ height: 96, background: "linear-gradient(135deg,#221c46,#3a2f73 55%,var(--ac))", position: "relative" }}>
           <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,.18)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <X size={16} />
           </button>
         </div>
-        <div style={{ padding: "0 24px 24px", marginTop: -38 }}>
-          <Avatar grad={user.avatarGrad} initials={user.initials} size={76} />
+        <div style={{ padding: "0 24px 24px", marginTop: -38, position: "relative", zIndex: 1 }}>
+          <div style={{ position: "relative", zIndex: 2, display: "inline-flex", borderRadius: "50%", boxShadow: "0 0 0 4px #fff" }}>
+            <Avatar grad={user.avatarGrad} initials={user.initials} size={76} />
+          </div>
           <div style={{ fontSize: 20, fontWeight: 800, marginTop: 10 }}>{user.name}</div>
           <div style={{ fontSize: 13, color: "#71768a", marginBottom: 16 }}>{user.title}</div>
           <div style={{ border: "1px solid #e9eaf2", borderRadius: 12, overflow: "hidden" }}>
@@ -418,7 +446,8 @@ function ProfileModal({ onClose, onSignOut }: { onClose: () => void; onSignOut: 
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
