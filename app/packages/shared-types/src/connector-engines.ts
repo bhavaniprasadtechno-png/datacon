@@ -24,7 +24,7 @@ export interface EngineDef {
   secondary: EngineField[];
 }
 
-export type ConnectorEngineId = "sqlite" | "postgres" | "mysql" | "mongodb" | "http" | "bigquery" | "snowflake" | "supabase";
+export type ConnectorEngineId = "sqlite" | "postgres" | "mysql" | "mongodb" | "http" | "bigquery" | "snowflake" | "supabase" | "s3" | "azure" | "gcs";
 
 interface ConnectorEnginesFile {
   syncScheduleOptions: string[];
@@ -44,6 +44,9 @@ export const ENGINE_FIELDS: Record<ConnectorEngineId, EngineDef> = {
   http: file.http as EngineDef,
   bigquery: file.bigquery as EngineDef,
   snowflake: file.snowflake as EngineDef,
+  s3: file.s3 as EngineDef,
+  azure: file.azure as EngineDef,
+  gcs: file.gcs as EngineDef,
 };
 
 export const ENGINE_LIST: EngineDef[] = [
@@ -55,6 +58,9 @@ export const ENGINE_LIST: EngineDef[] = [
   ENGINE_FIELDS.http,
   ENGINE_FIELDS.bigquery,
   ENGINE_FIELDS.snowflake,
+  ENGINE_FIELDS.s3,
+  ENGINE_FIELDS.azure,
+  ENGINE_FIELDS.gcs,
 ];
 
 export function allFields(engine: ConnectorEngineId): EngineField[] {

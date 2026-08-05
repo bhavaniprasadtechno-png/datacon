@@ -128,5 +128,42 @@
       { "key": "schema", "label": "Schema", "placeholder": "PUBLIC", "required": true },
       { "key": "role", "label": "Role", "placeholder": "ANALYST" }
     ]
+  },
+  "s3": {
+    "id": "s3",
+    "name": "AWS S3 bucket",
+    "description": "Read CSV/Parquet/JSON objects from an S3 bucket or prefix.",
+    "typeLetter": "S3",
+    "primary": { "key": "bucket", "label": "Bucket name", "placeholder": "lyra-analytics-exports" },
+    "secondary": [
+      { "key": "prefix", "label": "Object key / prefix", "placeholder": "exports/sales/2026/", "required": true, "help": "A single file key or a prefix to sync every object under it." },
+      { "key": "region", "label": "Region", "placeholder": "us-east-1", "required": true },
+      { "key": "accessKeyId", "label": "Access key ID", "placeholder": "AKIAIOSFODNN7EXAMPLE", "required": true },
+      { "key": "secretAccessKey", "label": "Secret access key", "placeholder": "••••••••••••••", "type": "password", "required": true, "secret": true },
+      { "key": "format", "label": "File format", "placeholder": "csv, parquet or json" }
+    ]
+  },
+  "azure": {
+    "id": "azure",
+    "name": "Azure Blob Storage",
+    "description": "Read tabular files from an Azure Storage container.",
+    "typeLetter": "A",
+    "primary": { "key": "account", "label": "Storage account name", "placeholder": "lyraanalytics" },
+    "secondary": [
+      { "key": "container", "label": "Container name", "placeholder": "exports", "required": true },
+      { "key": "prefix", "label": "Blob path / prefix", "placeholder": "sales/2026/", "required": true },
+      { "key": "connectionString", "label": "Connection string", "kind": "textarea", "placeholder": "DefaultEndpointsProtocol=https;AccountName=…;AccountKey=…;EndpointSuffix=core.windows.net", "required": true, "secret": true, "help": "From Storage account → Access keys. Stored encrypted at rest." }
+    ]
+  },
+  "gcs": {
+    "id": "gcs",
+    "name": "Google Cloud Storage",
+    "description": "Read tabular files from a GCS bucket via service account.",
+    "typeLetter": "G",
+    "primary": { "key": "bucket", "label": "Bucket name", "placeholder": "lyra-analytics-exports" },
+    "secondary": [
+      { "key": "prefix", "label": "Object path / prefix", "placeholder": "exports/sales/2026/", "required": true },
+      { "key": "serviceAccountJson", "label": "Service-account JSON", "kind": "textarea", "placeholder": "{\"type\":\"service_account\",\"project_id\":\"…\",\"private_key\":\"-----BEGIN…\"}", "required": true, "secret": true, "help": "Paste the full JSON contents of your service-account key. Stored encrypted at rest." }
+    ]
   }
 }
