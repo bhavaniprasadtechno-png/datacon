@@ -121,6 +121,9 @@ enum ConnectorEngine {
   HTTP
   BIGQUERY
   SNOWFLAKE
+  S3
+  AZURE
+  GCS
 }
 
 enum ConnectorStatus {
