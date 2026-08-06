@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Modal } from "../../components/ui/Modal";
+import { Modal, ModalFooter } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
 import { useDataSourcePreview } from "../../api/documents";
 import { Loader2 } from "lucide-react";
@@ -49,7 +49,7 @@ export function DataSourceTableModal({ id, onClose }: { id: string | null; onClo
       )}
       {!isLoading && data && (
         <>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, position: "sticky", top: 0, paddingTop: 20, background: "var(--background)", zIndex: 10 }}>
             <div>
               <div style={{ font: "600 12px 'IBM Plex Mono',monospace", fontWeight: 700 }}>{data.title}</div>
               <div style={{ fontSize: 11.5, color: "#9499ad" }}>
@@ -63,9 +63,10 @@ export function DataSourceTableModal({ id, onClose }: { id: string | null; onClo
           
           <div 
             onScroll={handleScroll}
+            className="table-scroll-container"
             style={{ 
               overflowX: "auto", 
-              overflowY: "auto",
+              overflowY: "overlay",
               maxHeight: "360px",
               marginTop: 14, 
               border: "1px solid #e9eaf2", 
@@ -75,8 +76,8 @@ export function DataSourceTableModal({ id, onClose }: { id: string | null; onClo
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ background: "#f7f8fc" }}>
-                  {data.columns.map((c) => (
-                    <th key={c} style={{ padding: "8px 12px", textAlign: "left", fontWeight: 700, whiteSpace: "nowrap", position: "sticky", top: 0, background: "#f7f8fc", zIndex: 10 }}>
+                  {data.columns.map((c, j) => (
+                    <th key={c} style={{ padding: "8px 12px", paddingRight: j === data.columns.length - 1 ? 24 : 12, textAlign: "left", fontWeight: 700, whiteSpace: "nowrap", position: "sticky", top: 0, background: "#f7f8fc", zIndex: 10 }}>
                       {c}
                     </th>
                   ))}
@@ -86,7 +87,7 @@ export function DataSourceTableModal({ id, onClose }: { id: string | null; onClo
                 {data.sampleRows.slice(0, visibleCount).map((row, i) => (
                   <tr key={i} style={{ borderTop: "1px solid #f0f1f6" }}>
                     {row.map((cell, j) => (
-                      <td key={j} style={{ padding: "8px 12px", fontFamily: "'IBM Plex Mono',monospace", whiteSpace: "nowrap" }}>
+                      <td key={j} style={{ padding: "8px 12px", paddingRight: j === row.length - 1 ? 24 : 12, fontFamily: "'IBM Plex Mono',monospace", whiteSpace: "nowrap" }}>
                         {cell}
                       </td>
                     ))}
@@ -102,14 +103,16 @@ export function DataSourceTableModal({ id, onClose }: { id: string | null; onClo
             )}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
-            <div style={{ fontSize: 11, color: "#9499ad" }}>
-              Showing {Math.min(visibleCount, data.sampleRows.length)} of {(data.rowCount ?? data.sampleRows.length).toLocaleString()} rows · read-only preview
+          <ModalFooter>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
+              <div style={{ fontSize: 11, color: "#9499ad" }}>
+                Showing {Math.min(visibleCount, data.sampleRows.length)} of {(data.rowCount ?? data.sampleRows.length).toLocaleString()} rows · read-only preview
+              </div>
+              <Button variant="secondary" onClick={onClose}>
+                Close
+              </Button>
             </div>
-            <Button variant="secondary" onClick={onClose}>
-              Close
-            </Button>
-          </div>
+          </ModalFooter>
         </>
       )}
     </Modal>

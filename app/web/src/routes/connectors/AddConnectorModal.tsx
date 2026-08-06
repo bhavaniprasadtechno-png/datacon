@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ENGINE_LIST, ENGINE_FIELDS, SYNC_SCHEDULE_OPTIONS, allFields, type ConnectorEngineId, type EngineField } from "@datacon/shared-types";
-import { Modal, ModalHeader } from "../../components/ui/Modal";
+import { Modal, ModalHeader, ModalFooter } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
 import { TYPE_STYLE } from "../../lib/connectorMeta";
 import { useCreateConnector, useTestDraftConnector } from "../../api/connectors";
@@ -150,17 +150,19 @@ export function AddConnectorModal({ open, onClose }: { open: boolean; onClose: (
           {testState === "pass" && <TestBanner tone="pass">✓ {testMsg || "Connection succeeded"}</TestBanner>}
           {testState === "fail" && <TestBanner tone="fail">✕ {testMsg || "Couldn't connect — fill in the required fields to test"}</TestBanner>}
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
-            <Button variant="secondary" onClick={close}>
-              Cancel
-            </Button>
-            <Button variant="secondary" onClick={runTest} disabled={testState === "testing"}>
-              Test connection
-            </Button>
-            <Button variant="primary" disabled={testState !== "pass" || createConnector.isPending} onClick={save}>
-              Connect & discover
-            </Button>
-          </div>
+          <ModalFooter>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+              <Button variant="secondary" onClick={close}>
+                Cancel
+              </Button>
+              <Button variant="secondary" onClick={runTest} disabled={testState === "testing"}>
+                Test connection
+              </Button>
+              <Button variant="primary" disabled={testState !== "pass" || createConnector.isPending} onClick={save}>
+                Connect & discover
+              </Button>
+            </div>
+          </ModalFooter>
         </>
       )}
     </Modal>

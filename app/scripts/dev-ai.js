@@ -18,20 +18,20 @@ const wslVenvUvicorn = path.join(aiDir, ".venv", "bin", "uvicorn");
 let child;
 
 if (process.platform === "win32" && fs.existsSync(winVenvUvicorn)) {
-  child = spawn(winVenvUvicorn, ["app.main:app", "--reload", "--port", port], {
+  child = spawn(winVenvUvicorn, ["app.main:app", "--reload", "--reload-dir", "app", "--port", port], {
     cwd: aiDir,
     stdio: "inherit",
   });
 } else if (fs.existsSync(wslVenvUvicorn)) {
   const driveLetter = aiDir[0].toLowerCase();
   const wslAiDir = `/mnt/${driveLetter}${aiDir.slice(2).replace(/\\/g, "/")}`;
-  const wslCmd = `cd '${wslAiDir}' && export PYTHONPATH=.venv/lib/python3.14/site-packages:. && .venv/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --reload --port ${port}`;
+  const wslCmd = `cd '${wslAiDir}' && export PYTHONPATH=.venv/lib/python3.14/site-packages:. && .venv/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --reload --reload-dir app --port ${port}`;
   child = spawn("wsl", ["bash", "-c", wslCmd], {
     stdio: "inherit",
   });
 } else {
   const command = process.platform === "win32" ? "uvicorn" : "uvicorn";
-  child = spawn(command, ["app.main:app", "--reload", "--port", port], {
+  child = spawn(command, ["app.main:app", "--reload", "--reload-dir", "app", "--port", port], {
     cwd: aiDir,
     stdio: "inherit",
   });

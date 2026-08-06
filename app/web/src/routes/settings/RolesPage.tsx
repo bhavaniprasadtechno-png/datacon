@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useCreateRole, useDeleteRole, usePermissionCatalog, useUpdateRole, useRoles } from "../../api/rbac";
 import { useToast } from "../../stores/useToastStore";
 import { useConfirm } from "../../stores/useConfirmStore";
-import { Modal, ModalHeader } from "../../components/ui/Modal";
+import { Modal, ModalHeader, ModalFooter } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
 import { apiErrorMessage } from "../../api/client";
 import { PageHeader, FieldRow, inputStyle } from "./UsersPage";
@@ -199,14 +199,16 @@ function RoleEditorForm({
           ))}
         </div>
       </FieldRow>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
-        <Button variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button variant="primary" disabled={!name.trim() || selected.length === 0} onClick={() => onSave({ name: name.trim(), colorHex: color, permissions: selected })}>
-          {role ? "Save changes" : "Create role"}
-        </Button>
-      </div>
+      <ModalFooter>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" disabled={!name.trim() || selected.length === 0} onClick={() => onSave({ name: name.trim(), colorHex: color, permissions: selected })}>
+            {role ? "Save changes" : "Create role"}
+          </Button>
+        </div>
+      </ModalFooter>
     </>
   );
 }

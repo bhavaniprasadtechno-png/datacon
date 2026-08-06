@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAssignRole, useRoles, useUsers } from "../../api/rbac";
 import { useToast } from "../../stores/useToastStore";
 import { useConfirm } from "../../stores/useConfirmStore";
-import { Modal, ModalHeader } from "../../components/ui/Modal";
+import { Modal, ModalHeader, ModalFooter } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
 import { RoleBadge } from "../../components/ui/RoleBadge";
 import { Avatar } from "../../components/shell/Sidebar";
@@ -118,14 +118,16 @@ export function AssignRolesPage() {
                 ))}
               </div>
             </FieldRow>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
-              <Button variant="secondary" onClick={() => setTarget(null)}>
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={save}>
-                Assign role
-              </Button>
-            </div>
+            <ModalFooter>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+                <Button variant="secondary" onClick={() => setTarget(null)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" onClick={save}>
+                  Assign role
+                </Button>
+              </div>
+            </ModalFooter>
           </>
         )}
       </Modal>

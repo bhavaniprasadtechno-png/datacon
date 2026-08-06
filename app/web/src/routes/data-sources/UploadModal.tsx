@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Modal } from "../../components/ui/Modal";
+import { Modal, ModalHeader, ModalFooter } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
 import { useUploadDataSource } from "../../api/documents";
 import { useToast } from "../../stores/useToastStore";
@@ -63,12 +63,7 @@ export function UploadModal({ open, onClose }: { open: boolean; onClose: () => v
 
   return (
     <Modal open={open} onClose={close}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <div style={{ fontSize: 18, fontWeight: 800 }}>Upload a data source</div>
-        <button onClick={close} style={{ fontSize: 16, color: "#9499ad" }}>
-          ✕
-        </button>
-      </div>
+      <ModalHeader title="Upload a data source" onClose={close} />
       <div style={{ fontSize: 12.5, color: "#9499ad", marginBottom: 18 }}>
         Accepts CSV (structured, feeds the Descriptive agent) or PDF / TXT / MD (unstructured, feeds the RAG pipeline). Max 10 MB.
       </div>
@@ -106,14 +101,16 @@ export function UploadModal({ open, onClose }: { open: boolean; onClose: () => v
             </div>
           )}
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-            <Button variant="secondary" onClick={close} disabled={state === "uploading"}>
-              Cancel
-            </Button>
-            <Button variant="primary" disabled={!file || state === "uploading"} onClick={doUpload}>
-              Upload
-            </Button>
-          </div>
+          <ModalFooter>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <Button variant="secondary" onClick={close} disabled={state === "uploading"}>
+                Cancel
+              </Button>
+              <Button variant="primary" disabled={!file || state === "uploading"} onClick={doUpload}>
+                Upload
+              </Button>
+            </div>
+          </ModalFooter>
         </>
       )}
 
@@ -123,14 +120,16 @@ export function UploadModal({ open, onClose }: { open: boolean; onClose: () => v
             <div style={{ fontSize: 13, fontWeight: 700, color: "#c0392b", marginBottom: 4 }}>⚠ Upload rejected</div>
             <div style={{ fontSize: 12.5, color: "#8a3226" }}>{errorMsg}</div>
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-            <Button variant="secondary" onClick={close}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={() => inputRef.current?.click()}>
-              Choose another
-            </Button>
-          </div>
+          <ModalFooter>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <Button variant="secondary" onClick={close}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={() => inputRef.current?.click()}>
+                Choose another
+              </Button>
+            </div>
+          </ModalFooter>
         </>
       )}
     </Modal>

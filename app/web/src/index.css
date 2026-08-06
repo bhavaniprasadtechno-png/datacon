@@ -127,3 +127,8 @@
     @apply font-sans;
     }
 }
+
+.table-scroll-container::-webkit-scrollbar-track {
+  margin-top: 34px;
+  margin-bottom: 10px;
+}

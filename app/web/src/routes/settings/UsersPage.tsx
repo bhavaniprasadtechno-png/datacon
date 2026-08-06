@@ -3,7 +3,7 @@ import { useAuth } from "../../stores/useAuthStore";
 import { useCreateUser, useDeleteUser, useRoles, useUpdateUser, useUsers } from "../../api/rbac";
 import { useToast } from "../../stores/useToastStore";
 import { useConfirm } from "../../stores/useConfirmStore";
-import { Modal, ModalHeader } from "../../components/ui/Modal";
+import { Modal, ModalHeader, ModalFooter } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
 import { RoleBadge } from "../../components/ui/RoleBadge";
 import { Avatar } from "../../components/shell/Sidebar";
@@ -171,14 +171,16 @@ function UserEditorForm({
           ))}
         </div>
       </FieldRow>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
-        <Button variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button variant="primary" disabled={!name.trim() || !email.trim()} onClick={() => onSave({ name: name.trim(), email: email.trim(), roleId })}>
-          {user ? "Save changes" : "Create user"}
-        </Button>
-      </div>
+      <ModalFooter>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" disabled={!name.trim() || !email.trim()} onClick={() => onSave({ name: name.trim(), email: email.trim(), roleId })}>
+            {user ? "Save changes" : "Create user"}
+          </Button>
+        </div>
+      </ModalFooter>
     </>
   );
 }
