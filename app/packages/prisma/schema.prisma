@@ -31,6 +31,8 @@ model Organization {
   conversations Conversation[]
   messages      Message[]
   feedback      Feedback[]
+  dashboards    Dashboard[]
+  dashlets      Dashlet[]
 
   @@map("organizations")
 }
@@ -69,6 +71,7 @@ model User {
   conversations Conversation[]
   documents     DataSource[]
   feedback      Feedback[]
+  dashboards    Dashboard[]
 
   @@map("users")
 }
@@ -263,4 +266,35 @@ model Feedback {
   createdAt DateTime @default(now())
 
   @@map("feedback")
+}
+
+// ───────────────────────────── Dashboards ─────────────────────────────
+
+model Dashboard {
+  id        String   @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  dashlets  Dashlet[]
+
+  @@map("dashboards")
+}
+
+model Dashlet {
+  id          String    @id @default(cuid())
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id])
+  dashboardId String
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  title       String
+  text        String
+  intent      Intent
+  payload     Json
+  createdAt   DateTime  @default(now())
+
+  @@map("dashlets")
 }

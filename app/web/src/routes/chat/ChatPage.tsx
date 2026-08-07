@@ -5,6 +5,9 @@ import { AVAILABLE_LLM_MODELS, CHAT_SUGGESTIONS, INTENT_META, type ChatIntent, t
 import { useChatMessages, useFeedback, streamChat, useLlmModels } from "../../api/chat";
 import { useToast } from "../../stores/useToastStore";
 import { AgentVisualization } from "./AgentVisualization";
+import { SaveDashboardModal } from "./SaveDashboardModal";
+import { CitationDrawer } from "../../components/common/CitationDrawer";
+import type { DashletIntent } from "../../api/dashboards";
 import type { ChatMessage, ChatPayload } from "../../lib/types";
 import {
   Sparkles,
@@ -15,7 +18,8 @@ import {
   FileText,
   Compass,
   LineChart,
-  Play
+  Play,
+  LayoutDashboard
 } from "lucide-react";
 
 let localIdSeq = 1;
@@ -31,6 +35,17 @@ const INTENT_ICON: Record<ChatIntent, typeof FileText> = {
 
 const CONFIDENCE_LABEL = { high: "High confidence", medium: "Medium confidence", low: "Low confidence" } as const;
 const CONFIDENCE_COLOR = { high: "#0f8a5c", medium: "#a3730c", low: "#7a7f8a" } as const;
+
+/** The question that produced a given agent message: the nearest preceding
+ * user message in the flat message list — one question can fan out to
+ * several agent messages (one per intent), all sharing the same origin. */
+function findQuestionFor(messages: ChatMessage[], agentId: string): string {
+  const idx = messages.findIndex((m) => m.id === agentId);
+  for (let i = idx - 1; i >= 0; i--) {
+    if (messages[i].role === "user") return messages[i].text;
+  }
+  return "";
+}
 
 export function ChatPage() {
   const qc = useQueryClient();
@@ -52,6 +67,7 @@ export function ChatPage() {
   const sendingRef = useRef(false);
   const sentPending = useRef(false);
   const [openCitation, setOpenCitation] = useState<Citation | null>(null);
+  const [dashboardTarget, setDashboardTarget] = useState<{ title: string; text: string; intent: DashletIntent; payload: ChatPayload } | null>(null);
 
   useEffect(() => {
     if (availableModels.length > 0 && !availableModels.some((m) => m.id === model)) {
@@ -264,6 +280,21 @@ export function ChatPage() {
                         >
                           <ThumbsDown size={12} />
                         </button>
+                        {m.payload && (m.payload.chart || m.payload.table || (m.payload.actions && m.payload.actions.length > 0)) && (
+                          <button
+                            onClick={() =>
+                              setDashboardTarget({
+                                title: findQuestionFor(messages, m.id) || m.text.slice(0, 80),
+                                text: m.text,
+                                intent: (m.intent as DashletIntent) ?? "descriptive",
+                                payload: m.payload!,
+                              })
+                            }
+                            style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "4px 9px", borderRadius: "var(--radius-sm)", color: "var(--ac-deep)", background: "var(--ac-soft)" }}
+                          >
+                            <LayoutDashboard size={12} /> Add to dashboard
+                          </button>
+                        )}
                         <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--ac-muted)" }}>
                           {m.vote === 1 ? "Thanks — feeds insight accuracy" : m.vote === -1 ? "Noted — we'll improve routing" : "Was this helpful?"}
                         </span>
@@ -328,41 +359,17 @@ export function ChatPage() {
           </div>
         </div>
 
-        {openCitation && (
-          <div
-            onClick={() => setOpenCitation(null)}
-            style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(0,0,0,0.3)" }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                position: "absolute",
-                right: 0,
-                top: 0,
-                height: "100%",
-                width: "min(480px, 100%)",
-                background: "#fff",
-                borderLeft: "1px solid var(--ac-border)",
-                padding: 24,
-                overflowY: "auto",
-              }}
-            >
-              <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac-muted)" }}>SOURCE CITATION</div>
-              <div style={{ fontSize: 19, fontWeight: 800, marginTop: 8 }}>{openCitation.documentTitle}</div>
-              <div style={{ font: "500 11px 'IBM Plex Mono',monospace", color: "var(--ac-muted)", marginTop: 4 }}>
-                {openCitation.filename} · chunk {openCitation.chunkIndex}
-              </div>
-              <div style={{ fontSize: 13, lineHeight: 1.6, color: "var(--ac-fg)", marginTop: 16, background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-sm)", padding: 14, whiteSpace: "pre-wrap" }}>
-                {openCitation.snippet}
-              </div>
-              <button
-                onClick={() => setOpenCitation(null)}
-                style={{ marginTop: 20, padding: "8px 14px", borderRadius: "var(--radius-sm)", background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", fontSize: 12.5, fontWeight: 600 }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
+        <CitationDrawer citation={openCitation} onClose={() => setOpenCitation(null)} />
+
+        {dashboardTarget && (
+          <SaveDashboardModal
+            open={true}
+            onClose={() => setDashboardTarget(null)}
+            title={dashboardTarget.title}
+            text={dashboardTarget.text}
+            intent={dashboardTarget.intent}
+            payload={dashboardTarget.payload}
+          />
         )}
     </div>
   );

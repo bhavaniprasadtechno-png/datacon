@@ -1,7 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../stores/useAuthStore";
 import { useInsights } from "../../api/insights";
 import { useConnectors } from "../../api/connectors";
+import { useDashboards } from "../../api/dashboards";
+import { DashboardsList } from "./DashboardsList";
 import { Skeleton, KpiCardSkeleton, ChartCardSkeleton } from "../../components/ui/Skeleton";
 
 const TONE_STYLE = {
@@ -14,6 +16,9 @@ export function InsightsPage() {
   const { data, isLoading } = useInsights();
   const { data: connectors } = useConnectors();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "dashboards" ? "dashboards" : "overview";
+  const { data: dashboards } = useDashboards();
 
   const liveSyncs = connectors?.filter((c) => c.status === "SYNCED" || c.status === "SYNCING").length ?? 0;
   const todayLabel = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
@@ -51,6 +56,25 @@ export function InsightsPage() {
         </div>
       </div>
 
+      <div style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: "1px solid var(--ac-border)" }}>
+        <button
+          onClick={() => setSearchParams({}, { replace: true })}
+          style={{ padding: "10px 14px", fontSize: 13, fontWeight: 700, color: tab === "overview" ? "var(--ac-deep)" : "var(--ac-muted)", borderBottom: tab === "overview" ? "2px solid var(--ac)" : "2px solid transparent" }}
+        >
+          Overview
+        </button>
+        <button
+          onClick={() => setSearchParams({ tab: "dashboards" }, { replace: true })}
+          style={{ padding: "10px 14px", fontSize: 13, fontWeight: 700, color: tab === "dashboards" ? "var(--ac-deep)" : "var(--ac-muted)", borderBottom: tab === "dashboards" ? "2px solid var(--ac)" : "2px solid transparent" }}
+        >
+          My dashboards · {dashboards?.length ?? 0}
+        </button>
+      </div>
+
+      {tab === "dashboards" ? (
+        <DashboardsList />
+      ) : (
+        <>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 20 }}>
         {isLoading || !data ? (
           <>
@@ -152,6 +176,8 @@ export function InsightsPage() {
         <span style={{ flex: 1, textAlign: "left", fontSize: 13.5, color: "#9499ad" }}>Ask Datacon anything about your business…</span>
         <span style={{ background: "var(--ac-grad)", color: "#fff", fontWeight: 700, fontSize: 12.5, padding: "8px 16px", borderRadius: 10 }}>Ask ✦</span>
       </button>
+        </>
+      )}
     </div>
   );
 }

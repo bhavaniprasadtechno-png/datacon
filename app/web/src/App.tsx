@@ -15,6 +15,7 @@ import { ChatPage } from "./routes/chat/ChatPage";
 import { ChatHistoryPage } from "./routes/chat/ChatHistoryPage";
 // import { ForecastsPage } from "./routes/forecasts/ForecastsPage";
 import { InsightsPage } from "./routes/insights/InsightsPage";
+import { DashboardDetailPage } from "./routes/insights/DashboardDetailPage";
 import { ThemesPage } from "./routes/themes/ThemesPage";
 import { OrganizationsPage } from "./routes/platform-admin/OrganizationsPage";
 import { OrgUsersPage } from "./routes/platform-admin/OrgUsersPage";
@@ -69,6 +70,7 @@ function AppRoutes() {
         <Route path="/chat" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
         <Route path="/chat/history" element={<ErrorBoundary><ChatHistoryPage /></ErrorBoundary>} />
         <Route path="/insights" element={<ErrorBoundary><InsightsPage /></ErrorBoundary>} />
+        <Route path="/insights/dashboards/:id" element={<ErrorBoundary><DashboardDetailPage /></ErrorBoundary>} />
         <Route path="/connectors" element={<ErrorBoundary><ConnectorsPage /></ErrorBoundary>} />
         <Route path="/data-sources" element={<ErrorBoundary><DataSourcesPage /></ErrorBoundary>} />
         {/* <Route path="/forecasts" element={<ForecastsPage />} /> */}

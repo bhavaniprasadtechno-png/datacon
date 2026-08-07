@@ -14,6 +14,7 @@ import { MetricsModule } from "./metrics/metrics.module";
 import { ChatModule } from "./chat/chat.module";
 import { ForecastsModule } from "./forecasts/forecasts.module";
 import { InsightsModule } from "./insights/insights.module";
+import { DashboardsModule } from "./dashboards/dashboards.module";
 import { PlatformAdminModule } from "./platform-admin/platform-admin.module";
 import { OrgContextInterceptor } from "./prisma/org-context.interceptor";
 import { RequestTransactionMiddleware } from "./prisma/request-transaction.middleware";
@@ -33,6 +34,7 @@ import { RequestTransactionMiddleware } from "./prisma/request-transaction.middl
     ChatModule,
     ForecastsModule,
     InsightsModule,
+    DashboardsModule,
     PlatformAdminModule,
   ],
   controllers: [HealthController],

@@ -94,10 +94,10 @@ export function AuthPage() {
           <span style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-.01em" }}>Datacon</span>
         </div>
         <div style={{ position: "relative" }}>
-          <div style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: ".2em", color: "#b6abff", marginBottom: 18 }}>ENTERPRISE ANALYTICS · OS</div>
-          <h1 style={{ margin: 0, fontSize: 38, lineHeight: 1.12, fontWeight: 800, letterSpacing: "-.025em", maxWidth: 440 }}>Ask your whole business one question.</h1>
+          <div style={{ font: "600 11px 'IBM Plex Mono',monospace", letterSpacing: ".2em", color: "#b6abff", marginBottom: 18 }}>DECISION INTELLIGENCE</div>
+          <h1 style={{ margin: 0, fontSize: 38, lineHeight: 1.12, fontWeight: 800, letterSpacing: "-.025em", maxWidth: 440 }}>Agents that help your business decide, faster.</h1>
           <p style={{ margin: "20px 0 0", fontSize: 15, lineHeight: 1.6, color: "#d8d3ff", maxWidth: 420 }}>
-            Datacon unifies your databases and your documents behind one conversation — routed to descriptive, diagnostic, predictive and prescriptive agents.
+            Datacon's agents analyze your data, explain why it happened, forecast what's next, and recommend what to do — so every decision your team makes is backed by evidence, not guesswork.
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 30, flexWrap: "wrap" }}>
             {PIPELINE.map((node, i) => (
