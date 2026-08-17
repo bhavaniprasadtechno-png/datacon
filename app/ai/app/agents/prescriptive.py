@@ -1,9 +1,3 @@
-from app.agents.analytics import (
-    churn_stats,
-    format_facts,
-    region_stats,
-    ticket_stats,
-)
 from app.agents.types import AgentPrep
 from app.query_engine.executor import answer_question
 from app.query_engine.extract import column_index

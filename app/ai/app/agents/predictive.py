@@ -1,4 +1,3 @@
-from app.agents.analytics import format_facts, region_stats, revenue_stats, run_forecast
 from app.agents.types import AgentPrep
 from app.forecasting import ols, holt_winters
 from app.query_engine.executor import answer_question

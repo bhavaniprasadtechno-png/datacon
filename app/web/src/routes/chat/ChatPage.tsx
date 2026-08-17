@@ -6,6 +6,7 @@ import { useChatMessages, useFeedback, streamChat, useLlmModels } from "../../ap
 import { useToast } from "../../stores/useToastStore";
 import { AgentVisualization } from "./AgentVisualization";
 import { SaveDashboardModal } from "./SaveDashboardModal";
+import { hasDashletContent } from "../../lib/payloadAdapter";
 import { CitationDrawer } from "../../components/common/CitationDrawer";
 import type { DashletIntent } from "../../api/dashboards";
 import type { ChatMessage, ChatPayload } from "../../lib/types";
@@ -280,7 +281,7 @@ export function ChatPage() {
                         >
                           <ThumbsDown size={12} />
                         </button>
-                        {m.payload && (m.payload.chart || m.payload.table || (m.payload.actions && m.payload.actions.length > 0)) && (
+                        {m.payload && hasDashletContent(m.payload, m.text) && (
                           <button
                             onClick={() =>
                               setDashboardTarget({

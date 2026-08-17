@@ -4,6 +4,7 @@ import { Modal, ModalHeader, ModalFooter } from "../../components/ui/Modal";
 import { useToast } from "../../stores/useToastStore";
 import { apiErrorMessage } from "../../api/client";
 import { useDashboards, useSaveDashboard, type DashletIntent } from "../../api/dashboards";
+import { adaptPayload, isChartVisualization, isStructuredResponse } from "../../lib/payloadAdapter";
 import type { ChatPayload } from "../../lib/types";
 
 type VisualInclude = "both" | "chart" | "table";
@@ -26,8 +27,9 @@ export function SaveDashboardModal({ open, onClose, title, text, intent, payload
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [include, setInclude] = useState<VisualInclude>("both");
 
-  const hasChart = !!payload.chart;
-  const hasTable = !!payload.table;
+  const adapted = adaptPayload(payload, text);
+  const hasChart = adapted.visualizations.some((v) => isChartVisualization(v.type));
+  const hasTable = adapted.tables.length > 0;
 
   useEffect(() => {
     if (!open) return;
@@ -53,11 +55,20 @@ export function SaveDashboardModal({ open, onClose, title, text, intent, payload
   const save = async () => {
     try {
       const targetName = mode === "existing" ? dashboards.find((d) => d.id === selectedId)?.name : name.trim();
-      const scopedPayload: ChatPayload = {
-        ...payload,
-        chart: include === "table" ? undefined : payload.chart,
-        table: include === "chart" ? undefined : payload.table,
-      };
+      const rawPayload: unknown = payload;
+      const scopedPayload = (
+        isStructuredResponse(rawPayload)
+          ? {
+              ...rawPayload,
+              visualizations: include === "table" ? [] : rawPayload.visualizations,
+              tables: include === "chart" ? [] : rawPayload.tables,
+            }
+          : {
+              ...payload,
+              chart: include === "table" ? undefined : payload.chart,
+              table: include === "chart" ? undefined : payload.table,
+            }
+      ) as ChatPayload;
       await saveDashboard.mutateAsync({
         dashboardId: mode === "existing" ? selectedId! : undefined,
         name: mode === "new" ? name.trim() : undefined,

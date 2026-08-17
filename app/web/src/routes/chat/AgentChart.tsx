@@ -20,6 +20,26 @@ export function AgentChart({ chart }: { chart: AgentChartData }) {
 
   const titleText = (chart.title || "Chart").toUpperCase();
 
+  if (chart.type === "horizontal_bar") {
+    const height = Math.max(120, chart.data.length * 32);
+    return (
+      <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>
+        <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)", marginBottom: 8 }}>
+          {titleText}
+        </div>
+        <ResponsiveContainer width="100%" height={height}>
+          <BarChart data={chart.data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--ac-border)" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" />
+            <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" width={100} />
+            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+            <Bar dataKey="value" fill="var(--ac)" radius={[0, 4, 4, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
   if (chart.type === "bar") {
     return (
       <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>

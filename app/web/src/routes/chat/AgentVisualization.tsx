@@ -1,5 +1,7 @@
+import { useState } from "react";
 import type { ChatMessage } from "../../lib/types";
-import type { AgentTable, Citation, PrescriptiveAction } from "@datacon/shared-types";
+import type { AgentTable, Citation, Insight, Metric, PrescriptiveAction, Source, StructuredTable } from "@datacon/shared-types";
+import { adaptPayload, isChartVisualization } from "../../lib/payloadAdapter";
 import { AgentChart } from "./AgentChart";
 
 function CorrelationTag({ text }: { text: string }) {
@@ -21,7 +23,66 @@ function CorrelationTag({ text }: { text: string }) {
   );
 }
 
-function DataTable({ table }: { table: AgentTable }) {
+const METRIC_FORMAT: Record<Metric["format"], { prefix: string; suffix: string }> = {
+  currency: { prefix: "$", suffix: "" },
+  number: { prefix: "", suffix: "" },
+  percentage: { prefix: "", suffix: "%" },
+  text: { prefix: "", suffix: "" },
+};
+
+function formatMetricValue(metric: Metric): string {
+  const value = typeof metric.value === "number" ? metric.value.toLocaleString() : String(metric.value);
+  const { prefix, suffix } = METRIC_FORMAT[metric.format];
+  return `${prefix}${value}${suffix}`;
+}
+
+function MetricCards({ metrics }: { metrics: Metric[] }) {
+  if (!metrics.length) return null;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 10 }}>
+      {metrics.map((m) => (
+        <div
+          key={m.id}
+          style={{
+            border: "1px solid var(--ac-border)",
+            borderRadius: "var(--radius-lg)",
+            padding: "10px 14px",
+            minWidth: 100,
+            background: "var(--ac-bg-muted)",
+          }}
+        >
+          <div style={{ font: "600 9px 'IBM Plex Mono',monospace", letterSpacing: ".08em", color: "var(--ac-muted)", marginBottom: 2 }}>
+            {m.label.toUpperCase()}
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ac-fg)" }}>{formatMetricValue(m)}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const INSIGHT_STYLE: Record<Insight["type"], { icon: string; color: string }> = {
+  positive: { icon: "✓", color: "#0f8a5c" },
+  attention: { icon: "⚠", color: "#a3730c" },
+  neutral: { icon: "•", color: "var(--ac-muted)" },
+};
+
+function InsightList({ insights }: { insights: Insight[] }) {
+  if (!insights.length) return null;
+  return (
+    <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac-muted)" }}>KEY INSIGHTS</div>
+      {insights.map((insight, i) => (
+        <div key={i} style={{ display: "flex", gap: 6, fontSize: 12.5, color: "var(--ac-fg)" }}>
+          <span style={{ color: INSIGHT_STYLE[insight.type].color }}>{INSIGHT_STYLE[insight.type].icon}</span>
+          <span>{insight.text}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DataTable({ table }: { table: AgentTable | StructuredTable }) {
   if (!table || !Array.isArray(table.columns) || !Array.isArray(table.rows) || !table.columns.length || !table.rows.length) return null;
   return (
     <div style={{ border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", overflow: "auto", marginTop: 10 }}>
@@ -58,6 +119,43 @@ function DataTable({ table }: { table: AgentTable }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function RecordsDisclosure({ table }: { table: StructuredTable }) {
+  const [open, setOpen] = useState(!table.collapsed);
+  if (!table.columns.length || !table.rows.length) return null;
+  if (!table.collapsed) return <DataTable table={table} />;
+  return (
+    <div style={{ marginTop: 10 }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          background: "none",
+          border: "none",
+          padding: 0,
+          font: "600 12px inherit",
+          color: "var(--ac)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        <span style={{ transform: open ? "rotate(90deg)" : "none", display: "inline-block", transition: "transform 0.15s" }}>▸</span>
+        {open ? "Hide underlying records" : "View underlying records"}
+      </button>
+      {open && <DataTable table={table} />}
+    </div>
+  );
+}
+
+function SourcesLine({ sources }: { sources: Source[] }) {
+  if (!sources.length) return null;
+  return (
+    <div style={{ marginTop: 10, fontSize: 11, color: "var(--ac-muted)" }}>
+      Sources: {sources.map((s) => s.dataset).join(", ")}
     </div>
   );
 }
@@ -178,15 +276,23 @@ function RecommendationCards({ items, citations, onOpen }: { items: Prescriptive
 
 export function AgentVisualization({ message, onOpenCitation }: { message: ChatMessage; onOpenCitation: (citation: Citation) => void }) {
   if (!message || !message.payload || typeof message.payload !== "object") return null;
-  const payload = message.payload as Record<string, any>;
+  const adapted = adaptPayload(message.payload, message.text);
+  const chartViz = adapted.visualizations.find((v) => isChartVisualization(v.type));
 
   return (
     <div style={{ marginTop: 8 }}>
-      {payload.correlation && <CorrelationTag text={String(payload.correlation)} />}
-      {payload.chart && <AgentChart chart={payload.chart} />}
-      {payload.table && <DataTable table={payload.table} />}
-      {payload.citations && <Citations items={payload.citations} onOpen={onOpenCitation} />}
-      {payload.actions && <RecommendationCards items={payload.actions} citations={payload.citations ?? []} onOpen={onOpenCitation} />}
+      {adapted.correlation && <CorrelationTag text={adapted.correlation} />}
+      <MetricCards metrics={adapted.metrics} />
+      {chartViz && (
+        <AgentChart chart={{ type: chartViz.type as "bar" | "line" | "horizontal_bar", title: chartViz.title ?? "", data: chartViz.data as any }} />
+      )}
+      <InsightList insights={adapted.insights} />
+      {adapted.tables.map((t, i) => (
+        <RecordsDisclosure key={i} table={t} />
+      ))}
+      <Citations items={adapted.citations} onOpen={onOpenCitation} />
+      <RecommendationCards items={adapted.actions} citations={adapted.citations} onOpen={onOpenCitation} />
+      <SourcesLine sources={adapted.sources} />
     </div>
   );
 }

@@ -92,21 +92,31 @@ def ensure_seeded_from_postgres() -> None:
         logger.warning("[DuckDB] Could not seed DuckDB from PostgreSQL unified_datasets: %s", e)
 
 
-def schema() -> dict[str, list[str]]:
-    """Table name -> column names, for every table currently loaded."""
+def _list_tables() -> list[tuple[str]]:
     with _lock:
         conn = _connect()
         try:
-            tables = conn.execute(
+            return conn.execute(
                 "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
             ).fetchall()
-            if not tables:
-                conn.close()
-                ensure_seeded_from_postgres()
-                conn = _connect()
-                tables = conn.execute(
-                    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
-                ).fetchall()
+        finally:
+            conn.close()
+
+
+def schema() -> dict[str, list[str]]:
+    """Table name -> column names, for every table currently loaded."""
+    tables = _list_tables()
+    if not tables:
+        # Must run outside `_lock`: this can call back into `load_dataset()`,
+        # which acquires `_lock` itself. Nesting the acquisition on the same
+        # thread (and opening a second connection to the same file while the
+        # first is still open) deadlocks.
+        ensure_seeded_from_postgres()
+        tables = _list_tables()
+
+    with _lock:
+        conn = _connect()
+        try:
             out: dict[str, list[str]] = {}
             for (table_name,) in tables:
                 cols = conn.execute(

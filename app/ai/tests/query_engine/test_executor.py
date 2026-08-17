@@ -8,6 +8,8 @@ from app.query_engine import executor, snapshot_store
 @pytest.fixture(autouse=True)
 def isolated_db(tmp_path, monkeypatch):
     monkeypatch.setattr(snapshot_store.settings, "query_engine_db_path", str(tmp_path / "test.duckdb"))
+    monkeypatch.setattr(snapshot_store.settings, "database_url", "")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     yield
 
 

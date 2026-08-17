@@ -1,0 +1,344 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 1200" font-family="'JetBrains Mono','SF Mono','Cascadia Code',monospace">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap');
+    text { font-family: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace; }
+  </style>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee"/>
+    </marker>
+    <marker id="arrow-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#fb923c"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-rose" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#0f172a"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+
+  <!-- ===================== REGION BOUNDARIES ===================== -->
+  
+  <!-- Legacy Paths Region -->
+  <rect x="540" y="110" width="240" height="305" rx="12" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="8,4"/>
+  <text x="556" y="130" fill="#94a3b8" font-size="9" font-weight="600">LEGACY UNCHANGED ANALYSTS</text>
+
+  <!-- LLM client box -->
+  <rect x="850" y="110" width="240" height="250" rx="12" fill="none" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="8,4"/>
+  <text x="866" y="130" fill="#fbbf24" font-size="9" font-weight="600">LLM INFERENCE CLIENT</text>
+
+  <!-- New Structured Analytics Pipeline Region -->
+  <rect x="290" y="470" width="1340" height="545" rx="12" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="12,4"/>
+  <text x="310" y="495" fill="#fbbf24" font-size="11" font-weight="700">NEW ANALYTICS RESPONSE PIPELINE (descriptive.py intent path)</text>
+
+  <!-- Data Sources Region -->
+  <rect x="300" y="1035" width="510" height="100" rx="12" fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="8,4"/>
+  <text x="316" y="1052" fill="#a78bfa" font-size="9" font-weight="600">DATA STORES</text>
+
+  <!-- ===================== CONNECTORS (drawn under boxes) ===================== -->
+  
+  <!-- Chat UI -> POST /stream -->
+  <path d="M 150,200 L 150,260" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+  
+  <!-- POST /stream -> route_dynamic -->
+  <path d="M 240,305 L 265,305 L 265,250 L 290,250" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  
+  <!-- Router -> Legacy paths (split) -->
+  <path d="M 490,230 L 525,230 L 525,165 L 560,165" fill="none" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <path d="M 490,230 L 525,230 L 525,375 L 560,375" fill="none" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <path d="M 490,230 L 525,230 L 525,235 L 560,235" fill="none" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <path d="M 490,230 L 525,230 L 525,305 L 560,305" fill="none" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <text x="500" y="215" fill="#94a3b8" font-size="7" text-anchor="middle">other intents</text>
+
+  <!-- Router -> Query Engine (Descriptive intent path) -->
+  <path d="M 390,315 L 390,440 L 430,440 L 430,535" fill="none" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-emerald)"/>
+  <text x="445" y="435" fill="#34d399" font-size="8" font-weight="600">descriptive intent</text>
+
+  <!-- Query Engine -> Result Normalizer -->
+  <path d="M 540,580 L 590,580" fill="none" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+
+  <!-- Fallback: RAG -> Result Normalizer -->
+  <path d="M 540,710 L 565,710 L 565,610 L 590,610" fill="none" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arrow)"/>
+  <text x="560" y="650" fill="#a78bfa" font-size="7" text-anchor="middle">RAG Fallback</text>
+
+  <!-- Result Normalizer -> Analytics Engine -->
+  <path d="M 800,580 L 850,580" fill="none" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+
+  <!-- Analytics Engine -> Insight Engine -->
+  <path d="M 1060,580 L 1110,580" fill="none" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+
+  <!-- Analytics Engine -> Insight Engine -->
+  <path d="M 1060,580 L 1110,580" fill="none" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+
+  <!-- Insight Engine -> Presentation Planner -->
+  <path d="M 1320,580 L 1370,580" fill="none" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+
+  <!-- Presentation Planner -> Validator -->
+  <path d="M 1475,630 L 1475,700" fill="none" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+
+  <!-- Validator -> LLM Facts Prompt -->
+  <path d="M 1370,750 L 1320,750" fill="none" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arrow-rose)"/>
+
+  <!-- LLM Facts Prompt -> Structured Response -->
+  <path d="M 1110,780 L 955,780 L 955,850" fill="none" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+
+  <!-- LLM Facts Prompt -> LLM Providers (upwards to client) -->
+  <path d="M 1215,700 L 1215,410 L 970,410 L 970,360" fill="none" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="1205" y="430" fill="#60a5fa" font-size="8" text-anchor="end">Facts-only prompt payload</text>
+
+  <!-- LLM client -> SSE Response (compose_stream deltas) -->
+  <path d="M 1090,235 L 1150,235" fill="none" stroke="#fb923c" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+  <text x="1120" y="225" fill="#fb923c" font-size="7" text-anchor="middle">text deltas</text>
+
+  <!-- Structured Response -> SSE Stream (agent_done payload) -->
+  <path d="M 1090,920 L 1345,920 L 1345,310" fill="none" stroke="#22d3ee" stroke-width="1.8" marker-end="url(#arrow-cyan)"/>
+  <text x="1335" y="890" fill="#22d3ee" font-size="8" text-anchor="end">StructuredResponse payload</text>
+
+  <!-- SSE Response Stream -> Chat UI (SSE return stream) -->
+  <path d="M 1260,110 L 1260,70 L 150,70 L 150,120" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-cyan)"/>
+  <text x="700" y="62" fill="#22d3ee" font-size="9" text-anchor="middle">SSE Stream: agents / agent_start / agent_delta / agent_done / error / done</text>
+
+  <!-- Legacy Analysts -> LLM client (direct LLM query) -->
+  <path d="M 760,235 L 850,235" fill="none" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+  <!-- Query Engine -> DuckDB -->
+  <path d="M 430,625 L 430,1070" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow)"/>
+  
+  <!-- ChromaDB RAG Fallback -> ChromaDB Vector Store -->
+  <path d="M 430,755 L 430,1020 L 700,1020 L 700,1070" fill="none" stroke="#a78bfa" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- ===================== MASK LAYER (opaque, hides connectors under boxes) ===================== -->
+  
+  <rect x="60" y="120" width="180" height="80" rx="6" fill="#0f172a"/>
+  <rect x="60" y="260" width="180" height="110" rx="6" fill="#0f172a"/>
+  <rect x="290" y="185" width="200" height="130" rx="6" fill="#0f172a"/>
+  
+  <rect x="560" y="140" width="200" height="50" rx="6" fill="#0f172a"/>
+  <rect x="560" y="210" width="200" height="50" rx="6" fill="#0f172a"/>
+  <rect x="560" y="280" width="200" height="50" rx="6" fill="#0f172a"/>
+  <rect x="560" y="350" width="200" height="50" rx="6" fill="#0f172a"/>
+
+  <rect x="870" y="140" width="200" height="45" rx="6" fill="#0f172a"/>
+  <rect x="870" y="200" width="200" height="45" rx="6" fill="#0f172a"/>
+  <rect x="870" y="260" width="200" height="45" rx="6" fill="#0f172a"/>
+
+  <rect x="1150" y="110" width="220" height="200" rx="6" fill="#0f172a"/>
+
+  <rect x="320" y="535" width="220" height="90" rx="6" fill="#0f172a"/>
+  <rect x="320" y="665" width="220" height="90" rx="6" fill="#0f172a"/>
+  <rect x="590" y="530" width="210" height="100" rx="6" fill="#0f172a"/>
+  <rect x="850" y="530" width="210" height="100" rx="6" fill="#0f172a"/>
+  <rect x="1110" y="530" width="210" height="100" rx="6" fill="#0f172a"/>
+  <rect x="1370" y="530" width="210" height="100" rx="6" fill="#0f172a"/>
+  <rect x="1370" y="700" width="210" height="100" rx="6" fill="#0f172a"/>
+  <rect x="1110" y="700" width="210" height="100" rx="6" fill="#0f172a"/>
+  <rect x="820" y="850" width="270" height="140" rx="6" fill="#0f172a"/>
+
+  <rect x="360" y="1070" width="140" height="50" rx="2" fill="#0f172a"/>
+  <rect x="630" y="1070" width="140" height="50" rx="2" fill="#0f172a"/>
+
+  <!-- ===================== VISUAL LAYER (styled boxes) ===================== -->
+
+  <!-- Chat UI -->
+  <rect x="60" y="120" width="180" height="80" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="150" y="142" fill="white" font-size="11" font-weight="600" text-anchor="middle">Chat UI</text>
+  <text x="150" y="158" fill="#94a3b8" font-size="8.5" text-anchor="middle">web client (React)</text>
+  <text x="150" y="172" fill="#94a3b8" font-size="8.5" text-anchor="middle">Sends user prompt</text>
+  <text x="150" y="186" fill="#94a3b8" font-size="8.5" text-anchor="middle">to FastAPI backend</text>
+
+  <!-- FastAPI stream -->
+  <rect x="60" y="260" width="180" height="110" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="150" y="282" fill="white" font-size="11" font-weight="600" text-anchor="middle">POST /stream</text>
+  <text x="150" y="298" fill="#94a3b8" font-size="8.5" text-anchor="middle">internal/chat_router.py</text>
+  <text x="150" y="314" fill="#94a3b8" font-size="8.5" text-anchor="middle">FastAPI Stream Endpoint</text>
+  <text x="150" y="330" fill="#94a3b8" font-size="8.5" text-anchor="middle">SSE chunks from agents</text>
+  <text x="150" y="346" fill="#fda4af" font-size="8.5" text-anchor="middle">Handles "error" events</text>
+
+  <!-- Intent Router -->
+  <rect x="290" y="185" width="200" height="130" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="390" y="210" fill="white" font-size="11" font-weight="600" text-anchor="middle">route_dynamic()</text>
+  <text x="390" y="226" fill="#94a3b8" font-size="8.5" text-anchor="middle">agents/router.py</text>
+  <text x="390" y="246" fill="#d1fae5" font-size="8.5" font-weight="600" text-anchor="middle">LLM Intent Classifier</text>
+  <text x="390" y="262" fill="#94a3b8" font-size="8.5" text-anchor="middle">Determines agent intents:</text>
+  <text x="390" y="278" fill="#94a3b8" font-size="8.5" text-anchor="middle">descriptive / diagnostic</text>
+  <text x="390" y="294" fill="#94a3b8" font-size="8.5" text-anchor="middle">predictive / prescriptive</text>
+
+  <!-- Legacy Analysts -->
+  <rect x="560" y="140" width="200" height="50" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="660" y="165" fill="white" font-size="10.5" font-weight="600" text-anchor="middle">Diagnostic Agent</text>
+  <text x="660" y="179" fill="#94a3b8" font-size="8" text-anchor="middle">diagnostic.py</text>
+
+  <rect x="560" y="210" width="200" height="50" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="660" y="235" fill="white" font-size="10.5" font-weight="600" text-anchor="middle">Predictive Agent</text>
+  <text x="660" y="249" fill="#94a3b8" font-size="8" text-anchor="middle">predictive.py</text>
+
+  <rect x="560" y="280" width="200" height="50" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="660" y="305" fill="white" font-size="10.5" font-weight="600" text-anchor="middle">Prescriptive Agent</text>
+  <text x="660" y="319" fill="#94a3b8" font-size="8" text-anchor="middle">prescriptive.py</text>
+
+  <rect x="560" y="350" width="200" height="50" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="660" y="375" fill="white" font-size="10.5" font-weight="600" text-anchor="middle">General Agent</text>
+  <text x="660" y="389" fill="#94a3b8" font-size="8" text-anchor="middle">general.py</text>
+
+  <!-- LLM Inference Client & Providers -->
+  <rect x="870" y="140" width="200" height="45" rx="6" fill="rgba(59,130,246,0.3)" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="970" y="167" fill="white" font-size="10.5" font-weight="600" text-anchor="middle">TogetherClient (default)</text>
+
+  <rect x="870" y="200" width="200" height="45" rx="6" fill="rgba(59,130,246,0.3)" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="970" y="227" fill="white" font-size="10.5" font-weight="600" text-anchor="middle">LiteLLMClient</text>
+
+  <rect x="870" y="260" width="200" height="45" rx="6" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="970" y="287" fill="white" font-size="10.5" font-weight="600" text-anchor="middle">OfflineLLMClient</text>
+  
+  <text x="970" y="340" fill="#94a3b8" font-size="9" text-anchor="middle" font-weight="600">llm/client.py dispatcher</text>
+
+  <!-- SSE Response Stream -->
+  <rect x="1150" y="110" width="220" height="200" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="1260" y="136" fill="white" font-size="11" font-weight="600" text-anchor="middle">SSE Stream Response</text>
+  <text x="1260" y="154" fill="#94a3b8" font-size="8.5" text-anchor="middle">events per intent:</text>
+  <text x="1260" y="172" fill="#d1fae5" font-size="8.5" text-anchor="middle">• agents (intents list)</text>
+  <text x="1260" y="188" fill="#d1fae5" font-size="8.5" text-anchor="middle">• agent_start (start)</text>
+  <text x="1260" y="204" fill="#d1fae5" font-size="8.5" text-anchor="middle">• agent_delta (text token)</text>
+  <text x="1260" y="220" fill="#d1fae5" font-size="8.5" text-anchor="middle">• agent_done (with payload)</text>
+  <text x="1260" y="236" fill="#d1fae5" font-size="8.5" text-anchor="middle">• done (final event)</text>
+  <text x="1260" y="252" fill="#fda4af" font-size="8.5" text-anchor="middle">• error (new failure event)</text>
+
+  <!-- Stage 1a: Query Engine -->
+  <rect x="320" y="535" width="220" height="90" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="430" y="558" fill="white" font-size="11" font-weight="600" text-anchor="middle">1. Query Engine</text>
+  <text x="430" y="574" fill="#c084fc" font-size="8" text-anchor="middle">query_engine/executor.py</text>
+  <text x="430" y="592" fill="#e2e8f0" font-size="8.5" text-anchor="middle">NL → SQL Translation</text>
+  <text x="430" y="608" fill="#94a3b8" font-size="8.5" text-anchor="middle">Executes on DuckDB Database</text>
+
+  <!-- Stage 1b: RAG Fallback -->
+  <rect x="320" y="665" width="220" height="90" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="430" y="688" fill="white" font-size="11" font-weight="600" text-anchor="middle">RAG Citation Fallback</text>
+  <text x="430" y="704" fill="#c084fc" font-size="8" text-anchor="middle">rag/chroma_store.py</text>
+  <text x="430" y="722" fill="#e2e8f0" font-size="8.5" text-anchor="middle">Queries uploaded docs if</text>
+  <text x="430" y="738" fill="#94a3b8" font-size="8.5" text-anchor="middle">DuckDB query has no data</text>
+
+  <!-- Stage 2: Result Normalizer -->
+  <rect x="590" y="530" width="210" height="100" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="695" y="553" fill="white" font-size="11" font-weight="600" text-anchor="middle">2. Result Normalizer</text>
+  <text x="695" y="569" fill="#ffedd5" font-size="8" text-anchor="middle">pipeline/normalizer.py</text>
+  <text x="695" y="587" fill="#e2e8f0" font-size="8.5" text-anchor="middle">Maps rows &amp; columns</text>
+  <text x="695" y="603" fill="#94a3b8" font-size="8.5" text-anchor="middle">Classifies dim vs measure</text>
+  <text x="695" y="619" fill="#94a3b8" font-size="8.5" text-anchor="middle">Types: Currency, Pct, etc.</text>
+
+  <!-- Stage 3: Analytics Engine -->
+  <rect x="850" y="530" width="210" height="100" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="955" y="553" fill="white" font-size="11" font-weight="600" text-anchor="middle">3. Analytics Engine</text>
+  <text x="955" y="569" fill="#ffedd5" font-size="8" text-anchor="middle">pipeline/analytics_engine.py</text>
+  <text x="955" y="587" fill="#e2e8f0" font-size="8.5" text-anchor="middle">Deterministic metrics</text>
+  <text x="955" y="603" fill="#94a3b8" font-size="8.5" text-anchor="middle">Totals, counts, splits</text>
+  <text x="955" y="619" fill="#94a3b8" font-size="8.5" text-anchor="middle">Category value rankings</text>
+
+  <!-- Stage 4: Insight Engine -->
+  <rect x="1110" y="530" width="210" height="100" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="1215" y="553" fill="white" font-size="11" font-weight="600" text-anchor="middle">4. Insight Engine</text>
+  <text x="1215" y="569" fill="#ffedd5" font-size="8" text-anchor="middle">pipeline/insight_engine.py</text>
+  <text x="1215" y="587" fill="#e2e8f0" font-size="8.5" text-anchor="middle">Derives observations</text>
+  <text x="1215" y="603" fill="#94a3b8" font-size="8.5" text-anchor="middle">positive/neutral/attention</text>
+  <text x="1215" y="619" fill="#94a3b8" font-size="8.5" text-anchor="middle">Tethered to evidence IDs</text>
+
+  <!-- Stage 5: Presentation Planner -->
+  <rect x="1370" y="530" width="210" height="100" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fb923c" stroke-width="1.5"/>
+  <text x="1475" y="553" fill="white" font-size="11" font-weight="600" text-anchor="middle">5. Pres. Planner</text>
+  <text x="1475" y="569" fill="#ffedd5" font-size="8" text-anchor="middle">pipeline/presentation_planner.py</text>
+  <text x="1475" y="587" fill="#e2e8f0" font-size="8.5" text-anchor="middle">Registry chart mapping</text>
+  <text x="1475" y="603" fill="#94a3b8" font-size="8.5" text-anchor="middle">Hides internal system cols</text>
+  <text x="1475" y="619" fill="#94a3b8" font-size="8.5" text-anchor="middle">Sets table collapse state</text>
+
+  <!-- Stage 6: Pipeline Validator -->
+  <rect x="1370" y="700" width="210" height="100" rx="6" fill="rgba(136,19,55,0.4)" stroke="#fb7185" stroke-width="1.5"/>
+  <text x="1475" y="723" fill="white" font-size="11" font-weight="600" text-anchor="middle">6. Validator</text>
+  <text x="1475" y="739" fill="#ffe4e6" font-size="8" text-anchor="middle">pipeline/validator.py</text>
+  <text x="1475" y="757" fill="#e2e8f0" font-size="8.5" text-anchor="middle">Verifies math accuracy,</text>
+  <text x="1475" y="773" fill="#94a3b8" font-size="8.5" text-anchor="middle">ensures insight evidence refs,</text>
+  <text x="1475" y="789" fill="#94a3b8" font-size="8.5" text-anchor="middle">computes confidence rating</text>
+
+  <!-- Stage 7: LLM Facts Prompt -->
+  <rect x="1110" y="700" width="210" height="100" rx="6" fill="rgba(59,130,246,0.3)" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="1215" y="723" fill="white" font-size="11" font-weight="600" text-anchor="middle">7. Facts-Only Prompt</text>
+  <text x="1215" y="739" fill="#dbeafe" font-size="8" text-anchor="middle">descriptive.py builder</text>
+  <text x="1215" y="757" fill="#e2e8f0" font-size="8.5" text-anchor="middle">Restricts prompt input to</text>
+  <text x="1215" y="773" fill="#94a3b8" font-size="8.5" text-anchor="middle">pre-computed facts ONLY —</text>
+  <text x="1215" y="789" fill="#fda4af" font-size="8.5" text-anchor="middle">no raw rows / no math errors</text>
+
+  <!-- Stage 8: Structured Response Contract -->
+  <rect x="820" y="850" width="270" height="140" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="955" y="872" fill="white" font-size="11" font-weight="600" text-anchor="middle">8. StructuredResponse Contract</text>
+  <text x="955" y="888" fill="#e0f7fa" font-size="8" text-anchor="middle">pipeline/contracts.py (Pydantic)</text>
+  <text x="955" y="906" fill="#e2e8f0" font-size="8.5" text-anchor="middle">CamelCase serialized wire payload:</text>
+  <text x="955" y="922" fill="#94a3b8" font-size="8.5" text-anchor="middle">• summary (text + confidence)</text>
+  <text x="955" y="936" fill="#94a3b8" font-size="8.5" text-anchor="middle">• metrics (id, label, value, format)</text>
+  <text x="955" y="950" fill="#94a3b8" font-size="8.5" text-anchor="middle">• insights (type, text, evidence)</text>
+  <text x="955" y="964" fill="#94a3b8" font-size="8.5" text-anchor="middle">• visualizations (type, title, data)</text>
+  <text x="955" y="978" fill="#94a3b8" font-size="8.5" text-anchor="middle">• tables &amp; sources metadata</text>
+
+  <!-- DuckDB Snapshot Store -->
+  <g transform="translate(360, 1060)">
+    <rect x="0" y="10" width="140" height="40" rx="2" fill="#0f172a"/>
+    <ellipse cx="70" cy="10" rx="70" ry="10" fill="#0f172a"/>
+    <ellipse cx="70" cy="50" rx="70" ry="10" fill="#0f172a"/>
+    <rect x="0" y="10" width="140" height="40" fill="rgba(76,29,149,0.4)"/>
+    <ellipse cx="70" cy="10" rx="70" ry="10" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+    <ellipse cx="70" cy="50" rx="70" ry="10" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+    <line x1="0" y1="10" x2="0" y2="50" stroke="#a78bfa" stroke-width="1.5"/>
+    <line x1="140" y1="10" x2="140" y2="50" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="70" y="32" fill="white" font-size="10" font-weight="600" text-anchor="middle">DuckDB Snapshot</text>
+    <text x="70" y="44" fill="#c084fc" font-size="8" text-anchor="middle">SQL Data Source</text>
+  </g>
+
+  <!-- ChromaDB Vector Store -->
+  <g transform="translate(630, 1060)">
+    <rect x="0" y="10" width="140" height="40" rx="2" fill="#0f172a"/>
+    <ellipse cx="70" cy="10" rx="70" ry="10" fill="#0f172a"/>
+    <ellipse cx="70" cy="50" rx="70" ry="10" fill="#0f172a"/>
+    <rect x="0" y="10" width="140" height="40" fill="rgba(76,29,149,0.4)"/>
+    <ellipse cx="70" cy="10" rx="70" ry="10" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+    <ellipse cx="70" cy="50" rx="70" ry="10" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+    <line x1="0" y1="10" x2="0" y2="50" stroke="#a78bfa" stroke-width="1.5"/>
+    <line x1="140" y1="10" x2="140" y2="50" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="70" y="32" fill="white" font-size="10" font-weight="600" text-anchor="middle">ChromaDB Store</text>
+    <text x="70" y="44" fill="#c084fc" font-size="8" text-anchor="middle">RAG Documents</text>
+  </g>
+
+  <!-- ===================== LEGEND ===================== -->
+  <g>
+    <rect x="60" y="1155" width="12" height="12" rx="2" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.2"/>
+    <text x="78" y="1165" fill="#cbd5e1" font-size="8.5">Client &amp; Wire Contracts</text>
+
+    <rect x="260" y="1155" width="12" height="12" rx="2" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.2"/>
+    <text x="278" y="1165" fill="#cbd5e1" font-size="8.5">Routing &amp; Orchestration</text>
+
+    <rect x="475" y="1155" width="12" height="12" rx="2" fill="rgba(120,53,15,0.3)" stroke="#fb923c" stroke-width="1.2"/>
+    <text x="493" y="1165" fill="#cbd5e1" font-size="8.5">Pipeline Processing Stages</text>
+
+    <rect x="690" y="1155" width="12" height="12" rx="2" fill="rgba(136,19,55,0.4)" stroke="#fb7185" stroke-width="1.2"/>
+    <text x="708" y="1165" fill="#cbd5e1" font-size="8.5">Quality &amp; Math Validation</text>
+
+    <rect x="905" y="1155" width="12" height="12" rx="2" fill="rgba(59,130,246,0.3)" stroke="#60a5fa" stroke-width="1.2"/>
+    <text x="923" y="1165" fill="#cbd5e1" font-size="8.5">Facts Grounded LLM Prompt</text>
+
+    <rect x="1120" y="1155" width="12" height="12" rx="2" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.2"/>
+    <text x="1138" y="1165" fill="#cbd5e1" font-size="8.5">Persistent Data stores</text>
+  </g>
+
+  <!-- ===================== TITLE ===================== -->
+  <text x="60" y="42" fill="white" font-size="16" font-weight="700">Datacon AI — Analytics Response Pipeline Architecture</text>
+  <text x="60" y="60" fill="#94a3b8" font-size="9">app/ai/app (FastAPI + Pydantic + DuckDB) · entry: POST /internal/chat/stream · updated with structured analytics response pipeline (v2.0)</text>
+</svg>

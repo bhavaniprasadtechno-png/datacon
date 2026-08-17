@@ -15,7 +15,7 @@ export interface ChartPoint {
 }
 
 export interface AgentChart {
-  type: "bar" | "line";
+  type: "bar" | "line" | "horizontal_bar";
   title: string;
   data: ChartPoint[];
 }
@@ -45,6 +45,65 @@ export interface AgentPayload {
   citations?: Citation[];
   actions?: PrescriptiveAction[];
   correlation?: string;
+}
+
+// --- Structured response contract -------------------------------------
+// Mirrors app/ai/app/pipeline/contracts.py's StructuredResponse. Emitted by
+// analysts migrated onto the new pipeline (currently: descriptive) as the
+// full payload shape; analysts not yet migrated still emit AgentPayload
+// above. The adapter in `lib/payloadAdapter.ts` normalizes both into one
+// shape the renderer consumes.
+
+export type MetricFormat = "number" | "percentage" | "currency" | "text";
+export type InsightType = "positive" | "attention" | "neutral";
+
+export type VisualizationType =
+  | "kpi" | "line" | "area" | "bar" | "horizontal_bar" | "stacked_bar" | "grouped_bar"
+  | "donut" | "pie" | "funnel" | "scatter" | "histogram" | "heatmap" | "table"
+  | "ranking" | "timeline" | "map" | "none";
+
+export interface Summary {
+  text: string;
+  confidence: Confidence;
+}
+
+export interface Metric {
+  id: string;
+  label: string;
+  value: number | string;
+  format: MetricFormat;
+}
+
+export interface Insight {
+  type: InsightType;
+  text: string;
+  evidence: string[];
+}
+
+export interface Visualization {
+  type: VisualizationType;
+  title: string | null;
+  data: Record<string, unknown>[];
+}
+
+export interface StructuredTable {
+  columns: string[];
+  rows: (string | number | boolean | null)[][];
+  collapsed: boolean;
+}
+
+export interface Source {
+  dataset: string;
+  rowCount: number;
+}
+
+export interface StructuredResponse {
+  summary: Summary;
+  metrics: Metric[];
+  insights: Insight[];
+  visualizations: Visualization[];
+  tables: StructuredTable[];
+  sources: Source[];
 }
 
 export const CHAT_SUGGESTIONS: { intent: Exclude<ChatIntent, "general">; question: string }[] = [

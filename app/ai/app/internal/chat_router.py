@@ -12,11 +12,7 @@ from app.agents import (
     general,
     predictive,
     prescriptive,
-    responder,
-    retriever,
-    validator,
 )
-from app.agents.context_filter import filter_context
 from app.agents.router import route_dynamic
 from app.internal.auth import require_internal_auth
 from app.llm.client import get_llm_client
@@ -26,14 +22,6 @@ logger = logging.getLogger("app.internal.chat_router")
 
 router = APIRouter(prefix="/internal/chat", tags=["internal-chat"], dependencies=[Depends(require_internal_auth)])
 
-# The four *analytical modes* still exist as focused specialists — the router
-# picks which of them are relevant to the question, they each compute their
-# deterministic payload (facts / forecast / actions / citations), and those
-# payloads flow into the Responder which composes the final LLM answer.
-# Compared to the previous design, each analytical mode no longer runs its
-# own LLM call — the Responder is the single visible LLM stage. That
-# eliminates redundant round-trips and matches the spec's "one coherent
-# response, not four disjointed outputs".
 _ANALYSTS = {
     "descriptive": descriptive.prepare,
     "diagnostic": diagnostic.prepare,
@@ -101,24 +89,30 @@ async def stream(payload: ChatPayload):
         yield _sse("agents", {"intents": intents})
         results = []
         for intent in intents:
-            logger.info("[ChatRouter] Running agent for intent '%s'...", intent)
-            prep = await _ANALYSTS[intent](payload.message, model)
-            logger.info("[ChatRouter] Agent '%s' prepared. Emitting 'agent_start' event.", intent)
-            yield _sse("agent_start", {"intent": intent})
-            
-            logger.info("[ChatRouter] Initiating LLM compose stream for agent '%s'...", intent)
-            text_parts: list[str] = []
-            async for delta in llm.compose_stream(prep.system, prep.prompt, prep.offline_text):
-                text_parts.append(delta)
-                yield _sse("agent_delta", {"intent": intent, "text": delta})
-            
-            text = "".join(text_parts) or prep.offline_text
-            logger.info("[ChatRouter] LLM stream finished for agent '%s'. Total response characters: %s. Emitting 'agent_done'.", intent, len(text))
-            
-            result = {"intent": intent, "text": text, "payload": prep.payload}
-            results.append(result)
-            yield _sse("agent_done", result)
-            
+            try:
+                logger.info("[ChatRouter] Running agent for intent '%s'...", intent)
+                prep = await _ANALYSTS[intent](payload.message, model)
+                logger.info("[ChatRouter] Agent '%s' prepared. Emitting 'agent_start' event.", intent)
+                yield _sse("agent_start", {"intent": intent})
+
+                logger.info("[ChatRouter] Initiating LLM compose stream for agent '%s'...", intent)
+                text_parts: list[str] = []
+                async for delta in llm.compose_stream(prep.system, prep.prompt, prep.offline_text):
+                    text_parts.append(delta)
+                    yield _sse("agent_delta", {"intent": intent, "text": delta})
+
+                text = "".join(text_parts) or prep.offline_text
+                logger.info("[ChatRouter] LLM stream finished for agent '%s'. Total response characters: %s. Emitting 'agent_done'.", intent, len(text))
+
+                result = {"intent": intent, "text": text, "payload": prep.payload}
+                results.append(result)
+                yield _sse("agent_done", result)
+            except Exception:
+                # Never leak internal exception details to the client — log
+                # the real error server-side, surface a safe status instead.
+                logger.exception("[ChatRouter] Agent '%s' failed while streaming.", intent)
+                yield _sse("error", {"intent": intent, "message": "Something went wrong while analyzing this question."})
+
         logger.info("[ChatRouter] All agents completed. Emitting 'done' SSE event.")
         yield _sse("done", {"results": results})
 

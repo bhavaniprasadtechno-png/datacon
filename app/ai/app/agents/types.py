@@ -14,9 +14,3 @@ class AgentPrep:
     prompt: str
     offline_text: str
     payload: dict[str, Any]
-
-
-@dataclass
-class AgentResult:
-    text: str
-    payload: dict[str, Any]

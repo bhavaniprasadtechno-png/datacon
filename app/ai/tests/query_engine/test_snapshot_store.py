@@ -6,6 +6,8 @@ from app.query_engine import snapshot_store
 @pytest.fixture(autouse=True)
 def isolated_db(tmp_path, monkeypatch):
     monkeypatch.setattr(snapshot_store.settings, "query_engine_db_path", str(tmp_path / "test.duckdb"))
+    monkeypatch.setattr(snapshot_store.settings, "database_url", "")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     yield
 
 
@@ -55,3 +57,29 @@ def test_schema_returns_table_and_column_names():
 
 def test_schema_is_empty_when_nothing_loaded():
     assert snapshot_store.schema() == {}
+
+
+def test_schema_does_not_deadlock_when_postgres_reseed_finds_data(monkeypatch):
+    """Regression test: schema() used to hold its lock (and an open DuckDB
+    connection) while calling ensure_seeded_from_postgres(), which calls
+    load_dataset() -> re-acquires the same lock and opens a second
+    connection to the same file on the same thread. Whenever a postgres
+    reseed actually found data, that nesting deadlocked the whole process."""
+    import threading
+
+    def fake_reseed():
+        snapshot_store.load_dataset("orders", pd.DataFrame({"id": [1, 2]}))
+
+    monkeypatch.setattr(snapshot_store, "ensure_seeded_from_postgres", fake_reseed)
+
+    result = {}
+
+    def call_schema():
+        result["schema"] = snapshot_store.schema()
+
+    t = threading.Thread(target=call_schema, daemon=True)
+    t.start()
+    t.join(timeout=5)
+
+    assert not t.is_alive(), "schema() deadlocked re-acquiring its own lock during a postgres reseed"
+    assert result["schema"] == {"orders": ["id"]}
