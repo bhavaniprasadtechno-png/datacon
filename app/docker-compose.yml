@@ -1,10 +1,21 @@
 version: "3.9"
 
-# Local dev infrastructure. Supabase Postgres (datacon-staging-ew) is the
-# app's own primary database in both dev and staging — the containers below
-# are sample *external* data sources for the Postgres/MySQL/MongoDB
-# connector engines, plus the ChromaDB vector store.
+# Local dev infrastructure.
+# app_postgres is the primary database for local dev (matches api/.env and packages/prisma/.env).
+# sample_postgres/sample_mysql/sample_mongo are sample external data sources for the connector engines.
+# chroma is the vector store for RAG.
 services:
+  app_postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: datacon
+      POSTGRES_PASSWORD: datacon
+      POSTGRES_DB: datacon
+    ports:
+      - "5432:5432"
+    volumes:
+      - app_postgres_data:/var/lib/postgresql/data
+
   sample_postgres:
     image: postgres:16-alpine
     environment:
@@ -47,7 +58,9 @@ services:
       - chroma_data:/chroma/chroma
 
 volumes:
+  app_postgres_data:
   sample_postgres_data:
   sample_mysql_data:
   sample_mongo_data:
   chroma_data:
+

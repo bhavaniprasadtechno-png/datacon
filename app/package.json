@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n api,ai,web -c blue,green,magenta \"npm run start:dev --workspace=api\" \"npm run dev:ai\" \"npm run dev --workspace=web\"",
+    "dev": "concurrently -k -n api,ai,web -c blue,green,magenta \"npm run start:dev --workspace=api\" \"npm run dev:ai\" \"npm run dev --workspace=web\"",
     "dev:web": "npm run dev --workspace=web",
     "dev:api": "npm run start:dev --workspace=api",
     "dev:ai": "node scripts/dev-ai.js",

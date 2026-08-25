@@ -42,3 +42,14 @@ child.on("error", (err) => {
   console.error(err);
   process.exit(1);
 });
+
+process.on("SIGINT", () => {
+  if (child) child.kill("SIGINT");
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  if (child) child.kill("SIGTERM");
+  process.exit(0);
+});
+

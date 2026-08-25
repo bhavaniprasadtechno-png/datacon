@@ -32,6 +32,17 @@ begin
   return event;
 end;
 $$;
+do $$ begin
+  if not exists (select from pg_catalog.pg_roles where rolname = 'supabase_auth_admin') then
+    create role supabase_auth_admin;
+  end if;
+  if not exists (select from pg_catalog.pg_roles where rolname = 'authenticated') then
+    create role authenticated;
+  end if;
+  if not exists (select from pg_catalog.pg_roles where rolname = 'anon') then
+    create role anon;
+  end if;
+end $$;
 
 grant usage on schema public to supabase_auth_admin;
 grant execute on function public.custom_access_token_hook to supabase_auth_admin;

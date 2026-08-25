@@ -37,22 +37,57 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   login: async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    await get().fetchUser();
+    try {
+      const res = await api.post<{ token: string; user: CurrentUser }>("/auth/login", { email, password });
+      if (res.data?.token) {
+        localStorage.setItem("datacon_token", res.data.token);
+      }
+      set({
+        user: res.data.user,
+        caps: res.data.user.kind === "org_member" ? capsFromPermissions(res.data.user.permissions) : EMPTY_CAPS,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    } catch (err) {
+      // Fallback to Supabase if configured
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw err;
+      await get().fetchUser();
+    }
   },
   register: async (name, email, password, orgName) => {
-    const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
-    if (error) throw error;
-    await api.post("/auth/complete-registration", { name, orgName });
-    await get().fetchUser();
+    try {
+      const res = await api.post<{ token: string; user: CurrentUser }>("/auth/register", { name, email, password, orgName });
+      if (res.data?.token) {
+        localStorage.setItem("datacon_token", res.data.token);
+      }
+      set({
+        user: res.data.user,
+        caps: res.data.user.kind === "org_member" ? capsFromPermissions(res.data.user.permissions) : EMPTY_CAPS,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    } catch (err) {
+      const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
+      if (error) throw err;
+      await api.post("/auth/complete-registration", { name, orgName });
+      await get().fetchUser();
+    }
   },
   logout: async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem("datacon_token");
+    localStorage.removeItem("datacon_dev_token");
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    }
     set({ user: undefined, caps: EMPTY_CAPS, isAuthenticated: false });
     queryClient.clear();
   },
 }));
+
+
 
 supabase.auth.onAuthStateChange(() => {
   useAuthStore.getState().fetchUser();

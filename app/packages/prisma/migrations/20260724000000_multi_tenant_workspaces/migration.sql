@@ -69,7 +69,11 @@ DROP FUNCTION IF EXISTS public.handle_new_user();
 -- table-owner rule. Prisma's *runtime* connection (DATABASE_URL only — NOT
 -- DIRECT_URL, which `prisma migrate` still uses via the owning role) must
 -- switch to a non-owning role with no BYPASSRLS for RLS to mean anything.
-CREATE ROLE app_user WITH LOGIN PASSWORD 'k6VoeQYsVTjpQH6dGZIPl5iMfuBFYW-O';
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'app_user') THEN
+    CREATE ROLE app_user WITH LOGIN PASSWORD 'k6VoeQYsVTjpQH6dGZIPl5iMfuBFYW-O';
+  END IF;
+END $$;
 GRANT USAGE ON SCHEMA public TO app_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;

@@ -33,8 +33,22 @@ function withOrgContext(client: PrismaClient) {
 
           const reqTx = requestTxStorage.getStore();
           if (reqTx) {
-            if (needsRlsVarSet(reqTx)) await setRlsVar(ctx, reqTx.tx);
-            return (reqTx.tx as unknown as Record<string, Record<string, (a: unknown) => unknown>>)[model!][operation](args);
+            try {
+              if (needsRlsVarSet(reqTx)) await setRlsVar(ctx, reqTx.tx);
+              return await (reqTx.tx as unknown as Record<string, Record<string, (a: unknown) => unknown>>)[model!][operation](args);
+            } catch (err: any) {
+              if (
+                err?.message?.includes("Transaction already closed") ||
+                err?.message?.includes("Transaction not found") ||
+                err?.code === "P2028"
+              ) {
+                return client.$transaction(async (tx) => {
+                  await setRlsVar(ctx, tx);
+                  return (tx as unknown as Record<string, Record<string, (a: unknown) => unknown>>)[model!][operation](args);
+                });
+              }
+              throw err;
+            }
           }
 
           return client.$transaction(async (tx) => {
@@ -46,6 +60,7 @@ function withOrgContext(client: PrismaClient) {
     },
   });
 }
+
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {

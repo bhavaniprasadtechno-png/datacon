@@ -90,11 +90,12 @@ interface StreamHandlers {
 }
 
 export async function streamChat(message: string, conversationId: string | null, model: string | null, handlers: StreamHandlers): Promise<void> {
-  const { data } = await supabase.auth.getSession();
+  const token = localStorage.getItem("datacon_token") || localStorage.getItem("datacon_dev_token") || (await supabase.auth.getSession()).data.session?.access_token;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (data.session?.access_token) {
-    headers["Authorization"] = `Bearer ${data.session.access_token}`;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
+
 
   let res = await fetch("/api/chat/stream", {
     method: "POST",

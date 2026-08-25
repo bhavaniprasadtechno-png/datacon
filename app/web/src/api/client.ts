@@ -6,6 +6,12 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
+  const token = localStorage.getItem("datacon_token") || localStorage.getItem("datacon_dev_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  }
+
   const { data } = await supabase.auth.getSession();
   if (data.session?.access_token) {
     config.headers.Authorization = `Bearer ${data.session.access_token}`;

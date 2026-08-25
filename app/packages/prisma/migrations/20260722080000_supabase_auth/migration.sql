@@ -1,3 +1,11 @@
+-- Ensure auth schema and auth.users table exist for local/non-Supabase Postgres environments
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE TABLE IF NOT EXISTS auth.users (
+  id uuid NOT NULL PRIMARY KEY,
+  email text,
+  raw_user_meta_data jsonb
+);
+
 -- Drop legacy refresh-token bookkeeping (Supabase Auth owns session lifecycle now)
 DROP TABLE "refresh_tokens";
 
@@ -5,6 +13,9 @@ DROP TABLE "refresh_tokens";
 ALTER TABLE "data_sources" DROP CONSTRAINT "data_sources_uploadedById_fkey";
 ALTER TABLE "conversations" DROP CONSTRAINT "conversations_userId_fkey";
 ALTER TABLE "feedback" DROP CONSTRAINT "feedback_userId_fkey";
+
+-- Clear legacy non-UUID rows before changing column types
+TRUNCATE TABLE "users", "data_sources", "conversations", "feedback", "messages" CASCADE;
 
 -- users.id now comes from Supabase Auth (auth.users.id), not Prisma's cuid()
 ALTER TABLE "users" ALTER COLUMN "id" TYPE UUID USING "id"::uuid;

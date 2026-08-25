@@ -8,6 +8,18 @@ import { CompleteRegistrationDto } from "./dto/complete-registration.dto";
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
+  @Bootstrapping()
+  @Post("login")
+  async login(@Body() dto: { email: string; password?: string }) {
+    return this.auth.login(dto.email, dto.password);
+  }
+
+  @Bootstrapping()
+  @Post("register")
+  async register(@Body() dto: { name: string; email: string; orgName: string; password?: string }) {
+    return this.auth.register(dto.name, dto.email, dto.orgName);
+  }
+
   @UseGuards(SupabaseTokenGuard)
   @Bootstrapping()
   @Get("me")
@@ -21,4 +33,5 @@ export class AuthController {
   async completeRegistration(@Req() req: { supabaseUserId: string }, @Body() dto: CompleteRegistrationDto) {
     return this.auth.completeRegistration(req.supabaseUserId, dto.name, dto.orgName);
   }
+
 }

@@ -21,16 +21,19 @@ export class RequestTransactionMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction) {
     this.prisma
-      .$transaction((tx) =>
-        requestTxStorage.run({ tx, rlsSet: false }, () => {
-          next();
-          return new Promise<void>((resolveTx) => {
-            const done = () => resolveTx();
-            res.once("finish", done);
-            res.once("close", done);
-          });
-        }),
+      .$transaction(
+        (tx) =>
+          requestTxStorage.run({ tx, rlsSet: false }, () => {
+            next();
+            return new Promise<void>((resolveTx) => {
+              const done = () => resolveTx();
+              res.once("finish", done);
+              res.once("close", done);
+            });
+          }),
+        { maxWait: 10000, timeout: 60000 },
       )
+
       .catch((err) => {
         // Only reachable if the transaction itself couldn't even open —
         // once next() has run, any later failure happens after the
