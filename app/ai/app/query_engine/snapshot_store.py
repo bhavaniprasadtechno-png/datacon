@@ -15,11 +15,16 @@ logger = logging.getLogger("app.query_engine.snapshot_store")
 _lock = threading.Lock()
 
 
-def _connect() -> duckdb.DuckDBPyConnection:
+def _connect(read_only: bool = False) -> duckdb.DuckDBPyConnection:
     path = settings.query_engine_db_path
     directory = os.path.dirname(path)
     if directory:
         os.makedirs(directory, exist_ok=True)
+    if read_only and os.path.exists(path):
+        try:
+            return duckdb.connect(path, read_only=True)
+        except Exception:
+            pass
     return duckdb.connect(path)
 
 
@@ -115,7 +120,7 @@ def ensure_seeded_from_postgres() -> None:
 
 def _list_tables() -> list[tuple[str]]:
     with _lock:
-        conn = _connect()
+        conn = _connect(read_only=True)
         try:
             return conn.execute(
                 "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
@@ -136,7 +141,7 @@ def schema() -> dict[str, list[str]]:
         tables = _list_tables()
 
     with _lock:
-        conn = _connect()
+        conn = _connect(read_only=True)
         try:
             out: dict[str, list[str]] = {}
             for (table_name,) in tables:
@@ -156,7 +161,7 @@ def execute(sql: str) -> tuple[list[str], list[list]]:
     and returns (column_names, rows)."""
     logger.info("[DuckDB] Executing SQL: %s", sql)
     with _lock:
-        conn = _connect()
+        conn = _connect(read_only=True)
         try:
             result = conn.execute(sql)
             columns = [d[0] for d in result.description]

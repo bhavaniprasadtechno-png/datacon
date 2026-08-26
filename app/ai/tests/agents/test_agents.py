@@ -10,6 +10,8 @@ from app.query_engine import executor, snapshot_store
 def isolated_db(tmp_path, monkeypatch):
     monkeypatch.setattr(snapshot_store.settings, "query_engine_db_path", str(tmp_path / "test.duckdb"))
     monkeypatch.setattr(snapshot_store.settings, "database_url", "")
+    monkeypatch.setattr(snapshot_store.settings, "chroma_persist_dir", str(tmp_path / ".chroma"))
+    monkeypatch.setattr(snapshot_store.settings, "chroma_url", "")
     monkeypatch.delenv("DATABASE_URL", raising=False)
     yield
 
