@@ -137,18 +137,19 @@ def _fallback_sql(question: str, schema: dict[str, list[str]]) -> str | None:
         for word in q_words:
             if len(word) >= 3 and (word == clean_name or word in clean_name or clean_name in word or word in full_name):
                 return f'SELECT * FROM "{table_name}" LIMIT 100;'
-    return None
+    first_table = next(iter(schema.keys()))
+    return f'SELECT * FROM "{first_table}" LIMIT 100;'
 
 
 async def generate_sql(question: str, schema: dict[str, list[str]], error_context: str | None = None, model: str | None = None) -> str | None:
-    """Returns a single SQL string, or fallback SQL if the provider call fails,
-    or None if the schema is empty."""
+    """Returns a single SQL string, or None if the provider call fails / declines,
+    or None if the schema is empty or no LLM configured."""
     if not schema:
         return None
 
     if not settings.is_llm_configured:
-        logger.info("[Generator] No LLM configured; using schema fallback SQL.")
-        return _fallback_sql(question, schema)
+        logger.info("[Generator] No LLM configured; returning None.")
+        return None
 
     # Enrich prompt with metadata about connectors and uploaded data sources
     conn_meta = _get_connector_metadata()
@@ -189,12 +190,22 @@ async def generate_sql(question: str, schema: dict[str, list[str]], error_contex
                 timeout=25,
             )
             parts = []
-            async for chunk in stream:
-                if not chunk.choices:
-                    continue
-                delta = getattr(chunk.choices[0].delta, "content", None)
-                if delta:
-                    parts.append(delta)
+            if hasattr(stream, "__aiter__"):
+                async for chunk in stream:
+                    if not getattr(chunk, "choices", None):
+                        continue
+                    delta = getattr(chunk.choices[0], "delta", None)
+                    content = getattr(delta, "content", None) if delta else getattr(getattr(chunk.choices[0], "message", None), "content", None)
+                    if content:
+                        parts.append(content)
+            elif hasattr(stream, "choices") and stream.choices:
+                msg = getattr(stream.choices[0], "message", None)
+                content = getattr(msg, "content", None) if msg else None
+                if content:
+                    parts.append(content)
+            elif isinstance(stream, str):
+                parts.append(stream)
+
             text = _clean("".join(parts))
             logger.info("[Generator] LLM raw response text (attempt %d/2): '%s'", attempt + 1, text)
             
@@ -203,13 +214,14 @@ async def generate_sql(question: str, schema: dict[str, list[str]], error_contex
             
             if text.upper() == "NO_ANSWER":
                 logger.warning("[Generator] LLM declined to answer the question (returned NO_ANSWER).")
-                return _fallback_sql(question, schema)
+                return None
                 
             logger.warning("[Generator] LLM returned empty response on attempt %d/2", attempt + 1)
         except Exception as e:
             logger.warning("[Generator] SQL generation attempt %d/2 failed: %s", attempt + 1, e)
             if attempt == 1:
-                logger.warning("[Generator] All LLM SQL generation attempts failed; using schema fallback SQL.")
-                return _fallback_sql(question, schema)
+                return None
 
-    return _fallback_sql(question, schema)
+    return None
+
+

@@ -31,8 +31,9 @@ export class RequestTransactionMiddleware implements NestMiddleware {
               res.once("close", done);
             });
           }),
-        { maxWait: 10000, timeout: 60000 },
+        { maxWait: 20000, timeout: 300000 },
       )
+
 
       .catch((err) => {
         // Only reachable if the transaction itself couldn't even open —

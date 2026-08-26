@@ -59,10 +59,28 @@ def parse_csv(data: bytes) -> tuple[list[str], int, list[list[str]], pd.DataFram
         except (UnicodeDecodeError, ValueError) as e:
             last_err = e
             continue
-            
+
     if df is None:
         raise last_err or ValueError("Failed to parse CSV due to encoding issues")
 
     columns = [str(c) for c in df.columns]
     sample_rows = df.head(PREVIEW_ROWS).astype(str).values.tolist()
     return columns, len(df), sample_rows, df
+
+
+def parse_xlsx(data: bytes) -> tuple[list[str], int, list[list[str]], pd.DataFrame]:
+    """Parse XLSX or XLS spreadsheet bytes into DataFrame and preview info."""
+    df = pd.read_excel(io.BytesIO(data))
+    columns = [str(c) for c in df.columns]
+    sample_rows = df.head(PREVIEW_ROWS).astype(str).values.tolist()
+    return columns, len(df), sample_rows, df
+
+
+
+def parse_tabular_data(data: bytes, file_ext: str = "csv") -> tuple[list[str], int, list[list[str]], pd.DataFrame]:
+    """Parse tabular bytes (CSV, XLSX, XLS) into DataFrame and preview info."""
+    ext = file_ext.lower().replace(".", "")
+    if ext in ("xlsx", "xls", "excel"):
+        return parse_xlsx(data)
+    return parse_csv(data)
+

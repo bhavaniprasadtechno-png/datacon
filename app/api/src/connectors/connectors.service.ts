@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { ConnectorEngine } from "@datacon/prisma";
 import { allFields, secretFieldKeys, type ConnectorEngineId } from "@datacon/shared-types";
 import { PrismaService } from "../prisma/prisma.service";
@@ -18,11 +18,14 @@ function toEngineId(engine: ConnectorEngine): ConnectorEngineId {
 
 @Injectable()
 export class ConnectorsService {
+  private readonly logger = new Logger(ConnectorsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly encryption: EncryptionService,
     private readonly ai: AiClientService,
   ) {}
+
 
   private validateFields(engineId: ConnectorEngineId, fields: Record<string, string>) {
     const defs = allFields(engineId);
@@ -127,7 +130,7 @@ export class ConnectorsService {
       },
     });
 
-    await this.runSync(row.id, dto.engine, config, plainSecrets);
+    await this.runSync(row.id, orgId, dto.engine, config, plainSecrets);
     return this.findOneShaped(row.id);
   }
 
@@ -144,14 +147,20 @@ export class ConnectorsService {
     await this.prisma.scoped.connector.update({ where: { id }, data: { status: "SYNCING" } });
     const engineId = toEngineId(row.engine);
     const plainSecrets = this.decryptSecrets(row.secrets as Record<string, string>);
-    await this.runSync(id, engineId, row.config as Record<string, string>, plainSecrets);
+    await this.runSync(id, orgId, engineId, row.config as Record<string, string>, plainSecrets);
     return this.findOneShaped(id);
   }
 
-  private async runSync(id: string, engineId: ConnectorEngineId, config: Record<string, string>, secrets: Record<string, string>) {
+  private async runSync(id: string, orgId: string, engineId: ConnectorEngineId, config: Record<string, string>, secrets: Record<string, string>) {
     try {
-      const res = await this.ai.client.post("/internal/connectors/sync", { engine: engineId, config, secrets, connectorId: id });
+      const res = await this.ai.client.post(
+        "/internal/connectors/sync",
+        { engine: engineId, config, secrets, connectorId: id },
+        { timeout: 300_000 },
+      );
+
       const data = res.data as { ok: boolean; message: string; datasets: { name: string; columns: string[]; rowCount: number; sampleRows: string[][] }[] };
+
 
       if (!data.ok) {
         await this.prisma.scoped.connector.update({
@@ -161,35 +170,39 @@ export class ConnectorsService {
         return;
       }
 
-      const connector = await this.prisma.scoped.connector.findUniqueOrThrow({ where: { id } });
-      await this.prisma.scoped.$transaction([
-        this.prisma.scoped.unifiedDataset.deleteMany({ where: { connectorId: id } }),
-        ...data.datasets.map((d) =>
-          this.prisma.scoped.unifiedDataset.create({
-            data: {
-              orgId: connector.orgId,
-              connectorId: id,
-              name: d.name,
-              columns: d.columns,
-              rowCount: d.rowCount,
-              sampleRows: d.sampleRows,
-              status: "synced",
-              syncedAt: new Date(),
-            },
-          }),
-        ),
-        this.prisma.scoped.connector.update({
-          where: { id },
-          data: { status: "SYNCED", lastSyncedAt: new Date(), lastTestOk: true, lastTestMsg: data.message, lastTestAt: new Date() },
-        }),
-      ]);
-    } catch (e: any) {
+      await this.prisma.scoped.unifiedDataset.deleteMany({ where: { connectorId: id } });
+      for (const d of data.datasets) {
+        await this.prisma.scoped.unifiedDataset.create({
+          data: {
+            orgId,
+            connectorId: id,
+            name: d.name,
+            columns: d.columns,
+            rowCount: d.rowCount,
+            sampleRows: d.sampleRows,
+            status: "synced",
+            syncedAt: new Date(),
+          },
+        });
+      }
       await this.prisma.scoped.connector.update({
         where: { id },
-        data: { status: "ERROR", lastTestOk: false, lastTestMsg: e?.message ?? "Sync failed.", lastTestAt: new Date() },
+        data: { status: "SYNCED", lastSyncedAt: new Date(), lastTestOk: true, lastTestMsg: data.message, lastTestAt: new Date() },
       });
+    } catch (e: any) {
+      this.logger.error(`Failed to sync connector ${id}: ${e?.message ?? e}`, e?.stack);
+      try {
+        await this.prisma.scoped.connector.update({
+          where: { id },
+          data: { status: "ERROR", lastTestOk: false, lastTestMsg: e?.message ?? "Sync failed.", lastTestAt: new Date() },
+        });
+      } catch (updateErr: any) {
+        this.logger.warn(`Could not update connector status on error: ${updateErr?.message ?? updateErr}`);
+      }
     }
   }
+
+
 
   private async findOneShaped(id: string) {
     const row = await this.prisma.scoped.connector.findUniqueOrThrow({ where: { id }, include: { _count: { select: { datasets: true } } } });

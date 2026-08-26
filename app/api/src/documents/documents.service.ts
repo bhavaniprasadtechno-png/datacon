@@ -5,7 +5,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AiClientService } from "../common/ai-client.service";
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10MB, per PRD FR-3.1
-const EXT_TO_TYPE: Record<string, DocType> = { pdf: "PDF", csv: "CSV", txt: "TXT", md: "MD" };
+const EXT_TO_TYPE: Record<string, DocType> = { pdf: "PDF", csv: "CSV", xlsx: "CSV", xls: "CSV", txt: "TXT", md: "MD" };
 
 @Injectable()
 export class DocumentsService {
@@ -85,9 +85,10 @@ export class DocumentsService {
     if (!docType) {
       this.logger.warn(`[Upload] Rejected upload of unsupported file type: .${ext} ("${file.originalname}")`);
       throw new BadRequestException(
-        `.${ext} files aren't supported yet. Datacon ingests PDF, CSV, TXT and MD — export the sheet as CSV and try again.`,
+        `.${ext} files aren't supported yet. Datacon ingests PDF, CSV, XLSX, XLS, TXT and MD.`,
       );
     }
+
     if (file.size > MAX_BYTES) {
       const mb = (file.size / (1024 * 1024)).toFixed(1);
       this.logger.warn(`[Upload] Rejected file "${file.originalname}" because size ${mb} MB exceeds limit of 10 MB`);

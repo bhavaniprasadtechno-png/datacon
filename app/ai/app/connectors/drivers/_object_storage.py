@@ -6,7 +6,7 @@ import io
 
 import pandas as pd
 
-SUPPORTED_EXTENSIONS = (".csv", ".parquet", ".json")
+SUPPORTED_EXTENSIONS = (".csv", ".parquet", ".json", ".xlsx", ".xls")
 
 # ponytail: fixed ceiling, bump if a legitimate object needs to be larger
 MAX_OBJECT_BYTES = 50_000_000
@@ -70,6 +70,8 @@ def read_table(data: bytes, key: str) -> pd.DataFrame:
     lower = key.lower()
     if lower.endswith(".parquet"):
         return pd.read_parquet(buf)
+    if lower.endswith((".xlsx", ".xls")):
+        return pd.read_excel(buf)
     if lower.endswith(".json"):
         try:
             return pd.read_json(buf)
@@ -77,6 +79,7 @@ def read_table(data: bytes, key: str) -> pd.DataFrame:
             buf.seek(0)
             return pd.read_json(buf, lines=True)
     return pd.read_csv(buf)
+
 
 
 def extract_sample_rows(df: pd.DataFrame, n: int = 5) -> list[list[str]]:

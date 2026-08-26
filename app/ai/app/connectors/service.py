@@ -47,15 +47,37 @@ def sync_connector(engine: str, config: dict, secrets: dict, connector_id: str |
         prefix = f"conn_{connector_id}_"
         logger.info("[Sync] Dropping existing DuckDB tables with prefix '%s'...", prefix)
         snapshot_store.drop_datasets(prefix)
+        loaded_tables: dict[str, pd.DataFrame] = {}
         for dataset in result.datasets:
             if dataset.rows:
                 table_name = f"conn_{connector_id}_{dataset.name}"
                 logger.info("[Sync] Loading dataset '%s' into DuckDB table '%s' (%d rows, %d columns)...", dataset.name, table_name, len(dataset.rows), len(dataset.columns))
                 try:
-                    snapshot_store.load_dataset(table_name, pd.DataFrame(dataset.rows, columns=dataset.columns))
+                    df = pd.DataFrame(dataset.rows, columns=dataset.columns)
+                    snapshot_store.load_dataset(table_name, df)
+                    loaded_tables[table_name] = df
                     logger.info("[Sync] Table '%s' loaded successfully.", table_name)
                 except Exception as e:
                     logger.exception("[Sync] Failed to load dataset %s into the query engine table %s: %s", dataset.name, table_name, e)
             else:
                 logger.warning("[Sync] Dataset '%s' has 0 rows, skipping DuckDB table registration.", dataset.name)
+
+        if loaded_tables:
+            try:
+                from app.query_engine import semantic_model
+                all_tables = snapshot_store.get_all_tables(sample_size=1000)
+                all_tables.update(loaded_tables)
+                dataset_label = config.get("database") or config.get("databaseName") or config.get("bucket") or f"{engine}_connector"
+                yaml_name, yaml_path = semantic_model.generate_and_save_semantic_model(
+                    tables_dict=all_tables,
+                    dataset_name=str(dataset_label),
+                    source_id=f"conn_{connector_id}",
+                    generated_by=f"{engine}_connector_pipeline",
+                )
+                logger.info("[Sync] Generated semantic model YAML for connector %s: %s", connector_id, yaml_path)
+            except Exception as e:
+                logger.warning("[Sync] Failed to generate semantic model YAML for connector %s: %s", connector_id, e)
+
+
     return result
+

@@ -46,36 +46,49 @@ def sync(config: dict, secrets: dict) -> SyncResult:
     bucket = config["bucket"]
     prefix = clean_prefix(config.get("prefix") or "", bucket)
     try:
+        from concurrent.futures import ThreadPoolExecutor
+
         client = _client(config, secrets)
         paginator = client.get_paginator("list_objects_v2")
-        datasets = []
-        count = 0
+        matching_keys = []
         for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
             for obj in page.get("Contents", []):
                 key = obj["Key"]
                 if not is_data_object(key):
                     continue
-                if count >= OBJECT_CAP:
+                if len(matching_keys) >= OBJECT_CAP:
                     break
                 size = obj.get("Size", 0)
                 if size <= 0 or size > MAX_OBJECT_BYTES:
                     # Zero-byte or oversized object: skip silently, same as not matching is_data_object.
                     continue
-                try:
-                    body = client.get_object(Bucket=bucket, Key=key)["Body"].read()
-                    df = read_table(body, key)
-                    columns = [str(c) for c in df.columns]
-                    sample_rows = extract_sample_rows(df, 5)
-                    rows = extract_rows(df, ROW_CAP)
-                    datasets.append(DatasetResult(name=dataset_name(key, prefix), columns=columns, row_count=len(df), sample_rows=sample_rows, rows=rows))
-                    count += 1
-                except Exception as e:
-                    logger.warning("[S3] Skipping %s: %s", key, e)
-                    continue
-            if count >= OBJECT_CAP:
+                matching_keys.append(key)
+            if len(matching_keys) >= OBJECT_CAP:
                 break
+
+        def _fetch_object(key: str) -> DatasetResult | None:
+            try:
+                body = client.get_object(Bucket=bucket, Key=key)["Body"].read()
+                df = read_table(body, key)
+                columns = [str(c) for c in df.columns]
+                sample_rows = extract_sample_rows(df, 5)
+                rows = extract_rows(df, ROW_CAP)
+                return DatasetResult(name=dataset_name(key, prefix), columns=columns, row_count=len(df), sample_rows=sample_rows, rows=rows)
+            except Exception as e:
+                logger.warning("[S3] Skipping %s: %s", key, e)
+                return None
+
+        datasets = []
+        if matching_keys:
+            workers = min(8, len(matching_keys))
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                for res in executor.map(_fetch_object, matching_keys):
+                    if res is not None:
+                        datasets.append(res)
+
         return SyncResult(True, f"Discovered {len(datasets)} object(s).", datasets)
     except ImportError:
         return SyncResult(False, "boto3 isn't installed (pip install '.[cloud]').", [])
+
     except Exception as e:
         return SyncResult(False, f"Sync failed: {e}", [])

@@ -38,7 +38,7 @@ async def test_returns_none_when_model_declines():
     with patch.object(generator.settings, "together_api_key", "fake-key"), \
          patch.object(litellm, "acompletion", new=AsyncMock(return_value=_fake_response("NO_ANSWER"))):
         result = await generator.generate_sql("what is the meaning of life", {"orders": ["id"]})
-    assert result is not None  # falls back to schema matching
+    assert result is None
 
 
 @pytest.mark.asyncio
@@ -46,7 +46,8 @@ async def test_returns_none_when_the_provider_call_raises():
     with patch.object(generator.settings, "together_api_key", "fake-key"), \
          patch.object(litellm, "acompletion", new=AsyncMock(side_effect=RuntimeError("boom"))):
         result = await generator.generate_sql("total revenue", {"orders": ["id", "revenue"]})
-    assert result is not None  # falls back to schema matching
+    assert result is None
+
 
 
 @pytest.mark.asyncio

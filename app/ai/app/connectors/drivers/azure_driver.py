@@ -42,32 +42,48 @@ def sync(config: dict, secrets: dict) -> SyncResult:
     container = config.get("container") or ""
     prefix = clean_prefix(config.get("prefix") or "", container)
     try:
+        from concurrent.futures import ThreadPoolExecutor
+
         client = _container_client(config, secrets)
-        datasets = []
-        count = 0
+
+        matching_keys = []
         for blob in client.list_blobs(name_starts_with=prefix):
             key = blob.name
             if not is_data_object(key):
                 continue
-            if count >= OBJECT_CAP:
+            if len(matching_keys) >= OBJECT_CAP:
                 break
             size = blob.size or 0
             if size <= 0 or size > MAX_OBJECT_BYTES:
                 # Zero-byte or oversized blob: skip silently, same as not matching is_data_object.
                 continue
+            matching_keys.append(key)
+            if len(matching_keys) >= OBJECT_CAP:
+                break
+
+        def _fetch_blob(key: str) -> DatasetResult | None:
             try:
                 data = client.download_blob(key).readall()
                 df = read_table(data, key)
                 columns = [str(c) for c in df.columns]
                 sample_rows = extract_sample_rows(df, 5)
                 rows = extract_rows(df, ROW_CAP)
-                datasets.append(DatasetResult(name=dataset_name(key, prefix), columns=columns, row_count=len(df), sample_rows=sample_rows, rows=rows))
-                count += 1
+                return DatasetResult(name=dataset_name(key, prefix), columns=columns, row_count=len(df), sample_rows=sample_rows, rows=rows)
             except Exception as e:
                 logger.warning("[Azure] Skipping %s: %s", key, e)
-                continue
+                return None
+
+        datasets = []
+        if matching_keys:
+            workers = min(8, len(matching_keys))
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                for res in executor.map(_fetch_blob, matching_keys):
+                    if res is not None:
+                        datasets.append(res)
+
         return SyncResult(True, f"Discovered {len(datasets)} object(s).", datasets)
     except ImportError:
         return SyncResult(False, "azure-storage-blob isn't installed (pip install '.[cloud]').", [])
     except Exception as e:
         return SyncResult(False, f"Sync failed: {e}", [])
+

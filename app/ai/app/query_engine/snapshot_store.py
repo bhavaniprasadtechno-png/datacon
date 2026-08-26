@@ -64,6 +64,27 @@ def drop_datasets(prefix: str) -> None:
             conn.close()
 
 
+def get_all_tables(sample_size: int = 1000) -> dict[str, pd.DataFrame]:
+    """Fetch sample DataFrames for all tables stored in the DuckDB snapshot."""
+    tables_dict: dict[str, pd.DataFrame] = {}
+    with _lock:
+        conn = _connect()
+        try:
+            tables = conn.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='main'").fetchall()
+            for (t_name,) in tables:
+                try:
+                    df = conn.execute(f'SELECT * FROM "{t_name}" LIMIT {sample_size}').fetchdf()
+                    tables_dict[t_name] = df
+                except Exception as e:
+                    logger.warning("[DuckDB] Could not sample table %s: %s", t_name, e)
+        except Exception as e:
+            logger.warning("[DuckDB] Could not list tables: %s", e)
+        finally:
+            conn.close()
+    return tables_dict
+
+
+
 def ensure_seeded_from_postgres() -> None:
     db_url = settings.database_url or os.environ.get("DATABASE_URL")
     if not db_url:
