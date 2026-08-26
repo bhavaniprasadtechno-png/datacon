@@ -2,7 +2,7 @@ import json
 import logging
 
 from app.connectors.types import TestResult, SyncResult, DatasetResult
-from app.connectors.drivers._object_storage import is_data_object, dataset_name, read_table, MAX_OBJECT_BYTES
+from app.connectors.drivers._object_storage import is_data_object, dataset_name, read_table, clean_prefix, extract_sample_rows, extract_rows, MAX_OBJECT_BYTES, ROW_CAP
 
 OBJECT_CAP = 200  # ponytail: fixed page size, paginate if a bucket needs more matching objects than this
 
@@ -42,7 +42,8 @@ def sync(config: dict, secrets: dict) -> SyncResult:
     missing = _missing_required(config, secrets)
     if missing:
         return SyncResult(False, missing, [])
-    prefix = config.get("prefix") or ""
+    bucket_name = config.get("bucket") or ""
+    prefix = clean_prefix(config.get("prefix") or "", bucket_name)
     try:
         bucket = _bucket(config, secrets)
         datasets = []
@@ -61,8 +62,9 @@ def sync(config: dict, secrets: dict) -> SyncResult:
                 data = blob.download_as_bytes()
                 df = read_table(data, key)
                 columns = [str(c) for c in df.columns]
-                sample_rows = df.head(5).astype(str).values.tolist()
-                datasets.append(DatasetResult(name=dataset_name(key, prefix), columns=columns, row_count=len(df), sample_rows=sample_rows))
+                sample_rows = extract_sample_rows(df, 5)
+                rows = extract_rows(df, ROW_CAP)
+                datasets.append(DatasetResult(name=dataset_name(key, prefix), columns=columns, row_count=len(df), sample_rows=sample_rows, rows=rows))
                 count += 1
             except Exception as e:
                 logger.warning("[GCS] Skipping %s: %s", key, e)

@@ -1,7 +1,17 @@
 import io
 
 import pandas as pd
-from app.connectors.drivers._object_storage import is_data_object, dataset_name, read_table
+from app.connectors.drivers._object_storage import is_data_object, dataset_name, read_table, clean_prefix
+
+
+def test_clean_prefix_handles_various_formats():
+    assert clean_prefix("s3://dataconai/datacon/tables/123/", "dataconai") == "datacon/tables/123/"
+    assert clean_prefix("s3://dataconai/datacon/tables/123", "dataconai") == "datacon/tables/123"
+    assert clean_prefix("datacon/tables/123/", "dataconai") == "datacon/tables/123/"
+    assert clean_prefix("/datacon/tables/123/", "dataconai") == "datacon/tables/123/"
+    assert clean_prefix("gs://my-bucket/path/to/data/", "my-bucket") == "path/to/data/"
+    assert clean_prefix("s3://dataconai", "dataconai") == ""
+    assert clean_prefix("", "dataconai") == ""
 
 
 def test_is_data_object_accepts_supported_extensions():
@@ -18,6 +28,8 @@ def test_is_data_object_rejects_unsupported_extensions_and_directory_markers():
 def test_dataset_name_strips_prefix_and_extension():
     assert dataset_name("exports/sales/2026/orders.csv") == "orders"
     assert dataset_name("orders.PARQUET") == "orders"
+    assert dataset_name("datacon/tables/123/orders.csv", prefix="s3://dataconai/datacon/tables/123/") == "orders"
+
 
 
 def test_dataset_name_avoids_collisions_across_date_partitioned_prefixes():
