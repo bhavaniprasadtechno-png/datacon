@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from fastapi import APIRouter, Depends
@@ -95,13 +96,24 @@ async def stream(payload: ChatPayload):
                 logger.info("[ChatRouter] Agent '%s' prepared. Emitting 'agent_start' event.", intent)
                 yield _sse("agent_start", {"intent": intent})
 
-                logger.info("[ChatRouter] Initiating LLM compose stream for agent '%s'...", intent)
-                text_parts: list[str] = []
-                async for delta in llm.compose_stream(prep.system, prep.prompt, prep.offline_text):
-                    text_parts.append(delta)
-                    yield _sse("agent_delta", {"intent": intent, "text": delta})
+                # Stream the dynamic LLM output from the specialized agent if available
+                if prep.payload and prep.payload.get("insightsText"):
+                    dynamic_text = str(prep.payload["insightsText"]).strip()
+                    logger.info("[ChatRouter] Streaming dynamic LLM insights (%d chars) for agent '%s'...", len(dynamic_text), intent)
+                    chunk_size = 12
+                    for i in range(0, len(dynamic_text), chunk_size):
+                        delta = dynamic_text[i : i + chunk_size]
+                        yield _sse("agent_delta", {"intent": intent, "text": delta})
+                        await asyncio.sleep(0.005)
+                    text = dynamic_text
+                else:
+                    logger.info("[ChatRouter] Initiating LLM compose stream for agent '%s'...", intent)
+                    text_parts: list[str] = []
+                    async for delta in llm.compose_stream(prep.system, prep.prompt, prep.offline_text):
+                        text_parts.append(delta)
+                        yield _sse("agent_delta", {"intent": intent, "text": delta})
+                    text = "".join(text_parts) or prep.offline_text
 
-                text = "".join(text_parts) or prep.offline_text
                 logger.info("[ChatRouter] LLM stream finished for agent '%s'. Total response characters: %s. Emitting 'agent_done'.", intent, len(text))
 
                 result = {"intent": intent, "text": text, "payload": prep.payload}
@@ -117,4 +129,3 @@ async def stream(payload: ChatPayload):
         yield _sse("done", {"results": results})
 
     return StreamingResponse(event_gen(), media_type="text/event-stream")
-

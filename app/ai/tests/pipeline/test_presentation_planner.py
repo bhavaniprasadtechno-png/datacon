@@ -52,6 +52,20 @@ def test_plan_visualization_ranks_by_measure_when_a_single_measure_is_present():
     assert viz.data == [{"label": "EMEA", "value": 120.0}, {"label": "APAC", "value": 95.0}]
 
 
+def test_plan_visualization_picks_line_for_temporal_data():
+    result = normalize("sales", ["order_date", "revenue"], [["2024-01-01", 100.0], ["2024-01-02", 150.0]])
+    viz = plan_visualization([], result)
+    assert viz.type == "line"
+    assert viz.data == [{"label": "2024-01-01", "value": 100.0}, {"label": "2024-01-02", "value": 150.0}]
+
+
+def test_plot_catalog_recommendation_picks_horizontal_bar_for_category_breakdown():
+    result = normalize("products", ["category", "sales"], [["electronics_and_accessories", 500.0], ["home_and_kitchen", 350.0]])
+    viz = plan_visualization([], result)
+    assert viz.type == "horizontal_bar"
+    assert len(viz.data) == 2
+
+
 def test_category_ranking_returns_none_when_more_than_one_dimension_is_present():
     assert category_ranking(_customers_result()) is None
 
