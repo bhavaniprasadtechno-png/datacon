@@ -347,3 +347,42 @@ def test_trained_model_manager_helpers():
     ]
     best = get_best_model_from_file_paths(file_paths, problem_type="regression")
     assert best["model_name"] == "ModelB"
+
+
+@pytest.mark.asyncio
+async def test_predictive_prepare_structured_response():
+    from app.agents import predictive
+    from app.query_engine import snapshot_store
+
+    snapshot_store.load_dataset(
+        "reviews",
+        pd.DataFrame({
+            "order_status": ["delivered", "shipped", "delivered", "canceled", "delivered"] * 4,
+            "price": [29.9, 45.0, 120.0, 80.0, 15.0] * 4,
+            "review_score": [5, 4, 5, 1, 4] * 4,
+        }),
+    )
+
+    mock_json = """```json
+    {
+        "problem_type": "classification",
+        "target_column": "reviews.review_score",
+        "feature_columns": ["reviews.order_status", "reviews.price"],
+        "reasoning": "Predicting customer review score based on status and price."
+    }
+    ```"""
+
+    with patch("app.agents.predictive.get_together_chat_completion", return_value=mock_json):
+        prep = await predictive.prepare("Can we predict whether a customer will leave a positive review?")
+
+    assert prep.payload is not None
+    assert prep.payload["confidence"] in ["high", "medium"]
+    assert "summary" in prep.payload
+    assert "metrics" in prep.payload
+    assert len(prep.payload["metrics"]) >= 3
+    assert "insights" in prep.payload
+    assert len(prep.payload["insights"]) >= 1
+    # Check that offline_text and insightsText contain clean text, not raw code interpreter header
+    assert "Predictive Analysis & CrewAI Code Interpreter Execution" not in prep.offline_text
+    assert "review" in prep.offline_text.lower()
+

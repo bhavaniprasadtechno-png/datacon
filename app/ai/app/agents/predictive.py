@@ -952,10 +952,8 @@ Requirements:
         y_classes = None
         # Preprocess target y
         if "classific" in prob_type:
-            if not pd.api.types.is_numeric_dtype(y_raw):
-                y, y_classes = pd.factorize(y_raw.astype(str))
-            else:
-                y = y_raw.values
+            y, y_classes = pd.factorize(y_raw)
+            y = np.asarray(y, dtype=int)
         else:
             y = pd.to_numeric(y_raw, errors='coerce').fillna(0).values
 
@@ -1258,9 +1256,11 @@ Requirements:
     ) -> str:
         """Formats the evaluation and prediction metrics into a comprehensive Markdown report."""
         prob_type = pa_details.get("problem_type", "regression")
-        target_col = pa_details.get("target_column", "target")
-        feature_cols = pa_details.get("feature_columns", [])
-        feat_cols_str = ", ".join(feature_cols) if isinstance(feature_cols, list) else str(feature_cols)
+        target_col_raw = pa_details.get("target_column", "target")
+        target_col = re.sub(r"^conn_[^_]+_", "", str(target_col_raw))
+        feature_cols_raw = pa_details.get("feature_columns", [])
+        feature_cols = [re.sub(r"^conn_[^_]+_", "", str(f)) for f in feature_cols_raw] if isinstance(feature_cols_raw, list) else [str(feature_cols_raw)]
+        feat_cols_str = ", ".join(feature_cols)
         models_list = pa_details.get("models") or pa_details.get("selected_models") or []
         models_str = ", ".join(models_list) if models_list else "N/A"
         reasoning = pa_details.get("reasoning", "")
@@ -1490,8 +1490,67 @@ Requirements:
         else:
             predicted_df = results_df if results_df is not None else pd.DataFrame()
 
-        # Insights summary
-        insights = f"Predictive analysis completed using top model ({eval_info.get('best_model', 'ML Model')}). Generated predictions for {len(predicted_df)} scenario records."
+        # Generate executive insights strictly answering the user's question
+        prob_type = pa_details.get("problem_type", "regression")
+        target_clean = re.sub(r"^conn_[^_]+_", "", str(target_col)).split(".")[-1]
+        best_model_name = eval_info.get("best_model", "Predictive Model")
+        best_acc = 0.0
+        for mr in eval_info.get("model_results", []):
+            if mr.get("model_name") == best_model_name:
+                best_acc = mr.get("accuracy_score", 0.0)
+                break
+        if not best_acc and eval_info.get("model_results"):
+            best_acc = eval_info["model_results"][0].get("accuracy_score", 0.0)
+
+        best_acc_str = f"{best_acc:.1f}%" if "classific" in str(prob_type).lower() else f"{best_acc:.2f} (R²)"
+        clean_features = [re.sub(r"^conn_[^_]+_", "", str(f)).split(".")[-1] for f in pa_details.get("feature_columns", [])]
+
+        pred_prompt = f"""You are a senior business intelligence and machine learning analyst delivering concise, high-impact executive insights.
+Analyze the predictive modeling results below and provide clear, direct business insights strictly answering the user's question.
+
+User Question: "{user_query}"
+
+Predictive Modeling Summary:
+- Problem Type: {prob_type.title()}
+- Target Variable: {target_clean}
+- Top-Performing Model: {best_model_name} ({best_acc_str})
+- Evaluated Records: {row_count} rows ({eval_info.get('train_count', 0)} training set, {eval_info.get('test_count', 0)} testing set)
+- Key Predictor Features: {', '.join(clean_features[:6])}
+- Scenario Predictions: {len(predicted_df)} test cases evaluated
+
+CRITICAL INSTRUCTIONS:
+1. Directly and clearly answer the user's question in the very first sentence (e.g., whether the outcome can be predicted, with what accuracy, and using which model).
+2. Provide 2–3 crisp, bulleted key takeaways citing exact numbers (model accuracy, key driver factors, and predicted distribution).
+3. Explain the business implications (what factors drive positive/favorable outcomes).
+4. Strictly avoid:
+   - Technical code, SQL, table connector prefixes (conn_...), or raw technical error logs.
+   - Apologies or generic textbook fluff.
+5. Deliver immediate, high-value, executive-ready insights.
+"""
+        try:
+            from app.agents.descriptive import get_together_chat_completion
+            exec_insights = get_together_chat_completion(
+                model_name=self.model_name,
+                messages=[{"role": "user", "content": pred_prompt}],
+                agent_name="InsightGenerator",
+                max_tokens=450,
+            )
+            if not exec_insights or not exec_insights.strip():
+                exec_insights = (
+                    f"Yes, outcomes for **{target_clean.replace('_', ' ')}** can be predicted with **{best_acc_str}** accuracy "
+                    f"using a **{best_model_name}** model evaluated on {row_count} records.\n\n"
+                    f"• **Model Performance**: {best_model_name} achieved the highest predictive score at {best_acc_str}.\n"
+                    f"• **Key Drivers**: Primary factors influencing predictions include {', '.join(clean_features[:4])}.\n"
+                    f"• **Validation**: Model demonstrated strong generalization across {eval_info.get('test_count', 0)} out-of-sample test cases."
+                )
+            else:
+                exec_insights = exec_insights.strip()
+        except Exception as e:
+            logger.warning("[Predictive] Error generating executive insights: %s", e)
+            exec_insights = (
+                f"Predictive analysis completed for '{user_query}'. "
+                f"The top-performing model **{best_model_name}** achieved **{best_acc_str}** accuracy across {row_count} evaluated records."
+            )
 
         return {
             "initial_routing_decision": "predictive_analysis",
@@ -1499,8 +1558,8 @@ Requirements:
             "sql": sql_query,
             "results": predicted_df,
             "explanation": report,
-            "answer": report,
-            "insights": insights,
+            "answer": exec_insights,
+            "insights": exec_insights,
             "predictive_analysis_details": pa_details,
             "predictive_eval_info": eval_info,
             "is_reused_model": is_reused,
@@ -1713,31 +1772,118 @@ async def prepare(question: str, model: str | None = None) -> AgentPrep:
             eval_info = res.get("predictive_eval_info", {})
             results_df = res.get("results")
 
-            table_payload = {}
+            insights = res.get("insights", "") or res.get("answer", "")
+            if not insights:
+                insights = explanation
+
+            from app.pipeline.contracts import (
+                Insight, Metric, Source, StructuredResponse, Summary, Table, Visualization
+            )
+
+            table_cols = []
+            table_rows = []
             if isinstance(results_df, pd.DataFrame) and not results_df.empty:
-                table_payload = {
-                    "columns": list(results_df.columns),
-                    "rows": results_df.head(20).fillna("").values.tolist()
-                }
+                table_cols = [re.sub(r"^conn_[^_]+_", "", str(c)) for c in results_df.columns]
+                clean_df = results_df.copy()
+                for col in clean_df.columns:
+                    if pd.api.types.is_float_dtype(clean_df[col]):
+                        clean_df[col] = clean_df[col].round(2)
+                table_rows = clean_df.head(20).fillna("").values.tolist()
+
+            table_payload = {
+                "columns": table_cols,
+                "rows": table_rows
+            }
+
+            best_model = eval_info.get("best_model", "Predictive Model")
+            prob_type = res.get("predictive_analysis_details", {}).get("problem_type", "predictive")
+            best_acc = 0.0
+            for mr in eval_info.get("model_results", []):
+                if mr.get("model_name") == best_model:
+                    best_acc = mr.get("accuracy_score", 0.0)
+                    break
+            if not best_acc and eval_info.get("model_results"):
+                best_acc = eval_info["model_results"][0].get("accuracy_score", 0.0)
+
+            total_records = int(eval_info.get("total_count", 0) or res.get("row_count", 0))
+
+            metrics = [
+                Metric(id="best_model", label="Top Model", value=best_model, format="text"),
+                Metric(
+                    id="accuracy",
+                    label="Model Accuracy",
+                    value=round(best_acc, 1),
+                    format="percentage" if "classific" in str(prob_type).lower() else "number",
+                ),
+                Metric(id="problem_type", label="Analysis Type", value=str(prob_type).title(), format="text"),
+                Metric(id="samples", label="Evaluated Records", value=total_records, format="number"),
+            ]
+
+            model_results = eval_info.get("model_results", [])
+            valid_models = [m for m in model_results if "error" not in m and m.get("accuracy_score") is not None]
+            visualizations = []
+            if valid_models:
+                chart_data = [
+                    {
+                        "label": m["model_name"].replace(" Classification", "").replace(" Regression", ""),
+                        "value": round(float(m["accuracy_score"]), 1),
+                        "model": m["model_name"],
+                        "accuracy": round(float(m["accuracy_score"]), 1),
+                    }
+                    for m in valid_models
+                ]
+                visualizations.append(
+                    Visualization(type="horizontal_bar", title="Model Accuracy Comparison (%)", data=chart_data)
+                )
+
+            target_clean = re.sub(r"^conn_[^_]+_", "", str(res.get("predictive_analysis_details", {}).get("target_column", "target"))).split(".")[-1]
+            structured_insights = [
+                Insight(
+                    type="positive",
+                    text=f"The top-performing {best_model} achieved {best_acc:.1f}% accuracy in predicting {target_clean.replace('_', ' ')}.",
+                    evidence=["accuracy", "best_model"],
+                ),
+            ]
+            feat_list = [re.sub(r"^conn_[^_]+_", "", str(f)).split(".")[-1] for f in res.get("predictive_analysis_details", {}).get("feature_columns", [])]
+            if feat_list:
+                structured_insights.append(
+                    Insight(type="positive", text=f"Key predictive factors identified: {', '.join(feat_list[:4])}.", evidence=["best_model"])
+                )
+            test_cnt = eval_info.get("test_count")
+            if test_cnt:
+                structured_insights.append(
+                    Insight(type="neutral", text=f"Validated on {test_cnt} out-of-sample test cases across {eval_info.get('train_count', 0)} training records.", evidence=["samples"])
+                )
+
+            confidence = "high" if best_model != "N/A" and best_model != "Predictive Model" else "medium"
+
+            structured_resp = StructuredResponse(
+                summary=Summary(text=insights, confidence=confidence),
+                metrics=metrics,
+                insights=structured_insights,
+                visualizations=visualizations,
+                tables=[Table(columns=table_cols, rows=table_rows, collapsed=False)] if table_cols else [],
+                sources=[Source(dataset="Predictive Evaluation Dataset", row_count=total_records)],
+            )
+
+            payload = structured_resp.model_dump(by_alias=True)
+            payload["confidence"] = confidence
+            payload["insightsText"] = insights
+            payload["problemType"] = prob_type
+            payload["bestModel"] = best_model
+            payload["table"] = table_payload
+            payload["rawReport"] = explanation
 
             ml_system = (
                 "You are Datacon's expert predictive analytics and machine learning specialist. "
-                "You train and evaluate classification and regression models and provide accurate, grounded conclusions."
+                "Deliver clear, high-impact business conclusions directly answering the user's question."
             )
-
-            payload = {
-                "confidence": "high" if eval_info.get("best_model") else "medium",
-                "insightsText": explanation,
-                "problemType": res.get("predictive_analysis_details", {}).get("problem_type"),
-                "bestModel": eval_info.get("best_model"),
-                "table": table_payload,
-            }
 
             return AgentPrep(
                 system=ml_system,
-                prompt=f"User Question: {question}\n\nPredictive Analysis Report:\n{explanation}",
-                offline_text=explanation,
-                payload=payload
+                prompt=f"User Question: {question}\n\nPredictive Analysis Insights:\n{insights}",
+                offline_text=insights,
+                payload=payload,
             )
         except Exception as pa_err:
             logger.error(f"[Predictive Agent] Error during predictive analysis execution: {pa_err}", exc_info=True)

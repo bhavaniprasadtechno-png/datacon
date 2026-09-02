@@ -1,0 +1,36 @@
+"""Re-export insight_analyzer module for flexible import resolution."""
+from app.agents.insight_analyzer import (
+    _detect_columns,
+    _format_num,
+    determine_analytical_intent,
+    analyze_time_series,
+    analyze_ranking,
+    analyze_comparison,
+    analyze_anomaly,
+    analyze_aggregate,
+    analyze_distribution,
+    analyze_filtering,
+    analyze_small_table,
+    select_important_rows,
+    format_compact_analytical_context,
+    build_insight_context,
+    get_output_token_budget,
+)
+
+__all__ = [
+    "_detect_columns",
+    "_format_num",
+    "determine_analytical_intent",
+    "analyze_time_series",
+    "analyze_ranking",
+    "analyze_comparison",
+    "analyze_anomaly",
+    "analyze_aggregate",
+    "analyze_distribution",
+    "analyze_filtering",
+    "analyze_small_table",
+    "select_important_rows",
+    "format_compact_analytical_context",
+    "build_insight_context",
+    "get_output_token_budget",
+]

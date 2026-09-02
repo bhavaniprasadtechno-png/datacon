@@ -1985,144 +1985,162 @@ Rules:
 # INSIGHT AGENT (Programmatic Data Summarization & Executive Insights)
 # ============================================================================
 
-def build_insight_context(
-    results_df: pd.DataFrame,
-    user_query: str,
-    sql_query: str | None = None,
-) -> dict[str, Any]:
-    """Build programmatic analytical context over 100% of the DataFrame without arbitrary truncation."""
-    if results_df is None or results_df.empty:
-        return {
-            "formatted_context": "No data returned from query.",
-            "max_tokens": 300,
-        }
+from app.agents.insight_analyzer import build_insight_context
 
-    lines = [
-        f"Total Records: {len(results_df)} | Total Columns: {len(results_df.columns)}",
-        f"Columns: {', '.join(str(c) for c in results_df.columns)}",
-        "",
-        "--- Complete Dataset Statistics & Aggregations ---",
-    ]
+TOGETHER_MODEL = os.getenv("TOGETHER_MODEL", settings.llm_model or "Qwen/Qwen3.7-Plus")
 
-    # Numeric metrics summary
-    numeric_cols = list(results_df.select_dtypes(include=[np.number]).columns)
-    for col in numeric_cols:
-        series = results_df[col].dropna()
-        if not series.empty:
-            total_sum = float(series.sum())
-            mean_val = float(series.mean())
-            median_val = float(series.median())
-            min_val = float(series.min())
-            max_val = float(series.max())
-            std_val = float(series.std()) if len(series) > 1 else 0.0
 
-            lines.append(
-                f"• Numeric Column '{col}': Total={total_sum:,.2f}, Mean={mean_val:,.2f}, "
-                f"Median={median_val:,.2f}, Min={min_val:,.2f}, Max={max_val:,.2f}, StdDev={std_val:,.2f}"
-            )
+def get_together_chat_completion(
+    model_name: str = TOGETHER_MODEL,
+    messages: list = None,
+    agent_name: str = "InsightGenerator",
+    max_tokens: int = 400,
+    **kwargs,
+) -> str:
+    """Helper to call Together or LiteLLM chat completions."""
+    clean_model_name = (model_name or settings.llm_model or TOGETHER_MODEL).replace("together_ai/", "").replace("openai/", "")
+    api_key = settings.together_api_key or os.getenv("TOGETHER_API_KEY")
 
-    # Categorical and dimension breakdown
-    cat_cols = [c for c in results_df.columns if c not in numeric_cols]
-    for col in cat_cols:
-        series = results_df[col].dropna()
-        if not series.empty:
-            nunique = series.nunique()
-            top_counts = series.value_counts().head(5)
-            top_str = ", ".join(f"{k}: {v} ({v / len(series) * 100:.1f}%)" for k, v in top_counts.items())
-            lines.append(f"• Dimension '{col}' ({nunique} unique values): Top 5 -> [{top_str}]")
+    if api_key:
+        try:
+            from together import Together
+            client = Together(api_key=api_key)
+            try:
+                stream = client.chat.completions.create(
+                    model=clean_model_name,
+                    messages=messages or [],
+                    stream=True,
+                    max_tokens=max_tokens,
+                    **kwargs,
+                )
+                text_chunks = []
+                for chunk in stream:
+                    if hasattr(chunk, "choices") and chunk.choices:
+                        content = getattr(chunk.choices[0].delta, "content", None) or getattr(chunk.choices[0], "text", None) or ""
+                        if content:
+                            text_chunks.append(content)
+                result_text = "".join(text_chunks).strip()
+                if result_text:
+                    return result_text
+            except Exception:
+                response = client.chat.completions.create(
+                    model=clean_model_name,
+                    messages=messages or [],
+                    stream=False,
+                    max_tokens=max_tokens,
+                    **kwargs,
+                )
+                if hasattr(response, "choices") and response.choices:
+                    return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.warning("Together client exception in %s: %s", agent_name, e)
 
-    # Sample rows for grounding
-    if len(results_df) <= 15:
-        sample_str = results_df.to_string(index=False)
-        lines.append(f"\n--- Complete Query Result Rows ---\n{sample_str}")
-    else:
-        sample_str = results_df.head(5).to_string(index=False)
-        lines.append(f"\n--- Sample Data (First 5 Rows of {len(results_df)}) ---\n{sample_str}")
+    try:
+        import litellm
+        target_model = clean_model_name if "together" in clean_model_name.lower() else f"together_ai/{clean_model_name}"
+        response = litellm.completion(
+            model=target_model,
+            messages=messages or [],
+            max_tokens=max_tokens,
+            temperature=kwargs.get("temperature", 0.1),
+        )
+        if hasattr(response, "choices") and response.choices:
+            return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error("LiteLLM completion error in %s: %s", agent_name, e)
 
-    if sql_query:
-        lines.append(f"\nExecuted SQL: {sql_query}")
+    return ""
 
-    max_tokens = 400 if len(results_df) > 1 else 250
-    return {
-        "formatted_context": "\n".join(lines),
-        "max_tokens": max_tokens,
-    }
+
+class AwaitableStr(str):
+    """String subclass that is also awaitable so callers can use either sync or await."""
+
+    def __await__(self):
+        async def _coro():
+            return str(self)
+        return _coro().__await__()
 
 
 class InsightAgent:
     """Agent to generate data insights from complete query results using Together LLM and programmatic compression."""
 
-    def __init__(self, model_name: str | None = None):
-        self.model_name = model_name or settings.llm_model or "Qwen/Qwen3.7-Plus"
+    def __init__(self, model_name: str = TOGETHER_MODEL):
+        self.model_name = model_name
 
-    async def generate_insights(
+    def generate_insights(
         self,
         user_query: str,
-        results_df_or_columns: pd.DataFrame | list[str],
-        results_rows: list[list] | None = None,
-        sql: str = "",
+        results_df: Any = None,
         sql_query: str | None = None,
-        model: str | None = None,
+        *args,
+        **kwargs,
     ) -> str:
         """Generate human-readable insights from complete query results without arbitrary truncation."""
-        # Normalize input to DataFrame
-        if isinstance(results_df_or_columns, pd.DataFrame):
-            df = results_df_or_columns
-            effective_sql = sql_query or sql
-        elif isinstance(results_df_or_columns, list) and results_rows is not None:
-            df = pd.DataFrame(results_rows, columns=results_df_or_columns)
-            effective_sql = sql or sql_query or ""
-        elif isinstance(results_df_or_columns, list) and results_rows is None:
-            # Empty rows or columns only
-            return "No data matched your query."
-        else:
-            return "No data matched your query."
+        # Handle backwards-compatibility if called with (user_query, filtered_columns, filtered_rows, ...)
+        df: pd.DataFrame | None = None
+        effective_sql = sql_query or kwargs.get("sql")
+
+        if isinstance(results_df, pd.DataFrame):
+            df = results_df
+        elif isinstance(results_df, list):
+            if isinstance(sql_query, list):
+                rows = sql_query
+                effective_sql = kwargs.get("sql") or (args[0] if len(args) > 0 else None)
+            else:
+                rows = args[0] if len(args) > 0 else kwargs.get("results_rows")
+            if rows is not None:
+                try:
+                    df = pd.DataFrame(rows, columns=results_df)
+                except Exception:
+                    df = None
+            else:
+                df = pd.DataFrame(columns=results_df)
+        elif results_df is None and "df" in kwargs:
+            df = kwargs["df"]
 
         # Handle empty results
         if df is None or df.empty:
-            return "No data matched your query."
+            return AwaitableStr("No data matched your query.")
 
         # Build programmatic analytical context over 100% of the DataFrame
         context_obj = build_insight_context(df, user_query, sql_query=effective_sql)
 
         # Build concise, executive-focused prompt tailored to analytical intent
         prompt = f"""You are a senior business intelligence analyst delivering concise, high-impact executive insights.
-Analyze the programmatic data summary below and provide clear, direct business insights strictly answering the user's question.
+            Analyze the programmatic data summary below and provide clear, direct business insights strictly answering the user's question.
 
-User Question: "{user_query}"
+            User Question: "{user_query}"
 
-Analytical Summary & Complete Dataset Statistics:
-{context_obj['formatted_context']}
+            Analytical Summary & Complete Dataset Statistics:
+            {context_obj['formatted_context']}
 
-CRITICAL INSTRUCTIONS:
-1. Base all conclusions strictly on the metrics, totals, percentages, and trends provided in the analytical summary.
-2. Structure your output clearly:
-   - For simple single-metric/aggregate queries: Provide 1–2 concise sentences directly stating the answer and key context.
-   - For multi-row queries (trends, rankings, comparisons, anomalies, distributions): Provide 3–5 crisp, bulleted key takeaways with exact numbers.
-3. Include specific figures from the analysis (e.g., exact revenue, percentage growth, CAGR, top category share, peak period, or difference margin).
-4. Strictly avoid:
-   - Apologies or explanations of missing data/data limitations.
-   - Mentioning SQL, tables, column names, code, or technical execution.
-   - Generic business advice, obvious textbook definitions, or repetitive fluff.
-   - Restating the user question.
-5. Deliver immediate, high-value, executive-ready insights.
-"""
+            CRITICAL INSTRUCTIONS:
+            1. Base all conclusions strictly on the metrics, totals, percentages, and trends provided in the analytical summary.
+            2. Structure your output clearly:
+            - For simple single-metric/aggregate queries: Provide 1–2 concise sentences directly stating the answer and key context.
+            - For multi-row queries (trends, rankings, comparisons, anomalies, distributions): Provide 3–5 crisp, bulleted key takeaways with exact numbers.
+            3. Include specific figures from the analysis (e.g., exact revenue, percentage growth, CAGR, top category share, peak period, or difference margin).
+            4. Strictly avoid:
+            - Apologies or explanations of missing data/data limitations.
+            - Mentioning SQL, tables, column names, code, or technical execution.
+            - Generic business advice, obvious textbook definitions, or repetitive fluff.
+            - Restating the user question.
+            5. Deliver immediate, high-value, executive-ready insights.
+            """
 
         try:
-            if settings.is_llm_configured:
-                insights = await _get_chat_completion(
-                    messages=[{"role": "user", "content": prompt}],
-                    model=model or self.model_name,
-                    max_tokens=context_obj.get("max_tokens", 400),
-                    temperature=0.1,
-                )
-                if insights and insights.strip():
-                    return insights.strip()
+            insights = get_together_chat_completion(
+                model_name=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                agent_name="InsightGenerator",
+                max_tokens=context_obj.get("max_tokens", 400),
+            )
+            if insights and insights.strip():
+                return AwaitableStr(insights.strip())
+            return AwaitableStr(context_obj.get("formatted_context", "Data query completed successfully."))
         except Exception as e:
-            logger.warning("[InsightAgent] LLM insight generation failed: %s", e)
+            return AwaitableStr(f"Insight generation failed: {str(e)}. Please review the raw data.")
 
-        # Programmatic summary fallback
-        return context_obj.get("formatted_context", "Data query completed successfully.")
 
 
 # ============================================================================
@@ -2250,7 +2268,8 @@ async def execute_sql_pipeline(user_query: str, model: str | None = None) -> dic
             verif_res = await verification_agent.verify(user_query, current_sql, filtered_columns, filtered_rows, model=model)
 
             # Stage 7: Insights
-            insights_text = await insight_agent.generate_insights(user_query, filtered_columns, filtered_rows, sql=current_sql, model=model)
+            full_df = pd.DataFrame(raw_rows, columns=raw_columns) if raw_rows else pd.DataFrame(columns=filtered_columns)
+            insights_text = await insight_agent.generate_insights(user_query, results_df=full_df, sql_query=current_sql)
 
             return {
                 "ok": True,

@@ -1,4 +1,4 @@
-import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, Bar, BarChart, CartesianGrid, ComposedChart, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { AgentChart as AgentChartData } from "@datacon/shared-types";
 
 function formatMillions(value: number): string {
@@ -21,19 +21,57 @@ export function AgentChart({ chart }: { chart: AgentChartData }) {
   const titleText = (chart.title || "Chart").toUpperCase();
 
   if (chart.type === "horizontal_bar") {
-    const height = Math.max(120, chart.data.length * 32);
+    const isPercent =
+      titleText.includes("ACCURACY") ||
+      titleText.includes("%") ||
+      titleText.includes("PERCENT") ||
+      titleText.includes("RATE");
+
+    const normalizedData = (chart.data || []).map((d: any) => {
+      const rawLabel = d.label ?? d.model ?? d.name ?? d.category ?? "";
+      const rawVal = d.value ?? d.accuracy ?? d.score ?? d.count ?? 0;
+      const value = typeof rawVal === "number" ? rawVal : parseFloat(rawVal) || 0;
+      return {
+        ...d,
+        label: String(rawLabel).replace(/ (Classification|Regression)$/i, ""),
+        fullName: String(rawLabel),
+        value: Number(value.toFixed(1)),
+      };
+    });
+
+    const height = Math.max(140, normalizedData.length * 40);
     return (
       <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>
         <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)", marginBottom: 8 }}>
           {titleText}
         </div>
         <ResponsiveContainer width="100%" height={height}>
-          <BarChart data={chart.data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+          <BarChart data={normalizedData} layout="vertical" margin={{ top: 4, right: 60, left: 8, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--ac-border)" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" />
-            <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" width={100} />
-            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-            <Bar dataKey="value" fill="var(--ac)" radius={[0, 4, 4, 0]} />
+            <XAxis
+              type="number"
+              domain={isPercent ? [0, 100] : ["auto", "auto"]}
+              unit={isPercent ? "%" : ""}
+              tick={{ fontSize: 11 }}
+              stroke="var(--ac-muted)"
+              tickFormatter={(v: number) => (isPercent ? `${v}%` : v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`)}
+            />
+            <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fontWeight: 500 }} stroke="var(--ac-fg)" width={130} />
+            <Tooltip
+              formatter={(val: any, _name: any, item: any) => [
+                isPercent ? `${typeof val === "number" ? val.toFixed(1) : val}%` : (typeof val === "number" ? val.toLocaleString() : val),
+                item?.payload?.fullName || (isPercent ? "Accuracy" : "Value"),
+              ]}
+              contentStyle={{ fontSize: 12, borderRadius: 8 }}
+            />
+            <Bar dataKey="value" fill="var(--ac, #6d4dff)" radius={[0, 4, 4, 0]}>
+              <LabelList
+                dataKey="value"
+                position="right"
+                formatter={(v: any) => (isPercent ? `${v}%` : typeof v === "number" ? v.toLocaleString() : v)}
+                style={{ fontSize: 11, fill: "var(--ac-fg)", fontWeight: 600 }}
+              />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -41,18 +79,29 @@ export function AgentChart({ chart }: { chart: AgentChartData }) {
   }
 
   if (chart.type === "bar") {
+    const normalizedData = (chart.data || []).map((d: any) => {
+      const rawLabel = d.label ?? d.model ?? d.name ?? d.category ?? "";
+      const rawVal = d.value ?? d.accuracy ?? d.score ?? d.count ?? 0;
+      const value = typeof rawVal === "number" ? rawVal : parseFloat(rawVal) || 0;
+      return {
+        ...d,
+        label: String(rawLabel).replace(/ (Classification|Regression)$/i, ""),
+        value: Number(value.toFixed(1)),
+      };
+    });
+
     return (
       <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>
         <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)", marginBottom: 8 }}>
           {titleText}
         </div>
         <ResponsiveContainer width="100%" height={180}>
-          <BarChart data={chart.data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+          <BarChart data={normalizedData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--ac-border)" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" />
             <YAxis tick={{ fontSize: 11 }} stroke="var(--ac-muted)" width={40} />
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-            <Bar dataKey="value" fill="var(--ac)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="value" fill="var(--ac, #6d4dff)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

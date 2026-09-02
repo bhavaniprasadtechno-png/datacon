@@ -8,6 +8,7 @@ import { AgentVisualization } from "./AgentVisualization";
 import { SaveDashboardModal } from "./SaveDashboardModal";
 import { hasDashletContent } from "../../lib/payloadAdapter";
 import { CitationDrawer } from "../../components/common/CitationDrawer";
+import { MarkdownMessage } from "../../components/common/MarkdownMessage";
 import type { DashletIntent } from "../../api/dashboards";
 import type { ChatMessage, ChatPayload } from "../../lib/types";
 import {
@@ -252,10 +253,7 @@ export function ChatPage() {
                   </div>
                   <div style={{ background: "#fff", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 20 }}>
                     {m.text ? (
-                      <div style={{ fontSize: 13.5, lineHeight: 1.55 }}>
-                        {m.text}
-                        {m.streaming && <span style={{ display: "inline-block", width: 7, height: 14, background: "var(--ac)", marginLeft: 2, animation: "dvblink .9s infinite", verticalAlign: "middle" }} />}
-                      </div>
+                      <MarkdownMessage content={m.text} streaming={m.streaming} />
                     ) : (
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 13, color: "var(--ac-muted)" }}>Analyzing data...</span>
