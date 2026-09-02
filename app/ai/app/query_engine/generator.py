@@ -38,8 +38,11 @@ def _get_clean_db_url(url: str) -> str:
 def _get_connector_metadata() -> dict[str, dict]:
     if not settings.database_url:
         return {}
-    import psycopg2
-    import json
+    try:
+        import psycopg2
+        import json
+    except ImportError:
+        return {}
     conn = None
     cur = None
     try:
@@ -70,7 +73,10 @@ def _get_connector_metadata() -> dict[str, dict]:
 def _get_datasource_metadata() -> dict[str, dict]:
     if not settings.database_url:
         return {}
-    import psycopg2
+    try:
+        import psycopg2
+    except ImportError:
+        return {}
     conn = None
     cur = None
     try:
