@@ -25,6 +25,7 @@ import { PlatformAdminShell } from "./components/shell/PlatformAdminShell";
 import { queryClient } from "./lib/queryClient";
 import { useAuthStore } from "./stores/useAuthStore";
 import { useThemeStore } from "./stores/useThemeStore";
+import { useDarkModeStore } from "./stores/useDarkModeStore";
 
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 
@@ -117,6 +118,7 @@ export default function App() {
   useEffect(() => {
     useAuthStore.getState().fetchUser();
     useThemeStore.getState().initialize();
+    useDarkModeStore.getState().initialize();
   }, []);
 
   return (

@@ -35,7 +35,7 @@ const INTENT_ICON: Record<ChatIntent, typeof FileText> = {
 };
 
 const CONFIDENCE_LABEL = { high: "High confidence", medium: "Medium confidence", low: "Low confidence" } as const;
-const CONFIDENCE_COLOR = { high: "#0f8a5c", medium: "#a3730c", low: "#7a7f8a" } as const;
+const CONFIDENCE_COLOR = { high: "var(--sem-success-color, #0f8a5c)", medium: "var(--sem-warning-color, #a3730c)", low: "var(--ac-muted)" } as const;
 
 /** The question that produced a given agent message: the nearest preceding
  * user message in the flat message list — one question can fan out to
@@ -177,7 +177,7 @@ export function ChatPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", minWidth: 0 }}>
-        <div style={{ padding: "18px 28px", borderBottom: "1px solid var(--ac-border)", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ padding: "18px 28px", borderBottom: "1px solid var(--ac-border)", background: "var(--ac-bg-muted)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 16, fontWeight: 800 }}>Multi-agent chat</div>
             <div style={{ fontSize: 11.5, color: "var(--ac-muted)" }}>Plain-English questions, routed automatically</div>
@@ -193,7 +193,7 @@ export function ChatPage() {
           </div>
         </div>
 
-        <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", background: "linear-gradient(180deg,#f7f8fc,var(--ac-bg))", padding: "24px 0" }}>
+        <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", background: "linear-gradient(180deg,var(--ac-bg-muted),var(--ac-bg))", padding: "24px 0" }}>
           <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px" }}>
             {messages.length === 0 && (
               <div style={{ textAlign: "center", marginTop: 40 }}>
@@ -207,7 +207,7 @@ export function ChatPage() {
                     <button
                       key={s.intent}
                       onClick={() => send(s.question)}
-                      style={{ background: "#fff", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 18, textAlign: "left" }}
+                      style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 18, textAlign: "left" }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 6, font: "600 9.5px 'IBM Plex Mono',monospace", color: INTENT_META[s.intent].color, marginBottom: 6, textTransform: "uppercase" }}>
                         {s.intent === "descriptive" && <FileText size={11} />}
@@ -250,7 +250,7 @@ export function ChatPage() {
                       </span>
                     )}
                   </div>
-                  <div style={{ background: "#fff", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 20 }}>
+                  <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 20 }}>
                     {m.text ? (
                       <div style={{ fontSize: 13.5, lineHeight: 1.55 }}>
                         {m.text}
@@ -271,13 +271,13 @@ export function ChatPage() {
                       <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--ac-border)" }}>
                         <button
                           onClick={() => vote(m.id, 1)}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "4px 9px", borderRadius: "var(--radius-sm)", color: m.vote === 1 ? "#0f8a5c" : "var(--ac-muted)", background: m.vote === 1 ? "#e6f7ef" : "transparent" }}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "4px 9px", borderRadius: "var(--radius-sm)", color: m.vote === 1 ? "var(--sem-success-color, #0f8a5c)" : "var(--ac-muted)", background: m.vote === 1 ? "var(--sem-success-bg, #e6f7ef)" : "transparent" }}
                         >
                           <ThumbsUp size={12} /> Helpful
                         </button>
                         <button
                           onClick={() => vote(m.id, -1)}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "4px 9px", borderRadius: "var(--radius-sm)", color: m.vote === -1 ? "#c0392b" : "var(--ac-muted)", background: m.vote === -1 ? "#fdeee9" : "transparent" }}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, padding: "4px 9px", borderRadius: "var(--radius-sm)", color: m.vote === -1 ? "var(--sem-error-color, #c0392b)" : "var(--ac-muted)", background: m.vote === -1 ? "var(--sem-error-bg, #fdeee9)" : "transparent" }}
                         >
                           <ThumbsDown size={12} />
                         </button>
@@ -316,7 +316,7 @@ export function ChatPage() {
                     Thinking
                   </span>
                 </div>
-                <div style={{ background: "#fff", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 20 }}>
+                <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 20 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 13, color: "var(--ac-muted)" }}>Thinking...</span>
                     <div style={{ display: "flex", gap: 4 }}>
@@ -331,7 +331,7 @@ export function ChatPage() {
           </div>
         </div>
 
-        <div style={{ borderTop: "1px solid var(--ac-border)", background: "#fff", padding: "16px 24px" }}>
+        <div style={{ borderTop: "1px solid var(--ac-border)", background: "var(--ac-bg-muted)", padding: "16px 24px" }}>
           <div style={{ maxWidth: 760, margin: "0 auto" }}>
             <form
               onSubmit={(e) => {

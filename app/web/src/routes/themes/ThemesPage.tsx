@@ -31,9 +31,9 @@ export function ThemesPage() {
               onClick={() => choosePreset(preset)}
               style={{
                 textAlign: "left",
-                background: "#fff",
+                background: "var(--ac-bg-muted)",
                 borderRadius: 16,
-                border: `2px solid ${active ? preset.ac : "#e9eaf2"}`,
+                border: `2px solid ${active ? preset.ac : "var(--ac-border)"}`,
                 padding: 18,
               }}
             >
@@ -57,7 +57,7 @@ export function ThemesPage() {
         })}
       </div>
 
-      <div style={{ background: "#fff", borderRadius: 16, border: `2px solid ${themeId === "custom" ? customAccent : "#e9eaf2"}`, padding: 18, marginBottom: 16 }}>
+      <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: `2px solid ${themeId === "custom" ? customAccent : "var(--ac-border)"}`, padding: 18, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ position: "relative", width: 52, height: 52, borderRadius: 16, background: `linear-gradient(135deg,${customAccent},${customAccent})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
             🎨

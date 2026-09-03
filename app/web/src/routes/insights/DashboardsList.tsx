@@ -10,7 +10,7 @@ export function DashboardsList() {
 
   if (dashboards.length === 0) {
     return (
-      <div style={{ background: "#fff", border: "1px dashed var(--ac-border)", borderRadius: 16, padding: 48, textAlign: "center" }}>
+      <div style={{ background: "var(--ac-bg-muted)", border: "1px dashed var(--ac-border)", borderRadius: 16, padding: 48, textAlign: "center" }}>
         <div style={{ width: 44, height: 44, borderRadius: "var(--radius-lg)", background: "var(--ac-soft)", color: "var(--ac)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
           <LayoutDashboard size={22} />
         </div>
@@ -34,7 +34,7 @@ export function DashboardsList() {
         <button
           key={d.id}
           onClick={() => navigate(`/insights/dashboards/${d.id}`)}
-          style={{ textAlign: "left", background: "#fff", border: "1px solid var(--ac-border)", borderRadius: 16, padding: 18 }}
+          style={{ textAlign: "left", background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: 16, padding: 18 }}
         >
           <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 2, background: "var(--ac)", marginBottom: 10 }} />
           <div style={{ fontSize: 14.5, fontWeight: 800 }}>{d.name}</div>

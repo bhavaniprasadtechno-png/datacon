@@ -120,7 +120,7 @@ export function AuthPage() {
         </div>
       </div>
 
-      <div style={{ flex: 1, background: "#f7f8fc", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ flex: 1, background: "var(--ac-bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ width: 392, maxWidth: "90vw" }}>
           <h2 style={{ fontSize: 25, fontWeight: 800, letterSpacing: "-.02em", margin: 0 }}>{mode === "login" ? "Sign in to Datacon" : "Create your account"}</h2>
           <p style={{ fontSize: 13.5, color: "#71768a", margin: "6px 0 22px" }}>
@@ -181,7 +181,7 @@ export function AuthPage() {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "11px 13px",
-  border: "1px solid #e2e4ee",
+  border: "1px solid var(--ac-border)",
   borderRadius: 11,
   fontSize: 13.5,
 };

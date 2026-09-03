@@ -6,7 +6,7 @@ export function RoleBadge({ name, color, bg }: { name: string; color?: string | 
       variant="outline"
       style={{
         color: color ?? "#71768a",
-        backgroundColor: bg ?? "#f0f1f6",
+        backgroundColor: bg ?? "var(--ac-bg)",
         fontFamily: "'IBM Plex Mono', monospace",
         fontSize: "10px",
         fontWeight: 600,

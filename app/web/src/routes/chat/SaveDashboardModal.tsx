@@ -101,7 +101,7 @@ export function SaveDashboardModal({ open, onClose, title, text, intent, payload
             padding: "10px 0",
             borderRadius: "var(--radius-sm)",
             border: `1px solid ${mode === "new" ? "var(--ac)" : "var(--ac-border)"}`,
-            background: mode === "new" ? "var(--ac-soft)" : "#fff",
+            background: mode === "new" ? "var(--ac-soft)" : "var(--ac-bg-muted)",
             color: mode === "new" ? "var(--ac-deep)" : "var(--ac-fg)",
             fontSize: 13,
             fontWeight: 700,
@@ -116,7 +116,7 @@ export function SaveDashboardModal({ open, onClose, title, text, intent, payload
             padding: "10px 0",
             borderRadius: "var(--radius-sm)",
             border: `1px solid ${mode === "existing" ? "var(--ac)" : "var(--ac-border)"}`,
-            background: mode === "existing" ? "var(--ac-soft)" : "#fff",
+            background: mode === "existing" ? "var(--ac-soft)" : "var(--ac-bg-muted)",
             color: mode === "existing" ? "var(--ac-deep)" : "var(--ac-fg)",
             fontSize: 13,
             fontWeight: 700,
@@ -157,7 +157,7 @@ export function SaveDashboardModal({ open, onClose, title, text, intent, payload
                   padding: "10px 12px",
                   borderRadius: "var(--radius-sm)",
                   border: `1px solid ${selectedId === d.id ? "var(--ac)" : "var(--ac-border)"}`,
-                  background: selectedId === d.id ? "var(--ac-soft)" : "#fff",
+                  background: selectedId === d.id ? "var(--ac-soft)" : "var(--ac-bg-muted)",
                   fontSize: 13,
                   fontWeight: 700,
                   color: selectedId === d.id ? "var(--ac-deep)" : "var(--ac-fg)",
@@ -184,7 +184,7 @@ export function SaveDashboardModal({ open, onClose, title, text, intent, payload
                     padding: "8px 0",
                     borderRadius: "var(--radius-sm)",
                     border: `1px solid ${include === opt ? "var(--ac)" : "var(--ac-border)"}`,
-                    background: include === opt ? "var(--ac-soft)" : "#fff",
+                    background: include === opt ? "var(--ac-soft)" : "var(--ac-bg-muted)",
                     color: include === opt ? "var(--ac-deep)" : "var(--ac-fg)",
                     fontSize: 12.5,
                     fontWeight: 700,
@@ -201,7 +201,7 @@ export function SaveDashboardModal({ open, onClose, title, text, intent, payload
 
       <ModalFooter>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <button onClick={onClose} style={{ padding: "10px 0", borderRadius: "var(--radius-sm)", border: "1px solid var(--ac-border)", background: "#fff", fontSize: 13.5, fontWeight: 700 }}>
+          <button onClick={onClose} style={{ padding: "10px 0", borderRadius: "var(--radius-sm)", border: "1px solid var(--ac-border)", background: "var(--ac-bg-muted)", fontSize: 13.5, fontWeight: 700 }}>
             Cancel
           </button>
           <button

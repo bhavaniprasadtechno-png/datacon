@@ -85,7 +85,7 @@ export function UploadModal({ open, onClose }: { open: boolean; onClose: () => v
             <Button variant="secondary" onClick={() => inputRef.current?.click()} disabled={state === "uploading"}>
               Choose File
             </Button>
-            <span style={{ fontSize: 12.5, color: file ? "#1a1d29" : "#9499ad" }}>{file ? file.name : "No file chosen"}</span>
+            <span style={{ fontSize: 12.5, color: file ? "var(--ac-fg)" : "#9499ad" }}>{file ? file.name : "No file chosen"}</span>
           </div>
 
           {state === "uploading" && (
@@ -94,7 +94,7 @@ export function UploadModal({ open, onClose }: { open: boolean; onClose: () => v
                 <span style={{ fontFamily: "'IBM Plex Mono',monospace" }}>{file?.name}</span>
                 <span style={{ color: "var(--ac)", fontWeight: 700 }}>{pct}%</span>
               </div>
-              <div style={{ height: 6, background: "#eef0f6", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: 6, background: "var(--ac-bg-muted)", borderRadius: 4, overflow: "hidden" }}>
                 <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg,var(--ac),#2bb8c4)", transition: "width .2s" }} />
               </div>
               <div style={{ fontSize: 11.5, color: "#9499ad", marginTop: 6 }}>{stage}</div>
@@ -116,9 +116,9 @@ export function UploadModal({ open, onClose }: { open: boolean; onClose: () => v
 
       {state === "error" && (
         <>
-          <div style={{ background: "#fdeee9", border: "1px solid #f6cfc2", borderRadius: 10, padding: 12, marginBottom: 18 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#c0392b", marginBottom: 4 }}>⚠ Upload rejected</div>
-            <div style={{ fontSize: 12.5, color: "#8a3226" }}>{errorMsg}</div>
+          <div style={{ background: "var(--sem-error-bg, #fdeee9)", border: "1px solid var(--sem-error-border, #f6cfc2)", borderRadius: 10, padding: 12, marginBottom: 18 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--sem-error-color, #c0392b)", marginBottom: 4 }}>⚠ Upload rejected</div>
+            <div style={{ fontSize: 12.5, color: "var(--sem-error-color, #8a3226)" }}>{errorMsg}</div>
           </div>
           <ModalFooter>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>

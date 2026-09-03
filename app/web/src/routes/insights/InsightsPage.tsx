@@ -7,7 +7,7 @@ import { DashboardsList } from "./DashboardsList";
 import { Skeleton, KpiCardSkeleton, ChartCardSkeleton } from "../../components/ui/Skeleton";
 
 const TONE_STYLE = {
-  high: { bg: "#fdeee9", dot: "#e2603f" },
+  high: { bg: "var(--sem-error-bg, #fdeee9)", dot: "#e2603f" },
   medium: { bg: "var(--ac-soft)", dot: "var(--ac)" },
 };
 
@@ -107,7 +107,7 @@ export function InsightsPage() {
         {isLoading || !data ? (
           <>
             <ChartCardSkeleton />
-            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18, display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", padding: 18, display: "flex", flexDirection: "column", gap: 14 }}>
               <Skeleton className="h-4 w-1/3 bg-slate-200/60" />
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {[1, 2, 3].map((n) => (
@@ -124,7 +124,7 @@ export function InsightsPage() {
           </>
         ) : (
           <>
-            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
+            <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", padding: 18 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 700 }}>Revenue &amp; forecast</div>
                 <button onClick={() => navigate("/forecasts")} style={{ fontSize: 12, color: "var(--ac)", fontWeight: 700 }}>
@@ -140,7 +140,7 @@ export function InsightsPage() {
               </div>
             </div>
 
-            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
+            <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", padding: 18 }}>
               <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 12 }}>Needs your attention</div>
               <div style={{ display: "flex", flexDirection: "column" }}>
                 {data.attention.map((a) => {
@@ -170,7 +170,7 @@ export function InsightsPage() {
 
       <button
         onClick={() => askAbout("")}
-        style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #e9eaf2", borderRadius: 16, padding: "14px 18px", cursor: "text" }}
+        style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: 16, padding: "14px 18px", cursor: "text" }}
       >
         <span style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--ac-logo)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>✦</span>
         <span style={{ flex: 1, textAlign: "left", fontSize: 13.5, color: "#9499ad" }}>Ask Datacon anything about your business…</span>
@@ -184,10 +184,10 @@ export function InsightsPage() {
 
 function KpiCard({ label, value, deltaLabel, good }: { label: string; value: string; deltaLabel: string; good: boolean }) {
   return (
-    <div className="dvfu" style={{ background: "#fff", borderRadius: 16, padding: "17px 18px", border: "1px solid #e9eaf2" }}>
+    <div className="dvfu" style={{ background: "var(--ac-bg-muted)", borderRadius: 16, padding: "17px 18px", border: "1px solid var(--ac-border)" }}>
       <div style={{ fontSize: 11.5, color: "#9499ad", marginBottom: 8 }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>{value}</div>
-      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 20, color: good ? "#13a06b" : "#d4654a", background: good ? "#e6f7ef" : "#fdeee9" }}>{deltaLabel}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 20, color: good ? "var(--sem-success-color, #13a06b)" : "var(--sem-error-color, #d4654a)", background: good ? "var(--sem-success-bg, #e6f7ef)" : "var(--sem-error-bg, #fdeee9)" }}>{deltaLabel}</span>
     </div>
   );
 }

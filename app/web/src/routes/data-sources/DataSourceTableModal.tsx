@@ -69,15 +69,15 @@ export function DataSourceTableModal({ id, onClose }: { id: string | null; onClo
               overflowY: "overlay",
               maxHeight: "360px",
               marginTop: 14, 
-              border: "1px solid #e9eaf2", 
+              border: "1px solid var(--ac-border)", 
               borderRadius: 10 
             }}
           >
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
-                <tr style={{ background: "#f7f8fc" }}>
+                <tr style={{ background: "var(--ac-bg-muted)" }}>
                   {data.columns.map((c, j) => (
-                    <th key={c} style={{ padding: "8px 12px", paddingRight: j === data.columns.length - 1 ? 24 : 12, textAlign: "left", fontWeight: 700, whiteSpace: "nowrap", position: "sticky", top: 0, background: "#f7f8fc", zIndex: 10 }}>
+                    <th key={c} style={{ padding: "8px 12px", paddingRight: j === data.columns.length - 1 ? 24 : 12, textAlign: "left", fontWeight: 700, whiteSpace: "nowrap", position: "sticky", top: 0, background: "var(--ac-bg-muted)", zIndex: 10 }}>
                       {c}
                     </th>
                   ))}
@@ -85,7 +85,7 @@ export function DataSourceTableModal({ id, onClose }: { id: string | null; onClo
               </thead>
               <tbody>
                 {data.sampleRows.slice(0, visibleCount).map((row, i) => (
-                  <tr key={i} style={{ borderTop: "1px solid #f0f1f6" }}>
+                  <tr key={i} style={{ borderTop: "1px solid var(--ac-border)" }}>
                     {row.map((cell, j) => (
                       <td key={j} style={{ padding: "8px 12px", paddingRight: j === row.length - 1 ? 24 : 12, fontFamily: "'IBM Plex Mono',monospace", whiteSpace: "nowrap" }}>
                         {cell}
@@ -97,7 +97,7 @@ export function DataSourceTableModal({ id, onClose }: { id: string | null; onClo
             </table>
 
             {visibleCount < data.sampleRows.length && (
-              <div style={{ padding: "10px", textAlign: "center", fontSize: 11, color: "#9499ad", background: "#fafafa", borderTop: "1px solid #f0f1f6" }}>
+              <div style={{ padding: "10px", textAlign: "center", fontSize: 11, color: "#9499ad", background: "var(--ac-bg-muted)", borderTop: "1px solid var(--ac-border)" }}>
                 Scroll down to load more rows...
               </div>
             )}

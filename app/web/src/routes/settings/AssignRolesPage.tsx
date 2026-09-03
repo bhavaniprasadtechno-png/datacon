@@ -48,8 +48,8 @@ export function AssignRolesPage() {
     <div style={{ padding: 32, maxWidth: 1080, margin: "0 auto" }}>
       <PageHeader title="Assign roles" sub="Give each user exactly one role" />
 
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 120px", padding: "12px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "#9499ad", borderBottom: "1px solid #f0f1f6" }}>
+      <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 120px", padding: "12px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "#9499ad", borderBottom: "1px solid var(--ac-border)" }}>
           <span>USER</span>
           <span>CURRENT ROLE</span>
           <span>ACTION</span>
@@ -85,7 +85,7 @@ export function AssignRolesPage() {
         {target && (
           <>
             <ModalHeader title="Assign role" onClose={() => setTarget(null)} />
-            <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f5f6fb", borderRadius: 11, padding: "9px 11px", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--ac-bg-muted)", borderRadius: 11, padding: "9px 11px", marginBottom: 16 }}>
               <Avatar grad={target.avatarGrad} initials={target.initials} size={32} />
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{target.name}</div>
@@ -104,8 +104,8 @@ export function AssignRolesPage() {
                       gap: 10,
                       padding: "9px 11px",
                       borderRadius: 10,
-                      border: `1px solid ${roleId === r.id ? "var(--ac-ring)" : "#e2e4ee"}`,
-                      background: roleId === r.id ? "var(--ac-softer)" : "#fff",
+                      border: `1px solid ${roleId === r.id ? "var(--ac-ring)" : "var(--ac-border)"}`,
+                      background: roleId === r.id ? "var(--ac-softer)" : "var(--ac-bg-muted)",
                       textAlign: "left",
                     }}
                   >

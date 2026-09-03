@@ -46,7 +46,7 @@ export function UsersPage() {
         action={<Button variant="primary" onClick={() => setEditing("new")}>+ Create user</Button>}
       />
 
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "hidden" }}>
+      <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", overflow: "hidden" }}>
         <div style={gridHeader}>
           <span>USER</span>
           <span>ROLE</span>
@@ -157,8 +157,8 @@ function UserEditorForm({
                 gap: 10,
                 padding: "9px 11px",
                 borderRadius: 10,
-                border: `1px solid ${roleId === r.id ? "var(--ac-ring)" : "#e2e4ee"}`,
-                background: roleId === r.id ? "var(--ac-softer)" : "#fff",
+                border: `1px solid ${roleId === r.id ? "var(--ac-ring)" : "var(--ac-border)"}`,
+                background: roleId === r.id ? "var(--ac-softer)" : "var(--ac-bg-muted)",
                 textAlign: "left",
               }}
             >
@@ -209,7 +209,7 @@ export function FieldRow({ label, children }: { label: string; children: React.R
 export const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "10px 12px",
-  border: "1px solid #e2e4ee",
+  border: "1px solid var(--ac-border)",
   borderRadius: 10,
   fontSize: 13,
 };
@@ -222,7 +222,7 @@ const gridHeader: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: ".06em",
   color: "#9499ad",
-  borderBottom: "1px solid #f0f1f6",
+  borderBottom: "1px solid var(--ac-border)",
 };
 
 const gridRow: React.CSSProperties = {

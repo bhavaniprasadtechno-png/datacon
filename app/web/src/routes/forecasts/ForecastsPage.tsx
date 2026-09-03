@@ -29,12 +29,12 @@ export function ForecastsPage() {
           <h1 style={{ fontSize: 21, fontWeight: 800, margin: 0 }}>Forecast · Revenue</h1>
           <div style={{ fontSize: 12.5, color: "#9499ad", marginTop: 4 }}>Predictive agent · raw NumPy time-series, 95% confidence intervals</div>
         </div>
-        <div style={{ display: "flex", background: "#f0f1f6", borderRadius: 10, padding: 3 }}>
+        <div style={{ display: "flex", background: "var(--ac-bg-muted)", borderRadius: 10, padding: 3 }}>
           {(["OLS", "Holt-Winters"] as const).map((m) => (
             <button
               key={m}
               onClick={() => setModel(m)}
-              style={{ padding: "7px 14px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, background: model === m ? "#fff" : "transparent", color: model === m ? "var(--ac)" : "#71768a" }}
+              style={{ padding: "7px 14px", borderRadius: 8, fontSize: 12.5, fontWeight: 700, background: model === m ? "var(--ac-bg)" : "transparent", color: model === m ? "var(--ac)" : "#71768a" }}
             >
               {m}
             </button>
@@ -46,7 +46,7 @@ export function ForecastsPage() {
 
       {data && (
         <>
-          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18, display: "grid", gridTemplateColumns: "140px 140px 140px 1fr", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", padding: 18, display: "grid", gridTemplateColumns: "140px 140px 140px 1fr", alignItems: "center", marginBottom: 16 }}>
             <Stat label="PROJECTED" value={data.projected} />
             <Stat label="95% CI" value={`${data.ciLow}–${data.ciHigh}`} />
             <Stat label="GROWTH" value={data.growth} color="#0f8a5c" />
@@ -57,7 +57,7 @@ export function ForecastsPage() {
                   <button
                     key={hval}
                     onClick={() => setHorizon(hval)}
-                    style={{ padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: horizon === hval ? "var(--ac-soft)" : "#f5f6fb", color: horizon === hval ? "var(--ac-deep)" : "#71768a" }}
+                    style={{ padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: horizon === hval ? "var(--ac-soft)" : "var(--ac-bg)", color: horizon === hval ? "var(--ac-deep)" : "#71768a" }}
                   >
                     {hval} mo
                   </button>
@@ -66,7 +66,7 @@ export function ForecastsPage() {
             </div>
           </div>
 
-          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18, marginBottom: 16 }}>
+          <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", padding: 18, marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
               <div style={{ fontSize: 13.5, fontWeight: 700 }}>
                 {model} projection · {HORIZON_LABEL[horizon]}
@@ -75,7 +75,7 @@ export function ForecastsPage() {
             </div>
             <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ display: "block" }}>
               {[0.25, 0.5, 0.75].map((f) => (
-                <line key={f} x1={0} x2={w} y1={h * f} y2={h * f} stroke="#f0f1f6" strokeWidth={1} />
+                <line key={f} x1={0} x2={w} y1={h * f} y2={h * f} stroke="var(--ac-border)" strokeWidth={1} />
               ))}
               <polyline points={linePoints} fill="none" stroke="#6d4dff" strokeWidth={2} />
               {points.length > 0 && <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r={4} fill="#6d4dff" />}
@@ -85,12 +85,12 @@ export function ForecastsPage() {
             </div>
           </div>
 
-          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
+          <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", padding: 18 }}>
             <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 12 }}>Top drivers</div>
             {data.topDrivers.map((d) => (
               <div key={d.label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                 <span style={{ flex: 1, fontSize: 12.5 }}>{d.label}</span>
-                <div style={{ width: 160, height: 7, background: "#f0f1f6", borderRadius: 4, overflow: "hidden" }}>
+                <div style={{ width: 160, height: 7, background: "var(--ac-bg)", borderRadius: 4, overflow: "hidden" }}>
                   <div style={{ width: `${d.pct}%`, height: "100%", background: "var(--ac)", borderRadius: 4 }} />
                 </div>
                 <span style={{ width: 32, fontSize: 12, fontWeight: 700, textAlign: "right" }}>{d.pct}%</span>

@@ -99,7 +99,7 @@ export function OrganizationsPage() {
         style={{ ...inputStyle, marginBottom: 16 }}
       />
 
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "hidden" }}>
+      <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", overflow: "hidden" }}>
         {isLoading ? (
           <>
             <ListEntrySkeleton />
@@ -177,7 +177,7 @@ export function OrganizationsPage() {
 
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #e9eaf2", borderRadius: 16, padding: "20px 22px" }}>
+    <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: 16, padding: "20px 22px" }}>
       <div style={{ font: "600 10.5px 'IBM Plex Mono',monospace", letterSpacing: ".06em", color: "#9499ad", marginBottom: 8 }}>
         {label.toUpperCase()}
       </div>

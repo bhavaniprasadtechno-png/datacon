@@ -74,10 +74,10 @@ export function PermissionsPage() {
       />
 
       {isLoading ? (
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "auto" }}>
+        <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #f0f1f6" }}>
+              <tr style={{ borderBottom: "1px solid var(--ac-border)" }}>
                 <th style={{ textAlign: "left", padding: "12px 18px", fontSize: 10.5, color: "#9499ad" }}>PERMISSION</th>
                 <th style={{ width: 82, padding: "12px 8px" }}><Skeleton className="h-3 w-12 mx-auto" /></th>
                 <th style={{ width: 82, padding: "12px 8px" }}><Skeleton className="h-3 w-12 mx-auto" /></th>
@@ -100,10 +100,10 @@ export function PermissionsPage() {
           </table>
         </div>
       ) : roles && perms && (
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "auto" }}>
+        <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", overflow: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #f0f1f6" }}>
+              <tr style={{ borderBottom: "1px solid var(--ac-border)" }}>
                 <th style={{ textAlign: "left", padding: "12px 18px", fontSize: 10.5, color: "#9499ad" }}>PERMISSION</th>
                 {roles.map((r) => (
                   <th key={r.id} style={{ width: 82, textAlign: "center", padding: "12px 8px", color: r.colorHex ?? "#71768a", fontSize: 10.5 }}>
@@ -130,8 +130,8 @@ export function PermissionsPage() {
                               width: 26,
                               height: 26,
                               borderRadius: 8,
-                              border: `1px solid ${granted ? "var(--ac-ring)" : "#e2e4ee"}`,
-                              background: granted ? "var(--ac-soft)" : "#fff",
+                              border: `1px solid ${granted ? "var(--ac-ring)" : "var(--ac-border)"}`,
+                              background: granted ? "var(--ac-soft)" : "var(--ac-bg)",
                               color: "var(--ac-deep)",
                               fontSize: 13,
                             }}

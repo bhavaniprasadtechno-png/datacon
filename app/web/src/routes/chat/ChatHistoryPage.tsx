@@ -73,11 +73,11 @@ export function ChatHistoryPage() {
               display: "flex",
               alignItems: "center",
               gap: 10,
-              border: "1px solid #e2e4ee",
+              border: "1px solid var(--ac-border)",
               borderRadius: 12,
               padding: "10px 14px",
               marginBottom: 20,
-              background: "#fff",
+              background: "var(--ac-bg-muted)",
             }}
           >
             <span style={{ fontSize: 15, color: "#9499ad" }}>🔍</span>
@@ -129,8 +129,8 @@ export function ChatHistoryPage() {
                   style={{
                     position: "relative",
                     cursor: "pointer",
-                    background: "#fff",
-                    border: "1px solid #e9eaf2",
+                    background: "var(--ac-bg-muted)",
+                    border: "1px solid var(--ac-border)",
                     borderRadius: 14,
                     padding: "14px 44px 14px 16px",
                   }}

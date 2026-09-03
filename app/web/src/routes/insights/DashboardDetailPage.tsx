@@ -27,7 +27,7 @@ export function DashboardDetailPage() {
         {data?.dashlets.map((d) => {
           const message: ChatMessage = { id: d.id, role: "agent", intent: d.intent, text: d.text, payload: d.payload, vote: 0 };
           return (
-            <div key={d.id} style={{ background: "#fff", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 18 }}>
+            <div key={d.id} style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 18 }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{d.title}</div>

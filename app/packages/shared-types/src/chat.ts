@@ -124,10 +124,10 @@ export const CHAT_SUGGESTIONS: { intent: Exclude<ChatIntent, "general">; questio
 
 export const INTENT_META: Record<string, { label: string; color: string; bg: string }> = {
   descriptive: { label: "Descriptive agent", color: "var(--ac)", bg: "var(--ac-soft)" },
-  diagnostic: { label: "Diagnostic agent", color: "#1d8e9c", bg: "#e3f6f9" },
-  predictive: { label: "Predictive agent", color: "#3f6fd6", bg: "#e9eefc" },
-  prescriptive: { label: "Prescriptive agent", color: "#0f8a5c", bg: "#e4f6ee" },
-  general: { label: "General agent", color: "#64748b", bg: "#f1f5f9" },
+  diagnostic: { label: "Diagnostic agent", color: "var(--intent-diagnostic-color)", bg: "var(--intent-diagnostic-bg)" },
+  predictive: { label: "Predictive agent", color: "var(--intent-predictive-color)", bg: "var(--intent-predictive-bg)" },
+  prescriptive: { label: "Prescriptive agent", color: "var(--intent-prescriptive-color)", bg: "var(--intent-prescriptive-bg)" },
+  general: { label: "General agent", color: "var(--intent-general-color)", bg: "var(--intent-general-bg)" },
 };
 
 // Keep in sync with app/ai/app/llm/models.py's AVAILABLE_MODELS — this is

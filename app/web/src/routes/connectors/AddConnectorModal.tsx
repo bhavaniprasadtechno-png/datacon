@@ -94,7 +94,7 @@ export function AddConnectorModal({ open, onClose }: { open: boolean; onClose: (
                 <button
                   key={e.id}
                   onClick={() => pickEngine(e.id as ConnectorEngineId)}
-                  style={{ display: "flex", gap: 10, textAlign: "left", padding: 12, borderRadius: 12, border: "1px solid #e2e4ee", background: "#fff" }}
+                  style={{ display: "flex", gap: 10, textAlign: "left", padding: 12, borderRadius: 12, border: "1px solid var(--ac-border)", background: "var(--ac-bg-muted)" }}
                 >
                   <div style={{ width: 30, height: 30, borderRadius: 9, background: style.bg, color: style.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
                     {style.letter}
@@ -217,7 +217,7 @@ function fieldInputStyle(mono = true): React.CSSProperties {
   return {
     width: "100%",
     padding: "9px 11px",
-    border: "1px solid #e2e4ee",
+    border: "1px solid var(--ac-border)",
     borderRadius: 9,
     fontSize: 12.5,
     fontFamily: mono ? "'IBM Plex Mono',monospace" : "inherit",
@@ -226,9 +226,9 @@ function fieldInputStyle(mono = true): React.CSSProperties {
 
 function TestBanner({ tone, children }: { tone: "pending" | "pass" | "fail"; children: React.ReactNode }) {
   const styles = {
-    pending: { bg: "#f5f6fb", color: "#71768a" },
-    pass: { bg: "#e6f7ef", color: "#0f8a5c" },
-    fail: { bg: "#fdeee9", color: "#c0392b" },
+    pending: { bg: "var(--ac-bg-muted)", color: "#71768a" },
+    pass: { bg: "var(--sem-success-bg, #e6f7ef)", color: "var(--sem-success-color, #0f8a5c)" },
+    fail: { bg: "var(--sem-error-bg, #fdeee9)", color: "var(--sem-error-color, #c0392b)" },
   }[tone];
   return (
     <div style={{ background: styles.bg, color: styles.color, borderRadius: 9, padding: "8px 11px", fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{children}</div>

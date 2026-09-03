@@ -13,7 +13,7 @@ body {
   background: var(--ac-bg);
   font-family: "Inter", -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  color: #0a0b0d;
+  color: var(--ac-fg);
 }
 input,
 button,
@@ -40,6 +40,14 @@ button:not([class]) {
   background: #bfc3d4;
   background-clip: content-box;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: #333333;
+  background-clip: content-box;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4d4d4d;
+  background-clip: content-box;
+}
 
 /* ── Theme tokens — ported verbatim from project/Datacon.dc.html ── */
 :root {
@@ -64,6 +72,18 @@ button:not([class]) {
   --radius-lg: 12px;
   --radius-xl: 24px;
   --radius-pill: 9999px;
+
+  /* ── Agent-intent badge colors (ChatPage intent pills, agent badges).
+     descriptive uses --ac/--ac-soft directly; these four are fixed
+     per-intent hues, independent of the accent picker. ── */
+  --intent-diagnostic-color: #1d8e9c;
+  --intent-diagnostic-bg: #e3f6f9;
+  --intent-predictive-color: #3f6fd6;
+  --intent-predictive-bg: #e9eefc;
+  --intent-prescriptive-color: #0f8a5c;
+  --intent-prescriptive-bg: #e4f6ee;
+  --intent-general-color: #64748b;
+  --intent-general-bg: #f1f5f9;
 }
 .dc-theme {
   --ac-soft: color-mix(in srgb, var(--ac) 13%, white);
@@ -104,6 +124,50 @@ button:not([class]) {
   --ac2: color-mix(in srgb, var(--ac) 76%, white);
   --ac-deep: color-mix(in srgb, var(--ac) 82%, black);
   --ac-logo: linear-gradient(135deg, var(--ac), var(--ac2));
+}
+
+/* ── Dark mode — Vercel Geist true-black neutrals. Accent hues
+   (--ac / --ac2 / --ac-deep) stay per-theme and unchanged; --ac-soft/
+   --ac-softer mix toward the muted surface (not pure black) so they
+   stay visibly tinted instead of crushing to near-invisible. ── */
+.dark.dc-theme {
+  --ac-bg: #000000;
+  --ac-bg-muted: #111111;
+  --ac-fg: #fafafa;
+  --ac-muted: #888888;
+  --ac-border: rgba(255, 255, 255, 0.145);
+  --ac-soft: color-mix(in srgb, var(--ac) 22%, var(--ac-bg-muted));
+  --ac-softer: color-mix(in srgb, var(--ac) 12%, var(--ac-bg-muted));
+  --ac-ring: color-mix(in srgb, var(--ac) 45%, white);
+
+  --intent-diagnostic-color: #6fd8d0;
+  --intent-diagnostic-bg: #12302e;
+  --intent-predictive-color: #8fb4ff;
+  --intent-predictive-bg: #16233f;
+  --intent-prescriptive-color: #7fe0a8;
+  --intent-prescriptive-bg: #10301f;
+  --intent-general-color: var(--ac-muted);
+  --intent-general-bg: var(--ac-bg-muted);
+
+  /* ── Dark-only semantic-pill/badge backgrounds. Consumers wrap each
+     bg in var(--sem-*, <original-light-hex>): unset in light mode (so
+     the existing per-site pastel shows through unchanged), set here so
+     every success/error/warning/info pill gets a consistent dark tint
+     instead of floating as a pale card on black. Text colors are left
+     as-is — they're already mid-saturation and read fine on black. ── */
+  --sem-success-bg: #10301f;
+  --sem-error-bg: #341515;
+  --sem-warning-bg: #332108;
+  --sem-info-bg: #16233f;
+  --sem-error-border: #5c2626;
+  /* These original light-mode text colors were tuned for pale backgrounds
+     (dark-on-light); paired with the dark bg tints above that would read
+     as dark-on-dark, so dark mode also gets brighter text counterparts. */
+  --sem-success-color: #4ade80;
+  --sem-warning-color: #fbbf24;
+  --sem-error-color: #ff6b6b;
+  --sem-info-color: #7aa2ff;
+  --connector-badge-bg: var(--ac-bg-muted);
 }
 
 /* ── Animations ── */
@@ -196,7 +260,7 @@ button:not([class]) {
 .dv-sub {
   margin-left: 12px;
   padding-left: 11px;
-  border-left: 1px solid #e9eaf2;
+  border-left: 1px solid var(--ac-border);
 }
 .dv-collapsed .dv-sub {
   margin-left: 0;

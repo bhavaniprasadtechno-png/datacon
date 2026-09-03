@@ -86,20 +86,20 @@
 .dark {
     --primary: var(--ac);
     --primary-foreground: oklch(0.205 0 0);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
+    --border: var(--ac-border);
+    --input: var(--ac-border);
     --ring: var(--ac-ring);
     --secondary: var(--ac-bg-muted);
     --secondary-foreground: var(--ac-fg);
     --accent: var(--ac-soft);
     --accent-foreground: var(--ac-fg);
 
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
+    --background: var(--ac-bg);
+    --foreground: var(--ac-fg);
+    --card: var(--ac-bg-muted);
+    --card-foreground: var(--ac-fg);
+    --popover: var(--ac-bg-muted);
+    --popover-foreground: var(--ac-fg);
     --destructive: oklch(0.704 0.191 22.216);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);

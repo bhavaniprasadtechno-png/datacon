@@ -6,7 +6,7 @@ export function CitationDrawer({ citation, onClose }: { citation: Citation | nul
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(0,0,0,0.3)" }}>
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ position: "absolute", right: 0, top: 0, height: "100%", width: "min(480px, 100%)", background: "#fff", borderLeft: "1px solid var(--ac-border)", padding: 24, overflowY: "auto" }}
+        style={{ position: "absolute", right: 0, top: 0, height: "100%", width: "min(480px, 100%)", background: "var(--ac-bg-muted)", borderLeft: "1px solid var(--ac-border)", padding: 24, overflowY: "auto" }}
       >
         <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac-muted)" }}>SOURCE CITATION</div>
         <div style={{ fontSize: 19, fontWeight: 800, marginTop: 8 }}>{citation.documentTitle}</div>

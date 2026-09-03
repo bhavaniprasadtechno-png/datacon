@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+// import { useSearchParams } from "react-router-dom"; // unused while Recent conversations is commented out
 import { useAuth } from "../../stores/useAuthStore";
-import { useConversations, useCreateConversation, useDeleteConversation } from "../../api/chat";
-import { useConfirm } from "../../stores/useConfirmStore";
+import { useCreateConversation } from "../../api/chat";
+// import { useConversations, useDeleteConversation } from "../../api/chat"; // unused while Recent conversations is commented out
+// import { useConfirm } from "../../stores/useConfirmStore"; // unused while Recent conversations is commented out
+import { useDarkMode, type DarkModeMode } from "../../stores/useDarkModeStore";
 import {
   MessageSquare,
   TrendingUp,
@@ -21,8 +24,35 @@ import {
   LogOut,
   X,
   Mail,
-  Clock
+  Clock,
+  Sun,
+  Moon,
+  Monitor
 } from "lucide-react";
+
+const DARK_MODE_META: Record<DarkModeMode, { icon: React.ReactNode; label: string; next: DarkModeMode }> = {
+  light: { icon: <Sun size={14} />, label: "Light", next: "dark" },
+  dark: { icon: <Moon size={14} />, label: "Dark", next: "system" },
+  system: { icon: <Monitor size={14} />, label: "System", next: "light" },
+};
+
+function footerButtonStyle(collapsed: boolean, { color = "var(--ac-fg)", flex = false } = {}): React.CSSProperties {
+  return {
+    flex: flex && !collapsed ? 1 : undefined,
+    width: collapsed ? 36 : "100%",
+    height: collapsed ? 36 : undefined,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    padding: collapsed ? 0 : "7px 0",
+    borderRadius: "var(--radius-sm)",
+    fontSize: 12,
+    color,
+    background: "var(--ac-bg-muted)",
+    border: "1px solid var(--ac-border)",
+  };
+}
 
 interface NavDef {
   id: string;
@@ -52,15 +82,16 @@ const SUB_NAV = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const { mode: darkModeMode, setMode: setDarkModeMode } = useDarkMode();
   const { user, caps, logout } = useAuth();
   const orgUser = user?.kind === "org_member" ? user : undefined;
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { data: conversations } = useConversations();
+  // const [searchParams] = useSearchParams(); // unused while Recent conversations is commented out
+  // const { data: conversations } = useConversations(); // unused while Recent conversations is commented out
   const createConversation = useCreateConversation();
-  const deleteConversation = useDeleteConversation();
-  const confirm = useConfirm();
+  // const deleteConversation = useDeleteConversation(); // unused while Recent conversations is commented out
+  // const confirm = useConfirm(); // unused while Recent conversations is commented out
 
   const onUserMgmtPage = location.pathname.startsWith("/settings");
   const [userMgmtOpen, setUserMgmtOpen] = useState(onUserMgmtPage);
@@ -72,34 +103,35 @@ export function Sidebar() {
   // Keep "Chat" highlighted both on the history list (/chat/history) and inside
   // an actual conversation (/chat?c=…), since the nav item now opens history.
   const onChatArea = location.pathname === "/chat" || location.pathname.startsWith("/chat/");
-  const activeConversationId = location.pathname === "/chat" ? searchParams.get("c") : null;
+  // const activeConversationId = location.pathname === "/chat" ? searchParams.get("c") : null; // unused while Recent conversations is commented out
 
   const startNewChat = async () => {
     const conversation = await createConversation.mutateAsync();
     navigate(`/chat?c=${conversation.id}`);
   };
 
-  const removeConversation = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const ok = await confirm({
-      title: "Delete conversation",
-      body: "Delete this conversation? This can't be undone.",
-      label: "Delete",
-      tone: "danger",
-    });
-    if (!ok) return;
-    await deleteConversation.mutateAsync(id);
-    // If the open conversation was just deleted, fall back to the default
-    // (most recent / freshly created) one by dropping the URL param.
-    if (id === activeConversationId) navigate("/chat", { replace: true });
-  };
+  // Unused while Recent conversations is commented out.
+  // const removeConversation = async (id: string, e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   const ok = await confirm({
+  //     title: "Delete conversation",
+  //     body: "Delete this conversation? This can't be undone.",
+  //     label: "Delete",
+  //     tone: "danger",
+  //   });
+  //   if (!ok) return;
+  //   await deleteConversation.mutateAsync(id);
+  //   // If the open conversation was just deleted, fall back to the default
+  //   // (most recent / freshly created) one by dropping the URL param.
+  //   if (id === activeConversationId) navigate("/chat", { replace: true });
+  // };
 
   return (
     <>
       <aside
         className={`dv-side${collapsed ? " dv-collapsed" : ""}`}
         style={{
-          background: "#fff",
+          background: "var(--ac-bg)",
           borderRight: "1px solid var(--ac-border)",
           padding: collapsed ? "16px 8px" : "20px 14px",
           display: "flex",
@@ -256,6 +288,7 @@ export function Sidebar() {
             );
           })}
         </nav>
+        {/* Recent conversations — commented out, not needed right now.
         {!collapsed && (
           <div style={{ marginTop: 16 }}>
             <div style={{ font: "600 9.5px 'IBM Plex Mono',monospace", letterSpacing: ".14em", color: "var(--ac-muted)", marginBottom: 6, padding: "0 4px" }}>
@@ -315,6 +348,7 @@ export function Sidebar() {
             </div>
           </div>
         )}
+        */}
       </div>
 
       <div style={{ padding: collapsed ? "14px 0" : "16px 14px", borderTop: "1px solid var(--ac-border)", display: "flex", flexDirection: "column", gap: 10, flexShrink: 0, width: "100%", alignItems: "center" }}>
@@ -334,26 +368,22 @@ export function Sidebar() {
             <Avatar grad={orgUser.avatarGrad} initials={orgUser.initials} size={32} />
           </div>
         )}
+        <button
+          title={`Appearance: ${DARK_MODE_META[darkModeMode].label} (click to cycle)`}
+          onClick={() => setDarkModeMode(DARK_MODE_META[darkModeMode].next)}
+          className="dv-navitem"
+          style={footerButtonStyle(collapsed)}
+        >
+          {DARK_MODE_META[darkModeMode].icon}
+          {!collapsed && ` ${DARK_MODE_META[darkModeMode].label}`}
+          {collapsed && <span className="dv-tip">{DARK_MODE_META[darkModeMode].label}</span>}
+        </button>
         <div style={{ display: "flex", flexDirection: collapsed ? "column" : "row", gap: 6, width: "100%", justifyContent: "center", alignItems: "center" }}>
           <button
             title="Profile"
             onClick={() => setShowProfile(true)}
             className="dv-navitem"
-            style={{
-              flex: collapsed ? undefined : 1,
-              width: collapsed ? 36 : "100%",
-              height: collapsed ? 36 : undefined,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              padding: collapsed ? 0 : "7px 0",
-              borderRadius: "var(--radius-sm)",
-              fontSize: 12,
-              color: "var(--ac-fg)",
-              background: "var(--ac-bg-muted)",
-              border: "1px solid var(--ac-border)",
-            }}
+            style={footerButtonStyle(collapsed, { flex: true })}
           >
             <User size={14} />
             {!collapsed && " Profile"}
@@ -363,21 +393,7 @@ export function Sidebar() {
             title="Sign out"
             onClick={() => logout()}
             className="dv-navitem"
-            style={{
-              flex: collapsed ? undefined : 1,
-              width: collapsed ? 36 : "100%",
-              height: collapsed ? 36 : undefined,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              padding: collapsed ? 0 : "7px 0",
-              borderRadius: "var(--radius-sm)",
-              fontSize: 12,
-              color: "#c0405a",
-              background: "var(--ac-bg-muted)",
-              border: "1px solid var(--ac-border)",
-            }}
+            style={footerButtonStyle(collapsed, { color: "#c0405a", flex: true })}
           >
             <LogOut size={14} />
             {!collapsed && " Sign out"}
@@ -419,7 +435,7 @@ function ProfileModal({ onClose, onSignOut }: { onClose: () => void; onSignOut: 
   if (!user || user.kind !== "org_member") return null;
   return createPortal(
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(26,29,41,.5)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-      <div onClick={(e) => e.stopPropagation()} className="dvfu" style={{ width: 440, maxWidth: "92vw", background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 30px 70px -20px rgba(26,29,41,.5)" }}>
+      <div onClick={(e) => e.stopPropagation()} className="dvfu" style={{ width: 440, maxWidth: "92vw", background: "var(--ac-bg-muted)", borderRadius: 20, overflow: "hidden", boxShadow: "0 30px 70px -20px rgba(26,29,41,.5)" }}>
         <div style={{ height: 96, background: "linear-gradient(135deg,#221c46,#3a2f73 55%,var(--ac))", position: "relative" }}>
           <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,.18)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <X size={16} />
@@ -431,13 +447,13 @@ function ProfileModal({ onClose, onSignOut }: { onClose: () => void; onSignOut: 
           </div>
           <div style={{ fontSize: 20, fontWeight: 800, marginTop: 10 }}>{user.name}</div>
           <div style={{ fontSize: 13, color: "#71768a", marginBottom: 16 }}>{user.title}</div>
-          <div style={{ border: "1px solid #e9eaf2", borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ border: "1px solid var(--ac-border)", borderRadius: 12, overflow: "hidden" }}>
             <InfoRow icon={<Mail size={16} />} label="EMAIL" value={user.email} shaded />
             <InfoRow icon={<Shield size={16} />} label="ROLE & ACCESS" value={`${user.roleName} · ${user.permissions.length} permissions`} />
             <InfoRow icon={<Clock size={16} />} label="LAST ACTIVE" value="Just now · This session" shaded />
           </div>
           <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #e2e4ee", fontWeight: 700, fontSize: 13 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid var(--ac-border)", fontWeight: 700, fontSize: 13 }}>
               Close
             </button>
             <button onClick={onSignOut} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid #e8a9b4", color: "#c0405a", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
@@ -453,10 +469,10 @@ function ProfileModal({ onClose, onSignOut }: { onClose: () => void; onSignOut: 
 
 function InfoRow({ icon, label, value, shaded }: { icon: React.ReactNode; label: string; value: string; shaded?: boolean }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", background: shaded ? "#fafbfe" : "#fff" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", background: shaded ? "var(--ac-bg)" : "var(--ac-bg-muted)" }}>
       <span style={{ display: "flex", alignItems: "center", color: "var(--ac-muted)" }}>{icon}</span>
       <div style={{ flex: 1 }}>
-        <div style={{ font: "600 9.5px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "#a3a8bd" }}>{label}</div>
+        <div style={{ font: "600 9.5px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac-muted)" }}>{label}</div>
         <div style={{ fontSize: 13, fontWeight: 600 }}>{value}</div>
       </div>
     </div>

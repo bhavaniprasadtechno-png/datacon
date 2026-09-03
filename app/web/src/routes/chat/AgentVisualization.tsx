@@ -204,9 +204,9 @@ function Citations({ items, onOpen }: { items: Citation[]; onOpen: (c: Citation)
 }
 
 const EFFORT_COLOR: Record<PrescriptiveAction["effort"], string> = {
-  Low: "#0f8a5c",
-  Medium: "#a3730c",
-  High: "#cf202f",
+  Low: "var(--sem-success-color, #0f8a5c)",
+  Medium: "var(--sem-warning-color, #a3730c)",
+  High: "var(--sem-error-color, #cf202f)",
 };
 
 function RecommendationCards({ items, citations, onOpen }: { items: PrescriptiveAction[]; citations: Citation[]; onOpen: (c: Citation) => void }) {

@@ -10,10 +10,10 @@ import { RefreshCw, Upload, Lock, Eye, Trash2, Check, Loader2, XCircle } from "l
 import { TableRowSkeleton } from "../../components/ui/Skeleton";
 
 const TYPE_CHIP: Record<DocType, { bg: string; color: string }> = {
-  PDF: { bg: "#fdeee9", color: "#c0392b" },
-  CSV: { bg: "#e6f7ef", color: "#0f8a5c" },
-  MD: { bg: "#e9eefc", color: "#3f6fd6" },
-  TXT: { bg: "#f0f1f6", color: "#5a5f72" },
+  PDF: { bg: "var(--sem-error-bg, #fdeee9)", color: "var(--sem-error-color, #c0392b)" },
+  CSV: { bg: "var(--sem-success-bg, #e6f7ef)", color: "var(--sem-success-color, #0f8a5c)" },
+  MD: { bg: "var(--sem-info-bg, #e9eefc)", color: "var(--sem-info-color, #3f6fd6)" },
+  TXT: { bg: "var(--ac-bg-muted)", color: "#5a5f72" },
 };
 
 const STATUS_META: Record<DocStatus, { label: string; color: string; icon: React.ReactNode; blink?: boolean }> = {
@@ -78,7 +78,7 @@ export function DataSourcesPage() {
         </div>
       )}
 
-      <div style={{ background: "#fff", borderRadius: "var(--radius-lg)", border: "1px solid var(--ac-border)", overflow: "hidden" }}>
+      <div style={{ background: "var(--ac-bg-muted)", borderRadius: "var(--radius-lg)", border: "1px solid var(--ac-border)", overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(150px,1.7fr) 66px 150px 120px 170px 100px", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "var(--ac-muted)", borderBottom: "1px solid var(--ac-border)" }}>
           <span>NAME</span>
           <span>TYPE</span>

@@ -86,7 +86,7 @@ export function ConnectorsPage() {
             const style = TYPE_STYLE[c.engine];
             const status = STATUS_META[c.status];
             return (
-              <div key={c.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 16 }}>
+              <div key={c.id} style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", padding: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ width: 42, height: 42, borderRadius: 12, background: style.bg, color: style.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 16, flexShrink: 0 }}>
                     {style.letter}
@@ -131,7 +131,7 @@ export function ConnectorsPage() {
         <span style={{ fontSize: 11.5, color: "var(--ac-muted)" }}>{catalog?.length ?? 0} tables imported</span>
       </div>
 
-      <div style={{ background: "#fff", borderRadius: "var(--radius-lg)", border: "1px solid var(--ac-border)", overflow: "hidden" }}>
+      <div style={{ background: "var(--ac-bg-muted)", borderRadius: "var(--radius-lg)", border: "1px solid var(--ac-border)", overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1.2fr 160px 120px 92px", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, letterSpacing: ".06em", color: "var(--ac-muted)", borderBottom: "1px solid var(--ac-border)" }}>
           <span>TABLE</span>
           <span>SOURCE</span>

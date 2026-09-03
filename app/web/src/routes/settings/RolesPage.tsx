@@ -56,18 +56,18 @@ export function RolesPage() {
           </>
         ) : (
           roles?.map((r) => (
-            <div key={r.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", padding: 18 }}>
+            <div key={r.id} style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", padding: 18 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 11, background: r.bgHex ?? "#f0f1f6", color: r.colorHex ?? "#71768a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>🛡</div>
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: r.bgHex ?? "var(--ac-bg-muted)", color: r.colorHex ?? "#71768a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>🛡</div>
               <div style={{ fontSize: 14, fontWeight: 800 }}>{r.name}</div>
-              {r.isSystem && <span style={{ font: "600 9px 'IBM Plex Mono',monospace", padding: "2px 7px", borderRadius: 6, background: "#f0f1f6", color: "#71768a" }}>SYSTEM</span>}
+              {r.isSystem && <span style={{ font: "600 9px 'IBM Plex Mono',monospace", padding: "2px 7px", borderRadius: 6, background: "var(--ac-bg-muted)", color: "#71768a" }}>SYSTEM</span>}
             </div>
             <div style={{ fontSize: 11.5, color: "#9499ad", marginBottom: 10 }}>
               {r.permissions.length} permissions · {r.userCount} users
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
               {r.permissions.slice(0, 3).map((p) => (
-                <span key={p} style={{ fontSize: 10.5, background: "#f5f6fb", color: "#5a5f72", padding: "3px 8px", borderRadius: 20 }}>
+                <span key={p} style={{ fontSize: 10.5, background: "var(--ac-bg-muted)", color: "#5a5f72", padding: "3px 8px", borderRadius: 20 }}>
                   {perms?.find((pd) => pd.key === p)?.label ?? p}
                 </span>
               ))}
@@ -171,8 +171,8 @@ function RoleEditorForm({
                 gap: 10,
                 padding: "8px 10px",
                 borderRadius: 9,
-                border: "1px solid #e9eaf2",
-                background: selected.includes(p.key) ? "var(--ac-softer)" : "#fff",
+                border: "1px solid var(--ac-border)",
+                background: selected.includes(p.key) ? "var(--ac-softer)" : "var(--ac-bg-muted)",
                 textAlign: "left",
               }}
             >
@@ -181,8 +181,8 @@ function RoleEditorForm({
                   width: 16,
                   height: 16,
                   borderRadius: 4,
-                  border: `1px solid ${selected.includes(p.key) ? "var(--ac)" : "#c9cbd6"}`,
-                  background: selected.includes(p.key) ? "var(--ac)" : "#fff",
+                  border: `1px solid ${selected.includes(p.key) ? "var(--ac)" : "var(--ac-border)"}`,
+                  background: selected.includes(p.key) ? "var(--ac)" : "var(--ac-bg)",
                   color: "#fff",
                   fontSize: 11,
                   display: "flex",

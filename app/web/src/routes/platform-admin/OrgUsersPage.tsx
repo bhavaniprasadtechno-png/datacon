@@ -60,7 +60,7 @@ export function OrgUsersPage() {
         title={org ? org.name : "Workspace users"}
         sub={`${users?.length ?? 0} ${users?.length === 1 ? "user" : "users"} in this organization`}
       />
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e9eaf2", overflow: "hidden" }}>
+      <div style={{ background: "var(--ac-bg-muted)", borderRadius: 16, border: "1px solid var(--ac-border)", overflow: "hidden" }}>
         {isLoading ? (
           <>
             <ListEntrySkeleton />
