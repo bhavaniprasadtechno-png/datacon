@@ -30,7 +30,10 @@ export interface Citation {
 
 export interface PrescriptiveAction {
   title: string;
-  impact: string;
+  // Unset for actions built by the migrated Prescriptive pipeline (see
+  // StructuredResponse.actions below) — it was never rendered, only carried
+  // by the pre-migration flat payload shape.
+  impact?: string;
   effort: "Low" | "Medium" | "High";
   owner: string;
   rationale: string;
@@ -84,6 +87,8 @@ export interface Visualization {
   type: VisualizationType;
   title: string | null;
   data: Record<string, unknown>[];
+  dimension?: string | null;
+  measure?: string | null;
 }
 
 export interface StructuredTable {
@@ -104,6 +109,10 @@ export interface StructuredResponse {
   visualizations: Visualization[];
   tables: StructuredTable[];
   sources: Source[];
+  // Reuses PrescriptiveAction's shape (minus `impact`, which the migrated
+  // pipeline's Action contract never populates) rather than introducing a
+  // second, structurally-identical TS type.
+  actions: PrescriptiveAction[];
 }
 
 export const CHAT_SUGGESTIONS: { intent: Exclude<ChatIntent, "general">; question: string }[] = [

@@ -1,5 +1,5 @@
 from app.pipeline.normalizer import normalize
-from app.pipeline.analytics_engine import count_by, count_where, percentage, rank_categories, total_count
+from app.pipeline.analytics_engine import count_by, count_where, percent_change, percentage, rank_categories, total_count
 
 
 def _customers():
@@ -45,3 +45,19 @@ def test_rank_categories_counts_and_ranks_rows_by_dimension_when_no_measure_give
 def test_rank_categories_sums_and_ranks_by_measure_when_given():
     result = normalize("sales", ["region", "revenue"], [["EMEA", 120.0], ["APAC", 95.0], ["EMEA", 30.0]])
     assert rank_categories(result, "region", "revenue") == [("EMEA", 150.0), ("APAC", 95.0)]
+
+
+def test_percent_change_computes_change_against_the_baseline_average():
+    assert percent_change(9, [4, 5, 3]) == 125.0
+
+
+def test_percent_change_returns_zero_when_baseline_is_empty():
+    assert percent_change(9, []) == 0.0
+
+
+def test_percent_change_returns_zero_when_baseline_average_is_zero():
+    assert percent_change(9, [0, 0, 0]) == 0.0
+
+
+def test_percent_change_rounds_to_one_decimal_place():
+    assert percent_change(10, [7, 8, 9]) == 25.0

@@ -4,7 +4,7 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Each of Retriever, Validator, Responder, context-filter, live-query, and connector-query has a documented disposition (repurposed vs. removed) and that disposition is applied.
 - [ ] Modules with no remaining caller after this change are deleted entirely — no orphaned files left behind.

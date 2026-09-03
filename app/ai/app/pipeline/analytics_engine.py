@@ -10,7 +10,7 @@ from app.pipeline.contracts import Metric, MetricFormat
 from app.pipeline.normalizer import NormalizedResult
 
 
-def _column_index(result: NormalizedResult, column: str) -> int:
+def column_index(result: NormalizedResult, column: str) -> int:
     return [c.name for c in result.columns].index(column)
 
 
@@ -19,12 +19,12 @@ def total_count(result: NormalizedResult) -> int:
 
 
 def count_where(result: NormalizedResult, column: str, predicate: Callable[[Any], bool]) -> int:
-    idx = _column_index(result, column)
+    idx = column_index(result, column)
     return sum(1 for row in result.rows if predicate(row[idx]))
 
 
 def count_by(result: NormalizedResult, column: str) -> dict[Any, int]:
-    idx = _column_index(result, column)
+    idx = column_index(result, column)
     counts: dict[Any, int] = {}
     for row in result.rows:
         counts[row[idx]] = counts.get(row[idx], 0) + 1
@@ -47,13 +47,24 @@ def rank_categories(result: NormalizedResult, dimension: str, measure: str | Non
     if measure is None:
         totals: dict[Any, int | float] = count_by(result, dimension)
     else:
-        idx = _column_index(result, dimension)
-        midx = _column_index(result, measure)
+        idx = column_index(result, dimension)
+        midx = column_index(result, measure)
         totals = {}
         for row in result.rows:
             key = row[idx]
             totals[key] = totals.get(key, 0) + row[midx]
     return sorted(totals.items(), key=lambda kv: kv[1], reverse=True)
+
+
+def percent_change(value: float, baseline: list[float]) -> float:
+    """Percentage change of `value` against the average of a preceding
+    baseline set (e.g. today's count vs. the average of prior days)."""
+    if not baseline:
+        return 0.0
+    avg = sum(baseline) / len(baseline)
+    if avg == 0:
+        return 0.0
+    return round((value - avg) / avg * 100, 1)
 
 
 def primary_metric(result: NormalizedResult, metric_id: str, label: str) -> Metric:
@@ -63,7 +74,7 @@ def primary_metric(result: NormalizedResult, metric_id: str, label: str) -> Metr
     entities returned (e.g. `SELECT * FROM customers`)."""
     if result.row_count == 1 and len(result.measures) == 1 and not result.dimensions:
         column = next(c for c in result.columns if c.name == result.measures[0])
-        idx = _column_index(result, column.name)
+        idx = column_index(result, column.name)
         value = result.rows[0][idx]
         fmt = _FORMAT_BY_VALUE_TYPE.get(column.value_type, "number")
         return Metric(id=metric_id, label=label, value=value, format=fmt)

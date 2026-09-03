@@ -1,0 +1,295 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1090" font-family="'JetBrains Mono','SF Mono','Cascadia Code',monospace">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap');
+    text { font-family: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace; }
+  </style>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+    </pattern>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#34d399"/>
+    </marker>
+    <marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee"/>
+    </marker>
+    <marker id="arrow-slate" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#fb923c"/>
+    </marker>
+    <marker id="arrow-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#0f172a"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+
+  <!-- ===================== TITLE ===================== -->
+  <text x="30" y="34" fill="white" font-size="16" font-weight="700">DATACON ANALYTICS PIPELINE — TARGET ARCHITECTURE</text>
+  <text x="30" y="52" fill="#94a3b8" font-size="9">One shared pipeline behind every specialized agent · migration status per agent shown below · for review, nothing built here yet except Descriptive</text>
+
+  <!-- ===================== REGION BOUNDARIES ===================== -->
+  <rect x="15" y="430" width="910" height="150" rx="12" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="12,4"/>
+  <text x="30" y="450" fill="#fbbf24" font-size="10" font-weight="700">SHARED PIPELINE (intent-agnostic — same 5 stages for every agent)</text>
+
+  <rect x="955" y="430" width="290" height="175" rx="12" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="8,4"/>
+  <text x="970" y="450" fill="#94a3b8" font-size="9" font-weight="700">ESCAPE-HATCH FIELDS</text>
+
+  <rect x="990" y="640" width="320" height="180" rx="12" fill="none" stroke="#fbbf24" stroke-width="1.2" stroke-dasharray="8,4"/>
+  <text x="1006" y="660" fill="#fbbf24" font-size="9" font-weight="600">DATA STORES</text>
+
+  <!-- ===================== CONNECTORS ===================== -->
+
+  <!-- Chat UI -> chat_router -->
+  <path d="M115,136 L115,190" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+
+  <!-- chat_router -> route_dynamic -->
+  <path d="M230,220 L270,220" fill="none" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- route_dynamic -> 4 agents (fan-out) -->
+  <path d="M355,250 C355,275 127,275 127,300" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <path d="M355,250 L347,300" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <path d="M355,250 C450,275 567,275 567,300" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <path d="M355,250 C550,272 787,278 787,300" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arrow)"/>
+
+  <!-- 4 agents -> Result Normalizer (converge), colored by agent -->
+  <path d="M127,392 L127,430 L62,430 L62,470" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <path d="M347,392 L347,420 L102,420 L102,470" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+  <path d="M567,392 L567,410 L142,410 L142,470" fill="none" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow-slate)"/>
+  <path d="M787,392 L787,400 L182,400 L182,470" fill="none" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+
+  <!-- sequential pipeline stages -->
+  <path d="M192,505 L209,505" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+  <path d="M369,505 L386,505" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+  <path d="M546,505 L563,505" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+  <path d="M723,505 L740,505" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+
+  <!-- Presentation Planner -> StructuredResponse -->
+  <path d="M820,540 L820,600 L390,600 L390,650" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+
+  <!-- StructuredResponse -> Action (extends) -->
+  <path d="M580,700 L620,700" fill="none" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
+  <text x="583" y="694" fill="#60a5fa" font-size="7">extends</text>
+
+  <!-- Diagnostic / Prescriptive -> Escape-hatch (bypass pipeline, direct RAG) -->
+  <path d="M347,392 L347,418 L1000,418 L1000,430" fill="none" stroke="#fb923c" stroke-width="1.3" stroke-dasharray="5,3" marker-end="url(#arrow-orange)"/>
+  <path d="M787,392 L787,408 L1150,408 L1150,430" fill="none" stroke="#fb923c" stroke-width="1.3" stroke-dasharray="5,3" marker-end="url(#arrow-orange)"/>
+
+  <!-- Data stores -> pipeline -->
+  <path d="M1150,640 L1150,615 L289,615 L289,540" fill="none" stroke="#a78bfa" stroke-width="1.3" stroke-dasharray="5,3" marker-end="url(#arrow-violet)"/>
+  <text x="310" y="609" fill="#a78bfa" font-size="7.5">query engine + RAG index</text>
+
+  <!-- StructuredResponse -> SSE -->
+  <path d="M390,750 L390,780 L420,780 L420,800" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+  <!-- Escape-hatch -> SSE -->
+  <path d="M1100,605 L1100,835 L580,835" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="5,3" marker-end="url(#arrow-slate)"/>
+  <!-- compose_stream -> SSE -->
+  <path d="M240,835 L280,835" fill="none" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- SSE -> payloadAdapter -->
+  <path d="M420,870 L420,890 L130,890 L130,910" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+  <!-- payloadAdapter -> AgentVisualization -->
+  <path d="M230,945 L270,945" fill="none" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+
+  <!-- ===================== BOXES ===================== -->
+
+  <!-- Chat UI -->
+  <rect x="30" y="80" width="170" height="56" rx="6" fill="#0f172a"/>
+  <rect x="30" y="80" width="170" height="56" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="115" y="104" fill="white" font-size="11" font-weight="600" text-anchor="middle">Chat UI</text>
+  <text x="115" y="119" fill="#94a3b8" font-size="8" text-anchor="middle">React · AgentVisualization</text>
+
+  <!-- chat_router.stream -->
+  <rect x="30" y="190" width="200" height="60" rx="6" fill="#0f172a"/>
+  <rect x="30" y="190" width="200" height="60" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="130" y="216" fill="white" font-size="11" font-weight="600" text-anchor="middle">chat_router.stream</text>
+  <text x="130" y="231" fill="#94a3b8" font-size="8" text-anchor="middle">agent-agnostic dispatch loop</text>
+  <text x="130" y="243" fill="#94a3b8" font-size="7.5" text-anchor="middle">unchanged for every migration</text>
+
+  <!-- route_dynamic -->
+  <rect x="270" y="190" width="170" height="60" rx="6" fill="#0f172a"/>
+  <rect x="270" y="190" width="170" height="60" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="355" y="216" fill="white" font-size="11" font-weight="600" text-anchor="middle">route_dynamic()</text>
+  <text x="355" y="231" fill="#94a3b8" font-size="8" text-anchor="middle">intent routing</text>
+
+  <!-- Agent: Descriptive -->
+  <rect x="30" y="300" width="195" height="92" rx="8" fill="#0f172a"/>
+  <rect x="30" y="300" width="195" height="92" rx="8" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <rect x="150" y="308" width="65" height="16" rx="8" fill="#052e21" stroke="#34d399" stroke-width="1"/>
+  <text x="182" y="319" fill="#34d399" font-size="7" font-weight="700" text-anchor="middle">SHIPPED</text>
+  <text x="127" y="345" fill="white" font-size="12" font-weight="700" text-anchor="middle">Descriptive</text>
+  <text x="127" y="363" fill="#94a3b8" font-size="8" text-anchor="middle">tickets 02–03 · live in prod</text>
+  <text x="127" y="378" fill="#94a3b8" font-size="8" text-anchor="middle">kpi · horizontal_bar · table</text>
+
+  <!-- Agent: Diagnostic -->
+  <rect x="250" y="300" width="195" height="92" rx="8" fill="#0f172a"/>
+  <rect x="250" y="300" width="195" height="92" rx="8" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <rect x="370" y="308" width="65" height="16" rx="8" fill="#062a33" stroke="#22d3ee" stroke-width="1"/>
+  <text x="402" y="319" fill="#22d3ee" font-size="7" font-weight="700" text-anchor="middle">SPEC READY</text>
+  <text x="347" y="345" fill="white" font-size="12" font-weight="700" text-anchor="middle">Diagnostic</text>
+  <text x="347" y="363" fill="#94a3b8" font-size="8" text-anchor="middle">spec published, not built</text>
+  <text x="347" y="378" fill="#94a3b8" font-size="8" text-anchor="middle">line trend + escape-hatch cites</text>
+
+  <!-- Agent: Predictive -->
+  <rect x="470" y="300" width="195" height="92" rx="8" fill="#0f172a"/>
+  <rect x="470" y="300" width="195" height="92" rx="8" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+  <rect x="590" y="308" width="65" height="16" rx="8" fill="#1e293b" stroke="#94a3b8" stroke-width="1"/>
+  <text x="622" y="319" fill="#94a3b8" font-size="7" font-weight="700" text-anchor="middle">PLANNED</text>
+  <text x="567" y="345" fill="white" font-size="12" font-weight="700" text-anchor="middle">Predictive</text>
+  <text x="567" y="363" fill="#94a3b8" font-size="8" text-anchor="middle">not yet grilled</text>
+  <text x="567" y="378" fill="#94a3b8" font-size="8" text-anchor="middle">forecast-fit confidence TBD</text>
+
+  <!-- Agent: Prescriptive -->
+  <rect x="690" y="300" width="195" height="92" rx="8" fill="#0f172a"/>
+  <rect x="690" y="300" width="195" height="92" rx="8" fill="rgba(59,130,246,0.3)" stroke="#60a5fa" stroke-width="1.5"/>
+  <rect x="810" y="308" width="65" height="16" rx="8" fill="#0b2447" stroke="#60a5fa" stroke-width="1"/>
+  <text x="842" y="319" fill="#60a5fa" font-size="7" font-weight="700" text-anchor="middle">IN DESIGN</text>
+  <text x="787" y="345" fill="white" font-size="12" font-weight="700" text-anchor="middle">Prescriptive</text>
+  <text x="787" y="363" fill="#94a3b8" font-size="8" text-anchor="middle">grilling in progress</text>
+  <text x="787" y="378" fill="#94a3b8" font-size="8" text-anchor="middle">gets new Action contract type</text>
+
+  <!-- Pipeline stage: Result Normalizer -->
+  <rect x="32" y="470" width="160" height="70" rx="6" fill="#0f172a"/>
+  <rect x="32" y="470" width="160" height="70" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="112" y="497" fill="white" font-size="10" font-weight="600" text-anchor="middle">Result Normalizer</text>
+  <text x="112" y="512" fill="#94a3b8" font-size="7.5" text-anchor="middle">columns → dims / measures</text>
+  <text x="112" y="524" fill="#94a3b8" font-size="7.5" text-anchor="middle">typed, deterministic</text>
+
+  <!-- Pipeline stage: Analytics Engine -->
+  <rect x="209" y="470" width="160" height="70" rx="6" fill="#0f172a"/>
+  <rect x="209" y="470" width="160" height="70" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="289" y="497" fill="white" font-size="10" font-weight="600" text-anchor="middle">Analytics Engine</text>
+  <text x="289" y="512" fill="#94a3b8" font-size="7.5" text-anchor="middle">totals · % · rank · Δ</text>
+  <text x="289" y="524" fill="#94a3b8" font-size="7.5" text-anchor="middle">+ percent_change (new)</text>
+
+  <!-- Pipeline stage: Validator -->
+  <rect x="386" y="470" width="160" height="70" rx="6" fill="#0f172a"/>
+  <rect x="386" y="470" width="160" height="70" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="466" y="497" fill="white" font-size="10" font-weight="600" text-anchor="middle">Validator</text>
+  <text x="466" y="512" fill="#94a3b8" font-size="7.5" text-anchor="middle">evidence · shape checks</text>
+  <text x="466" y="524" fill="#94a3b8" font-size="7.5" text-anchor="middle">structural only, not domain</text>
+
+  <!-- Pipeline stage: Insight Engine -->
+  <rect x="563" y="470" width="160" height="70" rx="6" fill="#0f172a"/>
+  <rect x="563" y="470" width="160" height="70" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="643" y="497" fill="white" font-size="10" font-weight="600" text-anchor="middle">Insight Engine</text>
+  <text x="643" y="512" fill="#94a3b8" font-size="7.5" text-anchor="middle">grounded statements</text>
+  <text x="643" y="524" fill="#94a3b8" font-size="7.5" text-anchor="middle">every insight cites a metric</text>
+
+  <!-- Pipeline stage: Presentation Planner -->
+  <rect x="740" y="470" width="160" height="70" rx="6" fill="#0f172a"/>
+  <rect x="740" y="470" width="160" height="70" rx="6" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="820" y="494" fill="white" font-size="10" font-weight="600" text-anchor="middle">Presentation</text>
+  <text x="820" y="507" fill="white" font-size="10" font-weight="600" text-anchor="middle">Planner</text>
+  <text x="820" y="522" fill="#94a3b8" font-size="7.5" text-anchor="middle">kpi · h-bar · line · none</text>
+
+  <!-- Escape-hatch content -->
+  <text x="970" y="480" fill="white" font-size="10" font-weight="600">citations[] · correlation</text>
+  <text x="970" y="497" fill="#94a3b8" font-size="8">flat fields, outside the</text>
+  <text x="970" y="510" fill="#94a3b8" font-size="8">StructuredResponse contract</text>
+  <text x="970" y="530" fill="#94a3b8" font-size="8">used by: Diagnostic, Prescriptive</text>
+  <text x="970" y="543" fill="#94a3b8" font-size="8">(same pattern already shipped</text>
+  <text x="970" y="556" fill="#94a3b8" font-size="8">for Descriptive's doc-QA path)</text>
+  <text x="970" y="580" fill="#fb923c" font-size="7.5">adapter reads these even when</text>
+  <text x="970" y="591" fill="#fb923c" font-size="7.5">the rest of the payload is new-shape</text>
+
+  <!-- StructuredResponse -->
+  <rect x="200" y="650" width="380" height="100" rx="8" fill="#0f172a"/>
+  <rect x="200" y="650" width="380" height="100" rx="8" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="390" y="676" fill="white" font-size="12" font-weight="700" text-anchor="middle">StructuredResponse</text>
+  <text x="390" y="695" fill="#94a3b8" font-size="8.5" text-anchor="middle">summary · metrics · insights</text>
+  <text x="390" y="709" fill="#94a3b8" font-size="8.5" text-anchor="middle">visualizations · tables · sources</text>
+  <text x="390" y="726" fill="#94a3b8" font-size="7.5" text-anchor="middle">shared contract, every migrated agent</text>
+  <text x="390" y="738" fill="#94a3b8" font-size="7.5" text-anchor="middle">emits this shape</text>
+
+  <!-- Action (NEW) -->
+  <rect x="620" y="650" width="230" height="100" rx="8" fill="#0f172a"/>
+  <rect x="620" y="650" width="230" height="100" rx="8" fill="rgba(59,130,246,0.3)" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="735" y="676" fill="white" font-size="11" font-weight="700" text-anchor="middle">Action  (NEW)</text>
+  <text x="735" y="694" fill="#94a3b8" font-size="8" text-anchor="middle">title · rationale · effort</text>
+  <text x="735" y="707" fill="#94a3b8" font-size="8" text-anchor="middle">owner · citationIds</text>
+  <text x="735" y="723" fill="#60a5fa" font-size="7.5" text-anchor="middle">only contract extension in this</text>
+  <text x="735" y="734" fill="#60a5fa" font-size="7.5" text-anchor="middle">series — Prescriptive only</text>
+
+  <!-- DuckDB cylinder -->
+  <g>
+    <rect x="1030" y="710" width="120" height="50" rx="2" fill="#0f172a"/>
+    <ellipse cx="1090" cy="710" rx="60" ry="12" fill="#0f172a"/>
+    <ellipse cx="1090" cy="760" rx="60" ry="12" fill="#0f172a"/>
+    <rect x="1030" y="710" width="120" height="50" fill="rgba(76,29,149,0.4)"/>
+    <ellipse cx="1090" cy="710" rx="60" ry="12" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+    <ellipse cx="1090" cy="760" rx="60" ry="12" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+    <line x1="1030" y1="710" x2="1030" y2="760" stroke="#a78bfa" stroke-width="1.5"/>
+    <line x1="1150" y1="710" x2="1150" y2="760" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="1090" y="740" fill="white" font-size="10" font-weight="600" text-anchor="middle">DuckDB</text>
+  </g>
+
+  <!-- ChromaDB cylinder -->
+  <g>
+    <rect x="1180" y="710" width="110" height="50" rx="2" fill="#0f172a"/>
+    <ellipse cx="1235" cy="710" rx="55" ry="12" fill="#0f172a"/>
+    <ellipse cx="1235" cy="760" rx="55" ry="12" fill="#0f172a"/>
+    <rect x="1180" y="710" width="110" height="50" fill="rgba(76,29,149,0.4)"/>
+    <ellipse cx="1235" cy="710" rx="55" ry="12" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+    <ellipse cx="1235" cy="760" rx="55" ry="12" fill="rgba(76,29,149,0.4)" stroke="#a78bfa" stroke-width="1.5"/>
+    <line x1="1180" y1="710" x2="1180" y2="760" stroke="#a78bfa" stroke-width="1.5"/>
+    <line x1="1290" y1="710" x2="1290" y2="760" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="1235" y="740" fill="white" font-size="9.5" font-weight="600" text-anchor="middle">ChromaDB</text>
+  </g>
+
+  <!-- compose_stream -->
+  <rect x="30" y="800" width="210" height="70" rx="6" fill="#0f172a"/>
+  <rect x="30" y="800" width="210" height="70" rx="6" fill="rgba(120,53,15,0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="135" y="826" fill="white" font-size="11" font-weight="600" text-anchor="middle">compose_stream()</text>
+  <text x="135" y="842" fill="#94a3b8" font-size="8" text-anchor="middle">Together / LiteLLM</text>
+  <text x="135" y="855" fill="#94a3b8" font-size="7.5" text-anchor="middle">prose constrained to computed facts</text>
+
+  <!-- SSE -->
+  <rect x="280" y="800" width="300" height="70" rx="6" fill="#0f172a"/>
+  <rect x="280" y="800" width="300" height="70" rx="6" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="430" y="826" fill="white" font-size="11" font-weight="600" text-anchor="middle">SSE stream</text>
+  <text x="430" y="842" fill="#94a3b8" font-size="8" text-anchor="middle">agent_start · agent_delta · agent_done</text>
+  <text x="430" y="855" fill="#94a3b8" font-size="7.5" text-anchor="middle">error · done — unchanged event names</text>
+
+  <!-- payloadAdapter -->
+  <rect x="30" y="910" width="200" height="70" rx="6" fill="#0f172a"/>
+  <rect x="30" y="910" width="200" height="70" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="130" y="938" fill="white" font-size="11" font-weight="600" text-anchor="middle">payloadAdapter</text>
+  <text x="130" y="954" fill="#94a3b8" font-size="8" text-anchor="middle">shape-agnostic normalize</text>
+  <text x="130" y="967" fill="#94a3b8" font-size="7.5" text-anchor="middle">now also preserves escape-hatch fields</text>
+
+  <!-- AgentVisualization -->
+  <rect x="270" y="910" width="280" height="70" rx="6" fill="#0f172a"/>
+  <rect x="270" y="910" width="280" height="70" rx="6" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="410" y="936" fill="white" font-size="11" font-weight="600" text-anchor="middle">AgentVisualization</text>
+  <text x="410" y="952" fill="#94a3b8" font-size="8" text-anchor="middle">MetricCards · AgentChart · Insights</text>
+  <text x="410" y="965" fill="#94a3b8" font-size="8" text-anchor="middle">RecommendationCards · Citations</text>
+
+  <!-- ===================== LEGEND ===================== -->
+  <text x="30" y="1020" fill="white" font-size="10" font-weight="700">STATUS</text>
+  <rect x="30" y="1030" width="12" height="12" rx="3" fill="rgba(6,78,59,0.4)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="48" y="1040" fill="#94a3b8" font-size="8.5">SHIPPED — Descriptive, live</text>
+  <rect x="230" y="1030" width="12" height="12" rx="3" fill="rgba(8,51,68,0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+  <text x="248" y="1040" fill="#94a3b8" font-size="8.5">SPEC READY — Diagnostic</text>
+  <rect x="430" y="1030" width="12" height="12" rx="3" fill="rgba(59,130,246,0.3)" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="448" y="1040" fill="#94a3b8" font-size="8.5">IN DESIGN — Prescriptive (now grilling)</text>
+  <rect x="720" y="1030" width="12" height="12" rx="3" fill="rgba(30,41,59,0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="738" y="1040" fill="#94a3b8" font-size="8.5">PLANNED — Predictive, not yet grilled</text>
+
+  <text x="30" y="1062" fill="white" font-size="10" font-weight="700">CONNECTORS</text>
+  <path d="M170,1058 L200,1058" fill="none" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+  <text x="208" y="1062" fill="#94a3b8" font-size="8.5">shared pipeline flow</text>
+  <path d="M380,1058 L410,1058" fill="none" stroke="#fb923c" stroke-width="1.3" stroke-dasharray="5,3" marker-end="url(#arrow-orange)"/>
+  <text x="418" y="1062" fill="#94a3b8" font-size="8.5">escape-hatch / bypass path</text>
+  <path d="M650,1058 L680,1058" fill="none" stroke="#64748b" stroke-width="1.3" marker-end="url(#arrow)"/>
+  <text x="688" y="1062" fill="#94a3b8" font-size="8.5">routing / dispatch</text>
+</svg>

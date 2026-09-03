@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { ConnectorEngine } from "@datacon/prisma";
 import { allFields, secretFieldKeys, type ConnectorEngineId } from "@datacon/shared-types";
 import { PrismaService } from "../prisma/prisma.service";
+import { requestTxStorage } from "../prisma/request-transaction.storage";
 import { EncryptionService } from "../common/encryption.service";
 import { AiClientService } from "../common/ai-client.service";
 import { SaveConnectorDto } from "./dto/save-connector.dto";
@@ -162,27 +163,35 @@ export class ConnectorsService {
       }
 
       const connector = await this.prisma.scoped.connector.findUniqueOrThrow({ where: { id } });
-      await this.prisma.scoped.$transaction([
-        this.prisma.scoped.unifiedDataset.deleteMany({ where: { connectorId: id } }),
-        ...data.datasets.map((d) =>
-          this.prisma.scoped.unifiedDataset.create({
-            data: {
-              orgId: connector.orgId,
-              connectorId: id,
-              name: d.name,
-              columns: d.columns,
-              rowCount: d.rowCount,
-              sampleRows: d.sampleRows,
-              status: "synced",
-              syncedAt: new Date(),
-            },
-          }),
-        ),
-        this.prisma.scoped.connector.update({
-          where: { id },
-          data: { status: "SYNCED", lastSyncedAt: new Date(), lastTestOk: true, lastTestMsg: data.message, lastTestAt: new Date() },
+
+      // A `scoped.$transaction([...])` array doesn't actually batch these atomically: the
+      // `scoped` extension runs each call eagerly the moment it's constructed (see
+      // prisma.service.ts's $allOperations), so a mid-sequence failure could leave a mix of
+      // deleted/recreated rows. Run them as one real interactive transaction instead, sharing
+      // it via requestTxStorage so the existing `scoped.*` calls route onto it unchanged.
+      await this.prisma.$transaction((tx) =>
+        requestTxStorage.run({ tx, rlsSet: false }, async () => {
+          await this.prisma.scoped.unifiedDataset.deleteMany({ where: { connectorId: id } });
+          for (const d of data.datasets) {
+            await this.prisma.scoped.unifiedDataset.create({
+              data: {
+                orgId: connector.orgId,
+                connectorId: id,
+                name: d.name,
+                columns: d.columns,
+                rowCount: d.rowCount,
+                sampleRows: d.sampleRows,
+                status: "synced",
+                syncedAt: new Date(),
+              },
+            });
+          }
+          await this.prisma.scoped.connector.update({
+            where: { id },
+            data: { status: "SYNCED", lastSyncedAt: new Date(), lastTestOk: true, lastTestMsg: data.message, lastTestAt: new Date() },
+          });
         }),
-      ]);
+      );
     } catch (e: any) {
       await this.prisma.scoped.connector.update({
         where: { id },

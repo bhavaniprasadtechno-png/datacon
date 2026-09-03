@@ -48,6 +48,25 @@ def binary_split_insights(
     return insights
 
 
+def spike_insight(
+    subject: str,
+    value: float,
+    baseline_average: float,
+    change_pct: float,
+    value_metric_id: str,
+    baseline_metric_id: str,
+) -> Insight:
+    """A direction-agnostic observation calling out a meaningful change
+    against a baseline (e.g. a day-by-day count spike). Always the
+    "attention" type, whether the change is a rise or a fall — the agent
+    producing this has no reliable way to know which direction is
+    favorable for an arbitrary connected dataset, unlike a boolean-split
+    insight where "positive" is unambiguous."""
+    direction = "rose" if change_pct >= 0 else "fell"
+    text = f"{subject} {direction} {change_pct:+.1f}% versus the baseline average ({value:.0f} vs {baseline_average:.1f}/day)."
+    return Insight(type="attention", text=text, evidence=[value_metric_id, baseline_metric_id])
+
+
 def ranking_insight(subject: str, top_label: str, top_value: int | float, top_metric_id: str, total: int | float) -> Insight:
     """A single grounded observation calling out the leading category in a
     ranked breakdown (e.g. tickets grouped by category)."""

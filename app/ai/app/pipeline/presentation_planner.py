@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.pipeline.analytics_engine import rank_categories
+from app.pipeline.analytics_engine import column_index, rank_categories
 from app.pipeline.contracts import Metric, Table, Visualization
 from app.pipeline.normalizer import NormalizedResult
 
@@ -40,15 +40,33 @@ def category_ranking(result: NormalizedResult) -> list[tuple[Any, int | float]] 
     return rank_categories(result, dimension, measure)
 
 
+def _is_line_trend(result: NormalizedResult) -> bool:
+    date_dims = [c for c in result.columns if c.value_type == "date"]
+    return (
+        len(date_dims) == 1
+        and len(result.dimensions) == 1
+        and len(result.measures) == 1
+        and result.row_count > 1
+    )
+
+
 def plan_visualization(metrics: list[Metric], result: NormalizedResult) -> Visualization:
     """Never picks a chart just because rows were returned. A category
-    comparison gets a ranked horizontal bar; with headline metrics to show
-    otherwise, the KPI cards are the visualization; with neither, there's
-    nothing worth visualizing."""
+    comparison gets a ranked horizontal bar; a single time-ordered trend gets
+    a line; with headline metrics to show otherwise, the KPI cards are the
+    visualization; with none of the above, there's nothing worth
+    visualizing. The response is always semantic (type + dimension/measure +
+    data) — never chart-library configuration; the frontend renderer alone
+    decides how a type maps to axes/series."""
     ranked = category_ranking(result)
     if ranked:
         data = [{"label": str(label), "value": value} for label, value in ranked]
         return Visualization(type="horizontal_bar", data=data)
+    if _is_line_trend(result):
+        dimension, measure = result.dimensions[0], result.measures[0]
+        dim_idx, measure_idx = column_index(result, dimension), column_index(result, measure)
+        data = [{"label": str(row[dim_idx]), "value": row[measure_idx]} for row in result.rows]
+        return Visualization(type="line", data=data, dimension=dimension, measure=measure)
     if not metrics:
         return Visualization(type="none")
     return Visualization(type="kpi")

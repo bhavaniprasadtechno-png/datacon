@@ -1,4 +1,4 @@
-from app.pipeline.normalizer import normalize
+from app.pipeline.normalizer import humanize_dataset_name, infer_dataset_name, normalize, sanitize_rows
 
 
 def test_classifies_numeric_column_as_a_measure():
@@ -59,3 +59,37 @@ def test_mixed_dimensions_and_measures_split_correctly():
 def test_a_column_with_no_non_null_values_defaults_to_categorical():
     result = normalize("customers", ["notes"], [[None], [None]])
     assert result.columns[0].value_type == "categorical"
+
+
+def test_infer_dataset_name_extracts_the_unquoted_table_name():
+    assert infer_dataset_name("SELECT * FROM customers") == "customers"
+
+
+def test_infer_dataset_name_extracts_the_quoted_table_name_with_hyphens():
+    assert infer_dataset_name('SELECT * FROM "conn_prod-postgres_customers"') == "conn_prod-postgres_customers"
+
+
+def test_infer_dataset_name_falls_back_when_sql_is_empty():
+    assert infer_dataset_name(None) == "results"
+    assert infer_dataset_name("", fallback="revenue") == "revenue"
+
+
+def test_infer_dataset_name_falls_back_when_no_from_clause_matches():
+    assert infer_dataset_name("SELECT 1", fallback="revenue") == "revenue"
+
+
+def test_humanize_dataset_name_strips_the_connector_sync_prefix():
+    assert humanize_dataset_name("conn_cmrkfxcm4000i_customers") == "customers"
+
+
+def test_humanize_dataset_name_leaves_a_name_without_the_prefix_unchanged():
+    assert humanize_dataset_name("customers") == "customers"
+
+
+def test_sanitize_rows_leaves_json_primitives_unchanged():
+    assert sanitize_rows([["CUS-1", 4200.0, True, None]]) == [["CUS-1", 4200.0, True, None]]
+
+
+def test_sanitize_rows_stringifies_non_primitive_values():
+    import datetime
+    assert sanitize_rows([[datetime.date(2026, 8, 1)]]) == [["2026-08-01"]]

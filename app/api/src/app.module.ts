@@ -47,6 +47,12 @@ export class AppModule implements NestModule {
       .exclude(
         { path: "chat/stream", method: RequestMethod.POST },
         { path: "health", method: RequestMethod.GET },
+        // Connector syncs call out to the AI service to load external data — that can run
+        // past Prisma's 5s interactive-transaction default. Excluded for the same reason as
+        // chat/stream: don't hold the per-request DB transaction open across a slow external
+        // call. RLS scoping still works via `scoped.*`'s own fallback (see prisma.service.ts).
+        { path: "connectors", method: RequestMethod.POST },
+        { path: "connectors/:id/sync", method: RequestMethod.POST },
       )
       .forRoutes("*");
   }

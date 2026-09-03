@@ -55,7 +55,7 @@ async def test_descriptive_answers_customers_with_kpi_metrics_grounded_insights_
     # No forced chart just because rows came back — the KPI cards are the
     # primary visual for this shape (customer_id is dropped upstream by the
     # executor's identifier-column filter, so no internal column leaks either).
-    assert payload["visualizations"] == [{"type": "kpi", "title": None, "data": []}]
+    assert payload["visualizations"] == [{"type": "kpi", "title": None, "data": [], "dimension": None, "measure": None}]
     assert payload["tables"][0]["columns"] == ["name", "tier", "mrr", "seats", "active"]
     assert payload["tables"][0]["collapsed"] is True
     assert payload["sources"] == [{"dataset": "customers", "rowCount": 4}]
@@ -144,54 +144,101 @@ async def test_descriptive_preserves_clickable_citation_metadata_when_falling_ba
 async def test_diagnostic_reports_no_data_when_nothing_is_connected():
     prep = await diagnostic.prepare("why did tickets spike?")
     assert "no day-by-day event data" in prep.offline_text.lower()
-    assert prep.payload == {"confidence": "low"}
+    assert prep.payload["summary"]["confidence"] == "low"
+    assert prep.payload["metrics"] == []
+    assert prep.payload["insights"] == []
 
 
 @pytest.mark.asyncio
-async def test_diagnostic_computes_a_real_spike_from_a_free_form_query():
-    snapshot_store.load_dataset("tickets", pd.DataFrame({"day": [1, 2], "region": ["EMEA", "EMEA"], "count": [40, 98]}))
-    with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT day, region, count FROM tickets ORDER BY day")), \
+async def test_diagnostic_computes_a_real_spike_with_kpi_metrics_a_line_chart_and_a_grounded_insight():
+    snapshot_store.load_dataset("tickets", pd.DataFrame({"date": ["2026-08-16", "2026-08-17"], "count": [40, 98]}))
+    with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT date, count FROM tickets ORDER BY date")), \
          patch.object(diagnostic, "chroma_query", return_value=[]):
         prep = await diagnostic.prepare("why did tickets spike?")
-    assert "EMEA" in prep.offline_text
-    assert "+145%" in prep.offline_text
-    assert prep.payload == {
-        "confidence": "medium",
-        "table": {"columns": ["region", "count"], "rows": [["EMEA", 40.0], ["EMEA", 98.0]]},
-    }
+
+    payload = prep.payload
+    assert payload["summary"]["confidence"] == "medium"
+    assert payload["metrics"] == [
+        {"id": "spike_count", "label": "Latest Count", "value": 98.0, "format": "number"},
+        {"id": "baseline_avg", "label": "Baseline Average", "value": 40.0, "format": "number"},
+        {"id": "percent_change", "label": "Change", "value": 145.0, "format": "percentage"},
+    ]
+    assert payload["insights"] == [
+        {"type": "attention", "text": "Events rose +145.0% versus the baseline average (98 vs 40.0/day).", "evidence": ["spike_count", "baseline_avg"]}
+    ]
+    for insight in payload["insights"]:
+        assert insight["evidence"], "every insight must cite at least one metric"
+    assert payload["visualizations"][0]["type"] == "line"
+    assert payload["visualizations"][0]["data"] == [
+        {"label": "2026-08-16", "value": 40.0},
+        {"label": "2026-08-17", "value": 98.0},
+    ]
+    assert payload["tables"][0]["columns"] == ["date", "count"]
+    assert "citations" not in payload
+    assert "correlation" not in payload
+    assert "+145.0%" in prep.offline_text
 
 
 @pytest.mark.asyncio
 async def test_diagnostic_marks_high_confidence_with_correlation_when_a_citation_is_found():
-    snapshot_store.load_dataset("tickets", pd.DataFrame({"day": [1, 2], "region": ["EMEA", "EMEA"], "count": [40, 98]}))
+    snapshot_store.load_dataset("tickets", pd.DataFrame({"date": ["2026-08-16", "2026-08-17"], "count": [40, 98]}))
     hit = {"metadata": {"title": "Incident Report", "filename": "incident.pdf", "chunk_index": 2}, "snippet": "root cause text", "distance": 0.1}
-    with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT day, region, count FROM tickets ORDER BY day")), \
+    with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT date, count FROM tickets ORDER BY date")), \
          patch.object(diagnostic, "chroma_query", return_value=[hit]):
         prep = await diagnostic.prepare("why did tickets spike?")
-    assert prep.payload["confidence"] == "high"
-    assert prep.payload["correlation"] == "spike ↔ Incident Report"
-    assert prep.payload["citations"] == [
+
+    payload = prep.payload
+    assert payload["summary"]["confidence"] == "high"
+    assert payload["correlation"] == "spike ↔ Incident Report"
+    assert payload["citations"] == [
         {"id": 1, "documentTitle": "Incident Report", "filename": "incident.pdf", "chunkIndex": 2, "snippet": "root cause text"}
     ]
+    assert payload["metrics"][0]["value"] == 98.0
+    assert payload["visualizations"][0]["type"] == "line"
+
+
+@pytest.mark.asyncio
+async def test_diagnostic_preserves_citation_metadata_when_falling_back_to_documents():
+    hit = {"metadata": {"title": "Runbook", "filename": "runbook.pdf", "chunk_index": 1}, "snippet": "Spikes are usually caused by deploys.", "distance": 0.2}
+    with patch.object(diagnostic, "chroma_query", return_value=[hit]):
+        prep = await diagnostic.prepare("why did tickets spike?")
+    assert prep.payload["citations"] == [
+        {"id": 1, "documentTitle": "Runbook", "filename": "runbook.pdf", "chunkIndex": 1, "snippet": "Spikes are usually caused by deploys."}
+    ]
+    assert prep.payload["confidence"] == "high"
 
 
 @pytest.mark.asyncio
 async def test_predictive_reports_no_data_when_nothing_is_connected():
     prep = await predictive.prepare("forecast next quarter")
     assert "no revenue history" in prep.offline_text.lower()
-    assert prep.payload == {"confidence": "low"}
+    assert prep.payload["summary"]["confidence"] == "low"
+    assert prep.payload["metrics"] == []
 
 
 @pytest.mark.asyncio
-async def test_predictive_forecasts_from_a_real_free_form_query():
-    snapshot_store.load_dataset("revenue", pd.DataFrame({"month": [1, 2, 3, 4], "revenue": [3.0, 3.1, 3.3, 3.5]}))
+async def test_predictive_reports_no_data_when_history_is_too_short():
+    snapshot_store.load_dataset("revenue", pd.DataFrame({"month": ["2026-01-01"], "revenue": [3.0]}))
+    with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT month, revenue FROM revenue ORDER BY month")):
+        prep = await predictive.prepare("forecast next quarter")
+    assert "no revenue history" in prep.offline_text.lower()
+    assert prep.payload["summary"]["confidence"] == "low"
+
+
+@pytest.mark.asyncio
+async def test_predictive_forecasts_with_kpi_metrics_a_line_chart_and_a_real_confidence_band():
+    snapshot_store.load_dataset("revenue", pd.DataFrame({
+        "month": ["2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01"],
+        "revenue": [3.0, 3.1, 3.3, 3.5],
+    }))
     with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT month, revenue FROM revenue ORDER BY month")):
         prep = await predictive.prepare("forecast next quarter")
 
-    chart_data = prep.payload["chart"]["data"]
-    assert prep.payload["chart"]["type"] == "line"
-    assert prep.payload["chart"]["title"] == "Holt-Winters revenue forecast"
-    assert [d["label"] for d in chart_data[:4]] == ["p0", "p1", "p2", "p3"]
+    payload = prep.payload
+    viz = payload["visualizations"][0]
+    assert viz["type"] == "line"
+    chart_data = viz["data"]
+    assert [d["label"] for d in chart_data[:4]] == ["2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01"]
     assert [d["value"] for d in chart_data[:4]] == [3.0, 3.1, 3.3, 3.5]
     # Last history point anchors the band's start (lower == upper == its own
     # value) so the shaded region has two adjacent bound-bearing points to
@@ -202,35 +249,67 @@ async def test_predictive_forecasts_from_a_real_free_form_query():
     assert forecast_point["label"] == "forecast"
     assert forecast_point["lower"] < forecast_point["value"] < forecast_point["upper"]
 
-    assert prep.payload["table"]["columns"] == ["period", "revenue"]
-    assert prep.payload["table"]["rows"][:4] == [["p0", 3.0], ["p1", 3.1], ["p2", 3.3], ["p3", 3.5]]
-    assert prep.payload["table"]["rows"][4][0] == "forecast"
+    metric_ids = [m["id"] for m in payload["metrics"]]
+    assert metric_ids == ["projected", "ci_low", "ci_high", "growth_pct"]
+    assert payload["metrics"][0]["value"] == forecast_point["value"]
+    assert "mape" not in metric_ids
 
-    assert prep.payload["confidence"] in ("high", "medium", "low")
+    # Table reflects only the real historical rows — no synthetic forecast row.
+    assert payload["tables"][0]["columns"] == ["month", "revenue"]
+    assert payload["tables"][0]["rows"] == [
+        ["2026-01-01", 3.0], ["2026-02-01", 3.1], ["2026-03-01", 3.3], ["2026-04-01", 3.5],
+    ]
+
+    assert payload["summary"]["confidence"] == "high"
+
+
+@pytest.mark.asyncio
+async def test_predictive_lowers_confidence_when_the_model_fit_is_poor():
+    snapshot_store.load_dataset("revenue", pd.DataFrame({
+        "month": ["2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01"],
+        "revenue": [3.0, 8.0, 1.0, 9.0],
+    }))
+    with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT month, revenue FROM revenue ORDER BY month")):
+        prep = await predictive.prepare("forecast next quarter")
+    assert prep.payload["summary"]["confidence"] in ("medium", "low")
 
 
 @pytest.mark.asyncio
 async def test_prescriptive_reports_no_data_when_nothing_is_connected():
     prep = await prescriptive.prepare("how do we reduce churn?")
     assert "no churn data" in prep.offline_text.lower()
-    assert prep.payload == {"confidence": "low"}
+    assert prep.payload["summary"]["confidence"] == "low"
+    assert prep.payload["actions"] == []
 
 
 @pytest.mark.asyncio
-async def test_prescriptive_builds_actions_from_a_real_free_form_query():
+async def test_prescriptive_builds_kpi_metrics_and_actions_from_a_real_free_form_query():
     snapshot_store.load_dataset("churn", pd.DataFrame({"churn_pct": [3.1], "prev_churn_pct": [3.5], "at_risk_accounts": [12]}))
     with patch.object(executor.generator, "generate_sql", new=AsyncMock(return_value="SELECT churn_pct, prev_churn_pct, at_risk_accounts FROM churn")), \
          patch.object(prescriptive, "chroma_query", return_value=[]):
         prep = await prescriptive.prepare("how do we reduce churn?")
-    assert len(prep.payload["actions"]) == 3
-    assert "12 at-risk" in prep.payload["actions"][0]["title"]
-    assert prep.payload["confidence"] == "high"
-    assert "citations" not in prep.payload
-    assert "3.1" in prep.offline_text
-    for action in prep.payload["actions"]:
+
+    payload = prep.payload
+    metric_ids = [m["id"] for m in payload["metrics"]]
+    assert metric_ids == ["churn_pct", "at_risk_accounts", "target_churn_pct"]
+    assert payload["metrics"][0]["value"] == 3.1
+    assert payload["metrics"][1]["value"] == 12
+    # No chart adds value here, but the metrics ARE the visualization — same
+    # rule Descriptive uses for a metrics-only, no-chart response.
+    assert payload["visualizations"][0]["type"] == "kpi"
+
+    actions = payload["actions"]
+    assert len(actions) == 3
+    assert "12 at-risk" in actions[0]["title"]
+    for action in actions:
         assert action["rationale"]
         assert action["expectedImpact"]
-        assert "citationIds" not in action
+        assert action["citationIds"] == []
+
+    # Every action lacks a supporting citation -> not "high".
+    assert payload["summary"]["confidence"] == "medium"
+    assert "citations" not in payload
+    assert "3.1" in prep.offline_text
 
 
 @pytest.mark.asyncio
@@ -248,12 +327,14 @@ async def test_prescriptive_assigns_topic_scoped_citations_per_action():
         prep = await prescriptive.prepare("how do we reduce churn?")
 
     actions = prep.payload["actions"]
-    assert "citationIds" not in actions[0]
+    assert actions[0]["citationIds"] == []
     assert actions[1]["citationIds"] == [1]
-    assert "citationIds" not in actions[2]
+    assert actions[2]["citationIds"] == []
     assert prep.payload["citations"] == [
         {"id": 1, "documentTitle": "Billing Postmortem", "filename": "billing.pdf", "chunkIndex": 1, "snippet": "billing errors caused churn"}
     ]
+    # Some, but not all, actions are grounded -> not "high".
+    assert prep.payload["summary"]["confidence"] == "medium"
 
 
 @pytest.mark.asyncio
@@ -275,3 +356,5 @@ async def test_prescriptive_deduplicates_a_citation_shared_across_two_actions():
     assert prep.payload["citations"] == [
         {"id": 1, "documentTitle": "Retention Playbook", "filename": "retention.pdf", "chunkIndex": 0, "snippet": "shared guidance"}
     ]
+    # Every action is grounded -> "high".
+    assert prep.payload["summary"]["confidence"] == "high"

@@ -13,6 +13,7 @@ from pydantic.alias_generators import to_camel
 Confidence = Literal["high", "medium", "low"]
 MetricFormat = Literal["number", "percentage", "currency", "text"]
 InsightType = Literal["positive", "attention", "neutral"]
+Effort = Literal["Low", "Medium", "High"]
 VisualizationType = Literal[
     "kpi", "line", "area", "bar", "horizontal_bar", "stacked_bar", "grouped_bar",
     "donut", "pie", "funnel", "scatter", "histogram", "heatmap", "table",
@@ -51,6 +52,8 @@ class Visualization(_WireModel):
     type: VisualizationType
     title: str | None = None
     data: list[dict[str, Any]] = Field(default_factory=list)
+    dimension: str | None = None
+    measure: str | None = None
 
 
 class Table(_WireModel):
@@ -64,6 +67,21 @@ class Source(_WireModel):
     row_count: int
 
 
+class Action(_WireModel):
+    """A recommended action — the only contract extension in the per-agent
+    migration series, since recommendation data (effort/owner/impact/
+    citations) doesn't fit losslessly into Metric or Insight. `citation_ids`
+    references entries in an agent's flat escape-hatch `citations` list, the
+    same mechanism Descriptive/Diagnostic use for document citations."""
+
+    title: str
+    rationale: str
+    effort: Effort
+    owner: str
+    expected_impact: str
+    citation_ids: list[int] = Field(default_factory=list)
+
+
 class StructuredResponse(_WireModel):
     summary: Summary
     metrics: list[Metric] = Field(default_factory=list)
@@ -71,3 +89,4 @@ class StructuredResponse(_WireModel):
     visualizations: list[Visualization] = Field(default_factory=list)
     tables: list[Table] = Field(default_factory=list)
     sources: list[Source] = Field(default_factory=list)
+    actions: list[Action] = Field(default_factory=list)

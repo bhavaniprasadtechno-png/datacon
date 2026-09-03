@@ -19,6 +19,18 @@ _CURRENCY_HINTS = ("revenue", "mrr", "amount", "price", "cost", "arr", "spend", 
 _PERCENTAGE_HINTS = ("pct", "percent", "rate", "ratio")
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}")
 
+# ponytail: single-table `FROM` match, upgrade to real SQL parsing if a
+# join-heavy question ever needs the true source table name. Quoted
+# alternative first — quoted identifiers (connector/csv-synced table names
+# contain hyphens, which `\w` doesn't match) can hold any character except a
+# closing quote.
+_FROM_TABLE_RE = re.compile(r'FROM\s+(?:"([^"]+)"|([A-Za-z_]\w*))', re.IGNORECASE)
+# Connector-synced tables are stored as `conn_{connectorId}_{tableName}` (see
+# connectors/service.py) — strip that prefix for a human-facing label. CSV
+# uploads (`csv_{documentId}`) have no recoverable human name from the table
+# name alone, so they're left as-is.
+_CONNECTOR_PREFIX_RE = re.compile(r"^conn_[^_]+_")
+
 
 @dataclass
 class NormalizedColumn:
@@ -66,6 +78,26 @@ def _classify(name: str, values: list[Any]) -> tuple[ColumnRole, ValueType]:
     if non_null and all(_looks_like_date(v) for v in non_null):
         return "dimension", "date"
     return "dimension", "categorical"
+
+
+def infer_dataset_name(sql: str | None, fallback: str = "results") -> str:
+    if not sql:
+        return fallback
+    match = _FROM_TABLE_RE.search(sql)
+    if not match:
+        return fallback
+    return match.group(1) or match.group(2)
+
+
+def humanize_dataset_name(dataset: str) -> str:
+    return _CONNECTOR_PREFIX_RE.sub("", dataset) or dataset
+
+
+def sanitize_rows(rows: list[list[Any]]) -> list[list[Any]]:
+    """Coerces any non-JSON-primitive cell (e.g. a DB-driver-specific numeric
+    or date wrapper type) to a string, so raw query rows are always safe to
+    hand to `normalize()` and, later, to serialize on the wire."""
+    return [[v if v is None or isinstance(v, (int, float, bool, str)) else str(v) for v in row] for row in rows]
 
 
 def normalize(dataset: str, columns: list[str], rows: list[list[Any]], sql: str = "") -> NormalizedResult:

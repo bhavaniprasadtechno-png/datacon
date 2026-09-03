@@ -1,4 +1,4 @@
-from app.pipeline.insight_engine import binary_split_insights, ranking_insight
+from app.pipeline.insight_engine import binary_split_insights, ranking_insight, spike_insight
 
 
 def test_majority_share_produces_a_positive_insight_grounded_in_the_rate_metric():
@@ -63,6 +63,25 @@ def test_ranking_insight_reports_the_top_category_with_its_share():
     assert insight.type == "neutral"
     assert insight.text == "Billing has the most tickets (3, 50.0%)."
     assert insight.evidence == ["top_category"]
+
+
+def test_spike_insight_reports_a_rise_as_attention_type_not_positive():
+    insight = spike_insight(
+        subject="Events", value=9, baseline_average=6.0, change_pct=50.0,
+        value_metric_id="spike_count", baseline_metric_id="baseline_avg",
+    )
+    assert insight.type == "attention"
+    assert insight.text == "Events rose +50.0% versus the baseline average (9 vs 6.0/day)."
+    assert insight.evidence == ["spike_count", "baseline_avg"]
+
+
+def test_spike_insight_reports_a_decline_as_attention_type_not_positive():
+    insight = spike_insight(
+        subject="Events", value=3, baseline_average=6.0, change_pct=-50.0,
+        value_metric_id="spike_count", baseline_metric_id="baseline_avg",
+    )
+    assert insight.type == "attention"
+    assert insight.text == "Events fell -50.0% versus the baseline average (3 vs 6.0/day)."
 
 
 def test_zero_total_produces_no_insights():

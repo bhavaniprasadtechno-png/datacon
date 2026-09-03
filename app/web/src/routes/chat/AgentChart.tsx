@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { AgentChart as AgentChartData } from "@datacon/shared-types";
 
@@ -15,51 +16,49 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
   );
 }
 
-export function AgentChart({ chart }: { chart: AgentChartData }) {
-  if (!chart || !chart.data || !Array.isArray(chart.data) || !chart.data.length) return null;
+type ChartRenderer = (chart: AgentChartData, titleText: string) => ReactElement;
 
-  const titleText = (chart.title || "Chart").toUpperCase();
-
-  if (chart.type === "horizontal_bar") {
-    const height = Math.max(120, chart.data.length * 32);
-    return (
-      <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>
-        <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)", marginBottom: 8 }}>
-          {titleText}
-        </div>
-        <ResponsiveContainer width="100%" height={height}>
-          <BarChart data={chart.data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--ac-border)" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" />
-            <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" width={100} />
-            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-            <Bar dataKey="value" fill="var(--ac)" radius={[0, 4, 4, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+function renderHorizontalBar(chart: AgentChartData, titleText: string) {
+  const height = Math.max(120, chart.data.length * 32);
+  return (
+    <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>
+      <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)", marginBottom: 8 }}>
+        {titleText}
       </div>
-    );
-  }
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={chart.data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--ac-border)" horizontal={false} />
+          <XAxis type="number" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" />
+          <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" width={100} />
+          <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+          <Bar dataKey="value" fill="var(--ac)" radius={[0, 4, 4, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
-  if (chart.type === "bar") {
-    return (
-      <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>
-        <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)", marginBottom: 8 }}>
-          {titleText}
-        </div>
-        <ResponsiveContainer width="100%" height={180}>
-          <BarChart data={chart.data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--ac-border)" vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" />
-            <YAxis tick={{ fontSize: 11 }} stroke="var(--ac-muted)" width={40} />
-            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-            <Bar dataKey="value" fill="var(--ac)" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+function renderBar(chart: AgentChartData, titleText: string) {
+  return (
+    <div style={{ background: "var(--ac-bg-muted)", border: "1px solid var(--ac-border)", borderRadius: "var(--radius-lg)", padding: 14, marginTop: 10 }}>
+      <div style={{ font: "600 10px 'IBM Plex Mono',monospace", letterSpacing: ".1em", color: "var(--ac)", marginBottom: 8 }}>
+        {titleText}
       </div>
-    );
-  }
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={chart.data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--ac-border)" vertical={false} />
+          <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--ac-muted)" />
+          <YAxis tick={{ fontSize: 11 }} stroke="var(--ac-muted)" width={40} />
+          <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+          <Bar dataKey="value" fill="var(--ac)" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
-  // Line chart: history points followed by one appended forecast point
+function renderLine(chart: AgentChartData, titleText: string) {
+  // History points followed by one optional appended forecast point
   // carrying lower/upper — the stat row below reads straight off that last
   // pair of points instead of duplicating formatted fields on the payload.
   const last = chart.data[chart.data.length - 1];
@@ -114,4 +113,22 @@ export function AgentChart({ chart }: { chart: AgentChartData }) {
       )}
     </div>
   );
+}
+
+// Adding the next visualization type is one entry here plus one renderer
+// function above — nothing else in the app needs to change.
+const CHART_RENDERERS: Record<AgentChartData["type"], ChartRenderer> = {
+  bar: renderBar,
+  horizontal_bar: renderHorizontalBar,
+  line: renderLine,
+};
+
+export function AgentChart({ chart }: { chart: AgentChartData }) {
+  if (!chart || !chart.data || !Array.isArray(chart.data) || !chart.data.length) return null;
+
+  const renderer = CHART_RENDERERS[chart.type];
+  if (!renderer) return null;
+
+  const titleText = (chart.title || "Chart").toUpperCase();
+  return renderer(chart, titleText);
 }

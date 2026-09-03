@@ -61,6 +61,44 @@ def test_category_ranking_returns_none_for_a_single_row():
     assert category_ranking(result) is None
 
 
+def _trend_result():
+    columns = ["day", "count"]
+    rows = [
+        ["2026-08-01", 4],
+        ["2026-08-02", 5],
+        ["2026-08-03", 3],
+        ["2026-08-04", 9],
+    ]
+    return normalize("tickets", columns, rows)
+
+
+def test_plan_visualization_picks_line_for_a_single_time_ordered_trend():
+    viz = plan_visualization([], _trend_result())
+    assert viz.type == "line"
+    assert viz.data == [
+        {"label": "2026-08-01", "value": 4},
+        {"label": "2026-08-02", "value": 5},
+        {"label": "2026-08-03", "value": 3},
+        {"label": "2026-08-04", "value": 9},
+    ]
+    assert viz.dimension == "day"
+    assert viz.measure == "count"
+
+
+def test_plan_visualization_does_not_pick_line_when_an_extra_dimension_is_present():
+    result = normalize("tickets", ["day", "region", "count"], [["2026-08-01", "EMEA", 4], ["2026-08-02", "EMEA", 5]])
+    viz = plan_visualization([], result)
+    assert viz.type != "line"
+
+
+def test_plan_visualization_does_not_pick_line_for_a_single_row():
+    result = normalize("tickets", ["day", "count"], [["2026-08-01", 4]])
+    metrics = [Metric(id="total", label="Total", value=4, format="number")]
+    viz = plan_visualization(metrics, result)
+    assert viz.type != "line"
+    assert viz.type == "kpi"
+
+
 def test_plan_table_includes_all_non_internal_columns():
     table = plan_table(_customers_result())
     assert table.columns == ["customer_id", "name", "tier", "mrr", "seats", "active"]

@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Result Normalizer converts a query-engine result into dataset name, row count, columns, classified dimensions/measures, typed values (categorical/numeric/date/percentage/currency, null-aware), and preserved source metadata for later evidence use.
 - [ ] Analytics Engine deterministically computes totals/counts/percentages for the customers scenario — no LLM involvement in any numeric fact.

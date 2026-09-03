@@ -44,7 +44,16 @@ export function hasDashletContent(payload: unknown, fallbackText: string): boole
 
 export function adaptPayload(payload: unknown, fallbackText: string): AdaptedPayload {
   if (isStructuredResponse(payload)) {
-    return { ...payload, citations: [], actions: [], correlation: null };
+    // A message can be structured-shape (summary/metrics/...) and still carry
+    // the old flat escape-hatch fields alongside it — e.g. Diagnostic's
+    // citation-grounded spike answers. Preserve them instead of dropping them.
+    const escapeHatch = payload as Partial<AgentPayload>;
+    return {
+      ...payload,
+      citations: escapeHatch.citations ?? [],
+      actions: escapeHatch.actions ?? [],
+      correlation: escapeHatch.correlation ?? null,
+    };
   }
 
   const old = (payload ?? {}) as Partial<AgentPayload>;

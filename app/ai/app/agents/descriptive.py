@@ -1,11 +1,10 @@
 import logging
-import re
 
-from app.agents.types import AgentPrep
+from app.agents.types import AgentPrep, facts_prompt, no_data_response
 from app.pipeline.analytics_engine import count_where, percentage, primary_metric
 from app.pipeline.contracts import Insight, Metric, Source, StructuredResponse, Summary
 from app.pipeline.insight_engine import binary_split_insights, ranking_insight
-from app.pipeline.normalizer import NormalizedResult, normalize
+from app.pipeline.normalizer import NormalizedResult, humanize_dataset_name, infer_dataset_name, normalize, sanitize_rows
 from app.pipeline.presentation_planner import category_ranking, plan_table, plan_visualization
 from app.pipeline.validator import compute_confidence, validate
 from app.query_engine.executor import answer_question
@@ -20,35 +19,6 @@ SYSTEM = (
     "natural-language summary (1-2 sentences) for a business audience, citing ONLY the "
     "numbers listed below. Never state a number that isn't listed."
 )
-
-# ponytail: single-table `FROM` match, upgrade to real SQL parsing if a join-heavy
-# question ever needs the true source table name. Quoted alternative first —
-# quoted identifiers (the common case here; connector/csv-synced table names
-# contain hyphens, which `\w` doesn't match) can hold any character except a
-# closing quote.
-_FROM_TABLE_RE = re.compile(r'FROM\s+(?:"([^"]+)"|([A-Za-z_]\w*))', re.IGNORECASE)
-# Connector-synced tables are stored as `conn_{connectorId}_{tableName}` (see
-# connectors/service.py) — strip that prefix for a human-facing label. CSV
-# uploads (`csv_{documentId}`) have no recoverable human name from the table
-# name alone, so they're left as-is.
-_CONNECTOR_PREFIX_RE = re.compile(r"^conn_[^_]+_")
-
-
-def _infer_dataset_name(sql: str | None, fallback: str = "results") -> str:
-    if not sql:
-        return fallback
-    match = _FROM_TABLE_RE.search(sql)
-    if not match:
-        return fallback
-    return match.group(1) or match.group(2)
-
-
-def _humanize_dataset_name(dataset: str) -> str:
-    return _CONNECTOR_PREFIX_RE.sub("", dataset) or dataset
-
-
-def _sanitize_rows(rows: list[list]) -> list[list]:
-    return [[v if v is None or isinstance(v, (int, float, bool, str)) else str(v) for v in row] for row in rows]
 
 
 def _boolean_split(normalized: NormalizedResult, dataset: str, total_metric_id: str) -> tuple[list[Metric], list[Insight]]:
@@ -105,24 +75,6 @@ def _offline_summary(dataset: str, total_metric: Metric, insights: list[Insight]
     return " ".join(parts)
 
 
-def _facts_prompt(question: str, response: StructuredResponse) -> str:
-    fact_lines = [f"- {m.label}: {m.value}{'%' if m.format == 'percentage' else ''}" for m in response.metrics]
-    insight_lines = [f"- {i.text}" for i in response.insights]
-    return (
-        f"Question: {question}\n\n"
-        "Computed facts (cite ONLY these numbers, never invent others):\n"
-        + ("\n".join(fact_lines) or "  (none)")
-        + "\n\nGrounded observations:\n"
-        + ("\n".join(insight_lines) or "  (none)")
-        + "\n\nWrite the summary now."
-    )
-
-
-def _no_data_response(message: str) -> AgentPrep:
-    response = StructuredResponse(summary=Summary(text=message, confidence="low"))
-    return AgentPrep(system=SYSTEM, prompt=f"Question unanswerable: {message}", offline_text=message, payload=response.model_dump(by_alias=True))
-
-
 async def _citation_fallback(question: str) -> AgentPrep | None:
     """Not migrated onto the new structured contract: StructuredResponse has
     no field rich enough to keep citation id/filename/chunkIndex/snippet, and
@@ -165,11 +117,11 @@ async def prepare(question: str, model: str | None = None) -> AgentPrep:
 
     if not result.ok or not result.rows:
         fallback = await _citation_fallback(question)
-        return fallback if fallback is not None else _no_data_response(result.message)
+        return fallback if fallback is not None else no_data_response(SYSTEM, result.message)
 
-    dataset = _infer_dataset_name(result.sql)
-    display_name = _humanize_dataset_name(dataset)
-    normalized = normalize(dataset, result.columns, _sanitize_rows(result.rows), sql=result.sql or "")
+    dataset = infer_dataset_name(result.sql)
+    display_name = humanize_dataset_name(dataset)
+    normalized = normalize(dataset, result.columns, sanitize_rows(result.rows), sql=result.sql or "")
 
     total_metric_id = f"total_{dataset}"
     total_metric = primary_metric(normalized, metric_id=total_metric_id, label=f"Total {display_name.replace('_', ' ').title()}")
@@ -195,7 +147,7 @@ async def prepare(question: str, model: str | None = None) -> AgentPrep:
 
     return AgentPrep(
         system=SYSTEM,
-        prompt=_facts_prompt(question, response),
+        prompt=facts_prompt(question, response),
         offline_text=offline_text,
         payload=response.model_dump(by_alias=True),
     )
